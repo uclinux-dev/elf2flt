@@ -24,7 +24,7 @@ if expr "$*" : ".*-elf2flt.*" > /dev/null
 then
 	ARG1=
 	ARG2=
-	OFILE=
+	OFILE="a.out"
 	PIC=
 	SDIRS=
 	LDSCRIPT=
@@ -79,8 +79,8 @@ then
 		SEDOP=" -e s/^R_RODAT// -e /^W_RODAT/d"
 		if [ "$MOVDAT" ]
 		then
-			$LINKER -r -d -o $OFILE.elf2flt $ARG1  || exit $?
-			if [ "`@target_alias@-objdump -h $OFILE.elf2flt | \
+			$LINKER -r -d -o "$OFILE.elf2flt" $ARG1  || exit $?
+			if [ "`@target_alias@-objdump -h "$OFILE.elf2flt" | \
 					egrep -A1 '[.]rodata' | grep RELOC`" ]
 			then
 				echo "warning: .rodata section contains relocations"
@@ -126,26 +126,26 @@ then
 
 		if [ "@got_check@" = "no" ]
 		then
-		 $LINKER $SDIRS -T $LDSCRIPT -Ur -d -o $OFILE.elf $ARG1       ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $ARG1              ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -Ur -d -o "$OFILE.elf" $ARG1         ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" $ARG1                ||exit $?
 		else
-		 $LINKER -r -d -o $OFILE.elf2flt $ARG1                        ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     ||exit $?
-		 rm -f $OFILE.elf2flt
+		 $LINKER -r -d -o "$OFILE.elf2flt" $ARG1                          ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -Ur -o "$OFILE.elf" "$OFILE.elf2flt" ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" "$OFILE.elf2flt"     ||exit $?
+		 rm -f "$OFILE.elf2flt"
 		fi
-		if grep _GLOBAL_OFFSET_TABLE_ $OFILE.gdb > /dev/null 
+		if grep _GLOBAL_OFFSET_TABLE_ "$OFILE.gdb" > /dev/null 
 		then
-			$ELF2FLT $FLTFLAGS -o $OFILE -p $OFILE.gdb $OFILE.elf || exit $?
+			$ELF2FLT $FLTFLAGS -o "$OFILE" -p "$OFILE.gdb" "$OFILE.elf" || exit $?
 		else
-			$ELF2FLT $FLTFLAGS -o $OFILE -r $OFILE.elf || exit $?
+			$ELF2FLT $FLTFLAGS -o "$OFILE" -r "$OFILE.elf" || exit $?
 		fi
-		rm -f $OFILE.elf  # not needed for any reason
+		rm -f "$OFILE.elf"  # not needed for any reason
 		rm -f "$NEWLDSCRIPT"
 		exit 0
 	fi
 
-	exec $LINKER -o $OFILE $ARG1
+	exec $LINKER -o "$OFILE" $ARG1
 fi
 
 #
