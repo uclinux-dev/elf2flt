@@ -454,9 +454,19 @@ dump_symbols(symbols, number_of_symbols);
 
 			if (use_resolved) {
 				/* Use the address of the symbol already in
-				   the program text.  */
-				sym_addr = *((unsigned long *)
-					     (sectionp + q->address));
+				   the program text.  The alignment of the
+				   build host might be stricter, and the
+				   endian-ness different, than that of the
+				   target, so we have to be careful. */
+				unsigned char *p = sectionp + q->address;
+				if (bfd_big_endian (abs_bfd))
+					sym_addr =
+						(p[0] << 24) + (p[1] << 16)
+						+ (p[2] << 8) + p[3];
+				else
+					sym_addr =
+						p[0] + (p[1] << 8)
+						+ (p[2] << 16) + (p[3] << 24);
 				relocation_needed = 1;
 			} else {
 				/* Calculate the sym address ourselves.  */
@@ -653,8 +663,8 @@ dump_symbols(symbols, number_of_symbols);
 
 
 			/*
-			 * for full elf relocation we have to write back the start_code
-			 * relative value to use.
+			 * for full elf relocation we have to write back the
+			 * start_code relative value to use.
 			 */
 			if (!pic_with_got) {
 #if defined(TARGET_arm)
@@ -699,7 +709,14 @@ dump_symbols(symbols, number_of_symbols);
 				else
 					*((unsigned long *) (sectionp + q->address)) = tmp.l;
 #else /* ! TARGET_arm */
-				*((unsigned long *) (sectionp + q->address)) = htonl(sym_addr);
+				/* The alignment of the build host might be
+				   stricter than that of the target, so be
+				   careful.  We store in network byte order. */
+				unsigned char *p = sectionp + q->address;
+				p[0] = (sym_addr >> 24) & 0xff;
+				p[1] = (sym_addr >> 16) & 0xff;
+				p[2] = (sym_addr >>  8) & 0xff;
+				p[3] =  sym_addr        & 0xff;
 #endif
 			}
 
