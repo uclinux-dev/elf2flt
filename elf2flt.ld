@@ -59,13 +59,31 @@ R_RODAT		*(.rodata.*)
 		*(.data1)
 		*(.eh_frame)
 		*(.gcc_except_table)
+
+		/* Microblaze has .sdata and .sbss (small bss).  They must
+		   be contiguous, so please don't move any of this. JW */
+		_ssrw = . ;			
 		*(.sdata) 
 		*(.sdata.*)
+		*(.sbss)			/* Don't move this! */
+		_essrw = . ;
+
+		_ssrw_size = _essrw - _ssrw;
+		PROVIDE(_SDA_BASE_ = _ssrw + (_ssrw_size / 2));
+
 		*(.gnu.linkonce.s.*)
 		*(__libc_atexit)
 		*(__libc_subinit)
 		*(__libc_subfreeres)
 		*(.note.ABI-tag)
+
+		/* microblaze-specific read-only small data area
+		   and associated locating symbols */
+		_ssro = . ;
+		*(.sdata2)
+		_essro = . ;
+		_ssro_size = _essro - _ssro;
+		PROVIDE(_SDA2_BASE_ = _ssro + (_ssro_size / 2));
 
 		. = ALIGN(4) ;
 		__CTOR_LIST__ = .;
