@@ -1291,7 +1291,7 @@ output_offset_table(int fd, char *ename, bfd *abfd, asymbol **symbol_table, long
 
   asection *text_section = bfd_get_section_by_name (abfd, ".text");
 
-  if (!(ef = fopen(ename, "r"))) {
+  if (!(ef = fopen(ename, "rb"))) {
     fprintf (stderr,"Can't open %s\n",ename);
     exit(1);
   }
@@ -1418,6 +1418,7 @@ int main(int argc, char *argv[])
   
   struct flat_hdr hdr;
 
+  int gf_is_pipe = 0;
 
   program = argv[0];
   progname = argv[0];
@@ -1682,11 +1683,16 @@ int main(int argc, char *argv[])
   sprintf(cmd, "gzip -f -9 >> %s", ofile);
 
 #define	START_COMPRESSOR do { \
-		if (gf) fclose(gf); \
-		if (!(gf = popen(cmd, "w"))) { \
+		if (gf) \
+			if (gf_is_pipe) \
+				pclose(gf); \
+			else \
+				fclose(gf); \
+		if (!(gf = popen(cmd, "wb"))) { \
 			fprintf(stderr, "Can't run cmd %s\n", cmd); \
 			exit(4); \
 		} \
+		gf_is_pipe = 1; \
 	} while (0)
 
   gf = fopen(ofile, "ab");	/* Add 'b' to support non-posix (ie windows) */
@@ -1715,6 +1721,9 @@ int main(int argc, char *argv[])
   if (reloc)
     fwrite(reloc, reloc_len * 4, 1, gf);
 
+  if(gf_is_pipe)
+    pclose(gf);
+  else
   fclose(gf);
 
   exit(0);
