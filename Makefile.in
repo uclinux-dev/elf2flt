@@ -1,0 +1,39 @@
+
+CC = @CC@
+CPU = @target_cpu@
+TARGET = @target_alias@
+CFLAGS = @CFLAGS@ -static -DTARGET_$(CPU)
+LDFLAGS = @LDFLAGS@ @LIBS@
+INSTALL = @INSTALL@
+INSTALLDIR = @prefix@
+
+PROGS = elf2flt flthdr
+
+
+all: $(PROGS)
+
+elf2flt: elf2flt.c Makefile
+	$(CC) $(CFLAGS) -o $@ elf2flt.c $(LDFLAGS)
+
+flthdr: flthdr.c Makefile
+	$(CC) $(CFLAGS) -o $@ flthdr.c $(LDFLAGS)
+
+clean:
+	-rm -f $(PROGS) *.[oa]
+
+distclean: clean
+	-rm -f Makefile config.log config.status config.cache
+
+install:
+	$(INSTALL) -s -m 755 flthdr $(INSTALLDIR)/bin/$(TARGET)-flthdr
+	$(INSTALL) -s -m 755 flthdr $(INSTALLDIR)/$(TARGET)/bin/flthdr
+	$(INSTALL) -s -m 755 elf2flt $(INSTALLDIR)/bin/$(TARGET)-elf2flt
+	$(INSTALL) -s -m 755 elf2flt $(INSTALLDIR)/$(TARGET)/bin/elf2flt
+	[ -f $(INSTALLDIR)/bin/$(TARGET)-ld.real ] || \
+		mv $(INSTALLDIR)/bin/$(TARGET)-ld $(INSTALLDIR)/bin/$(TARGET)-ld.real
+	[ -f $(INSTALLDIR)/$(TARGET)/bin/ld.real ] || \
+		mv $(INSTALLDIR)/$(TARGET)/bin/ld $(INSTALLDIR)/$(TARGET)/bin/ld.real
+	$(INSTALL) -m 755 ld-elf2flt $(INSTALLDIR)/bin/$(TARGET)-ld
+	$(INSTALL) -m 755 ld-elf2flt $(INSTALLDIR)/$(TARGET)/bin/ld
+	$(INSTALL) -m 644 elf2flt.ld $(INSTALLDIR)/$(TARGET)/lib
+

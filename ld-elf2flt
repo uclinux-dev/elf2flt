@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# allow us to do flat processing if the flag -Welf2flt (or -elf2flt)  to
+# the 'C' compiler or linker respectively
+#
+# uses the env. var FLTFLAGS as extra parameters to pass to elf2flt
+# arguments given like -Wl,-elf2flt="-b 10000 -v" are given before FLTFLAGS
+#
+# Install by renaming all m68k-elf-ld/ld to XXX.real, and put this
+# script in their place.
+#
+# Copyright (C) 2000, Lineo.
+# davidm@lineo.com
+#
+
+LINKER="$0.real"            # the original renamed-linker
+ELF2FLT="`expr $0 : '\(.*\)ld'`elf2flt"
+TOOLDIR="`dirname $0`"      # let gcc find the tools for us
+
+#
+# if we have the elf2flt options, run it
+#
+
+if expr "$*" : ".*-elf2flt.*" > /dev/null
+then
+	ARG1=
+	ARG2=
+	OFILE=
+	PIC=
+	SDIRS=
+	LDSCRIPT=
+	FINAL="yes"
+
+	while [ $# -ne 0 ]
+	do
+		case "$1" in
+
+		-elf2flt) ;;                           # we already know this
+		-elf2flt*)FLTFLAGS="`expr \"$1\" : '-elf2flt=\(.*\)'` $FLTFLAGS";; 
+
+		-o)       shift; OFILE="$1";;          # the final outfile
+		-o*)      OFILE="`expr \"$1\" : '-o\(.*\)'`";;
+
+		-T)       shift; LDSCRIPT="$1";;       # they have a linker script
+		-c)       shift; LDSCRIPT="$1";;
+
+		-L)       ARG1="$ARG1 $1"              # remember search dirs
+		          shift;
+				  ARG1="$ARG1 $1"
+				  SDIRS="$SDIRS -L$1"
+				  ;;
+		-L*)      ARG1="$ARG1 $1"; SDIRS="$SDIRS $1";;
+
+		-EB)      ARG1="$ARG1 $1"; SDIRS="$SDIRS $1";; # arm big endian
+
+		-r|-Ur)   FINAL=""                     # this is not a final link
+		          ARG1="$ARG1 $1"
+				  ;;
+
+		*)        ARG1="$ARG1 $1"
+				  ;;
+		esac
+		shift
+	done
+
+	if [ "$FINAL" = "yes" ]
+	then
+		[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.ld"
+		$LINKER -r -d -o $OFILE.elf2flt $ARG1                        || exit $?
+		$LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
+		$LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
+		rm -f $OFILE.elf2flt
+		if grep _GLOBAL_OFFSET_TABLE_ $OFILE.gdb > /dev/null 
+		then
+			$ELF2FLT $FLTFLAGS -o $OFILE -p $OFILE.gdb $OFILE.elf || exit $?
+		else
+			$ELF2FLT $FLTFLAGS -o $OFILE -r $OFILE.elf || exit $?
+		fi
+		rm -f $OFILE.elf  # not needed for any reason
+		exit 0
+	fi
+
+	exec $LINKER -o $OFILE $ARG1
+fi
+
+#
+# otherwise pretend we aren't here
+#
+
+exec $LINKER "$@"
