@@ -48,6 +48,8 @@
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
+#elif defined(TARGET_microblaze)
+#include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
 #elif defined(__CYGWIN__)
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
 #else
@@ -800,10 +802,19 @@ dump_symbols(symbols, number_of_symbols);
 
 					/* grab any offset from the text */
 					offset = (p[0]<<24) + (p[1] << 16) + (p[2] << 8) + (p[3]);
-					//sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
-					sym_addr += offset + sym_vma + q->addend;
+					/* This is a horrible kludge.  For some
+					   reason, *sometimes* the offset is in
+					   both addend and the code.  Detect
+					   it, and cancel the effect.  Otherwise
+					   the offset gets added twice - ouch.
+					   There should be a better test
+					   for this condition, based on the
+					   BFD data structures */
+					if(offset==q->addend)
+						offset=0;
 
+					sym_addr += offset + sym_vma + q->addend;
 					relocation_needed = 1;
 					break;
 				}
