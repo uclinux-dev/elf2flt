@@ -1305,9 +1305,9 @@ int main(int argc, char *argv[])
   /* Read in all text sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
     if (s->flags & SEC_CODE) 
-      if (bfd_get_section_contents(abs_bfd, s,
+      if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
-				   s->_raw_size) == false)
+				   s->_raw_size))
       {
 	fprintf(stderr, "read error section %s\n", s->name);
 	exit(2);
@@ -1336,9 +1336,9 @@ int main(int argc, char *argv[])
   /* Read in all data sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
     if (s->flags & SEC_DATA) 
-      if (bfd_get_section_contents(abs_bfd, s,
+      if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
-				   s->_raw_size) == false)
+				   s->_raw_size))
       {
 	fprintf(stderr, "read error section %s\n", s->name);
 	exit(2);
