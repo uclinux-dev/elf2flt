@@ -598,7 +598,8 @@ dump_symbols(symbols, number_of_symbols);
 
 				tmp.l = *((unsigned long *) (sectionp + q->address));
 				hl = tmp.c[i0] | (tmp.c[i1] << 8) | (tmp.c[i2] << 16);
-				if ((*p)->howto->type != R_ARM_PC24)
+				if (((*p)->howto->type != R_ARM_PC24) &&
+				    ((*p)->howto->type != R_ARM_PLT32))
 					hl |= (tmp.c[i3] << 24);
 				else if (tmp.c[i2] & 0x80)
 					hl |= 0xff000000; /* sign extend */
@@ -606,7 +607,8 @@ dump_symbols(symbols, number_of_symbols);
 				tmp.c[i0] = hl & 0xff;
 				tmp.c[i1] = (hl >> 8) & 0xff;
 				tmp.c[i2] = (hl >> 16) & 0xff;
-				if ((*p)->howto->type != R_ARM_PC24)
+				if (((*p)->howto->type != R_ARM_PC24) &&
+				    ((*p)->howto->type != R_ARM_PLT32))
 					tmp.c[i3] = (hl >> 24) & 0xff;
 				if ((*p)->howto->type == R_ARM_ABS32)
 					*((unsigned long *) (sectionp + q->address)) = htonl(hl);
