@@ -89,5 +89,5 @@ AC_SUBST(target_os)
 AC_SUBST(target_vendor)
 AC_SUBST(bfd_include_dir)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile ld-elf2flt)
 

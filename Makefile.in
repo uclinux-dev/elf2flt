@@ -37,7 +37,7 @@ clean:
 	-rm -f $(PROGS) *.[oa]
 
 distclean: clean
-	-rm -f Makefile config.log config.status config.cache
+	-rm -f Makefile config.log config.status config.cache ld-elf2flt
 
 install:
 	$(INSTALL) -s -m 755 flthdr $(bindir)/$(TARGET)-flthdr

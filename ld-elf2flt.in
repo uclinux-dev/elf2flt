@@ -1,13 +1,10 @@
 #!/bin/sh
 #
-# allow us to do flat processing if the flag -Welf2flt (or -elf2flt)  to
+# allow us to do flat processing if the flag -Wl,-elf2flt or -elf2flt to
 # the 'C' compiler or linker respectively
 #
 # uses the env. var FLTFLAGS as extra parameters to pass to elf2flt
 # arguments given like -Wl,-elf2flt="-b 10000 -v" are given before FLTFLAGS
-#
-# Install by renaming all m68k-elf-ld/ld to XXX.real, and put this
-# script in their place.
 #
 # Copyright (C) 2002 David McCullough <davidm@snapgear.com>
 # Copyright (C) 2000, Lineo. davidm@lineo.com
@@ -45,7 +42,7 @@ then
 		          MOVDAT="y";;                 # Put rodata in ROM if possible
 			 
 		-shared-lib-id)
-			shift; SHARED_ID="$1";;		# Shared library ID
+		          shift; SHARED_ID="$1";;      # Shared library ID
 
 		-o)       shift; OFILE="$1";;          # the final outfile
 		-o*)      OFILE="`expr \"$1\" : '-o\(.*\)'`";;
@@ -79,7 +76,7 @@ then
 		if [ "$MOVDAT" ]
 		then
 			$LINKER -r -d -o $OFILE.elf2flt $ARG1  || exit $?
-			if [ "`m68k-elf-objdump -h $OFILE.elf2flt | \
+			if [ "`@target_alias@-objdump -h $OFILE.elf2flt | \
 					egrep -A1 '[.]rodata' | grep RELOC`" ]
 			then
 				echo "warning: .rodata section contains relocations"
@@ -107,18 +104,25 @@ then
 			ARG1="$ARG1 -defsym _current_shared_library_a5_offset_=`expr ${SHARED_ID} '*' -4 - 4`"
 		fi
 		
-		# Provide a default linker script
-		[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.ld"
+		# provide a default linker script, we usually need one
+		[ -z "$LDSCRIPT" ] && LDSCRIPT="@prefix@/@target_alias@/lib/elf2flt.ld"
 
-		# Reprocess the linker script as required.
-		# We do this in a subshell so a relatively pathed script can be found
-		(	cd /usr/local/m68k-elf/lib
+		# if we can find the linker script we preprocess it,  otherwise
+		# we assume the user knows what they are doing
+		if [ -f "$LDSCRIPT" ]; then
 			sed $SEDOP < "$LDSCRIPT" > "$NEWLDSCRIPT"
-		)
+			LDSCRIPT="$NEWLDSCRIPT"
+		elif [ -f "@prefix@/@target_alias@/lib/$LDSCRIPT" ]; then
+			sed $SEDOP < "@prefix@/@target_alias@/lib/$LDSCRIPT" > "$NEWLDSCRIPT"
+			LDSCRIPT="$NEWLDSCRIPT"
+		elif [ -f "@prefix@/@target_alias@/lib/ldscripts/$LDSCRIPT" ]; then
+			sed $SEDOP < "@prefix@/@target_alias@/lib/ldscripts/$LDSCRIPT" > "$NEWLDSCRIPT"
+			LDSCRIPT="$NEWLDSCRIPT"
+		fi
 
 		$LINKER -r -d -o $OFILE.elf2flt $ARG1                        || exit $?
-		$LINKER $SDIRS -T $NEWLDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
-		$LINKER $SDIRS -T $NEWLDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
+		$LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
+		$LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
 		rm -f $OFILE.elf2flt
 		if grep _GLOBAL_OFFSET_TABLE_ $OFILE.gdb > /dev/null 
 		then
