@@ -6,7 +6,7 @@
 # uses the env. var FLTFLAGS as extra parameters to pass to elf2flt
 # arguments given like -Wl,-elf2flt="-b 10000 -v" are given before FLTFLAGS
 #
-# Copyright (C) 2002 David McCullough <davidm@snapgear.com>
+# Copyright (C) 2002,2003 David McCullough <davidm@snapgear.com>
 # Copyright (C) 2000, Lineo. davidm@lineo.com
 #
 

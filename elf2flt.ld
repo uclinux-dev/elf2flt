@@ -3,7 +3,6 @@ ENTRY (_start)
 
 MEMORY {
 	flatmem : ORIGIN = 0x0, LENGTH = 0xffffff
-	junk    : ORIGIN = 0x0, LENGTH = 0x100000
 }
 
 SECTIONS {
@@ -45,7 +44,10 @@ W_RODAT		*(.rodata.*)
 		data_start = . ;
 		*(.got.plt)
 		*(.got)
+		FILL(0) ;
+		. = ALIGN(0x10) ; 
 		LONG(-1)
+		. = ALIGN(0x10) ; 
 R_RODAT		*(.rodata)
 R_RODAT		*(.rodata1)
 R_RODAT		*(.rodata.*)
@@ -64,14 +66,20 @@ R_RODAT		*(.rodata.*)
 		*(__libc_subinit)
 		*(__libc_subfreeres)
 		*(.note.ABI-tag)
+
 		. = ALIGN(4) ;
-		*(.ctors.*)
+		/* LATER __CTOR_LIST__ = .; */
+		/* LATER LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2) */
 		*(.ctors)
 		LONG(0)
-		*(.dtors.*)
+		/* LATER __CTOR_END__ = .; */
+		/* LATER __DTOR_LIST__ = .; */
+		/* LATER LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2) */
 		*(.dtors)
 		LONG(0)
-		. = ALIGN(0x10) ;
+		/* LATER __DTOR_END__ = .; */
+
+		. = ALIGN(0x10) ; 
 		_edata = . ;
 	} > flatmem
 	.bss : {
@@ -86,14 +94,24 @@ R_RODAT		*(.rodata.*)
 		*(.bss)
 		*(.bss.*)
 		*(COMMON)
-		. = ALIGN(0x4) ;
+		. = ALIGN(0x10) ;
 		_ebss = . ;
 		_end = . ;
 		end = . ;
 	} > flatmem
 
-	.junk : {
-		*(.rel*)
-		*(.rela*)
-	} > junk
+	.junk 0 : { *(.rel*) *(.rela*) }
+	/* Stabs debugging sections.    */
+	.stab 0 : { *(.stab) }
+	.stabstr 0 : { *(.stabstr) }
+	.stab.excl 0 : { *(.stab.excl) }
+	.stab.exclstr 0 : { *(.stab.exclstr) }
+	.stab.index 0 : { *(.stab.index) }
+	.stab.indexstr 0 : { *(.stab.indexstr) }
+	.comment 0 : { *(.comment) }
+	.debug_abbrev 0 : { *(.debug_abbrev) }
+	.debug_info 0 : { *(.debug_info) }
+	.debug_line 0 : { *(.debug_line) }
+	.debug_pubnames 0 : { *(.debug_pubnames) }
+	.debug_aranges 0 : { *(.debug_aranges) }
 }
