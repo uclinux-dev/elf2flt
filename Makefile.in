@@ -32,10 +32,10 @@ PROGS = $(PROG_ELF2FLT) $(PROG_FLTHDR)
 
 all: $(PROGS)
 
-$(PROG_ELF2FLT): $(srcdir)/elf2flt.c Makefile
-	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $(srcdir)/elf2flt.c $(LIBS)
+$(PROG_ELF2FLT): elf2flt.c stubs.c Makefile
+	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $(srcdir)/elf2flt.c $(srcdir)/stubs.c $(LIBS)
 
-$(PROG_FLTHDR): $(srcdir)/flthdr.c Makefile
+$(PROG_FLTHDR): flthdr.c Makefile
 	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $(srcdir)/flthdr.c $(LIBS)
 
 clean:

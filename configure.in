@@ -98,6 +98,8 @@ AC_C_CONST
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
+AC_CHECK_FUNCS(dcgettext)
+
 dnl Subsitute values
 AC_SUBST(target)
 AC_SUBST(target_alias)
