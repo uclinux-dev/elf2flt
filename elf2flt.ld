@@ -68,16 +68,16 @@ R_RODAT		*(.rodata.*)
 		*(.note.ABI-tag)
 
 		. = ALIGN(4) ;
-		/* LATER __CTOR_LIST__ = .; */
-		/* LATER LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2) */
+		__CTOR_LIST__ = .;
+		LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2)
 		*(.ctors)
 		LONG(0)
-		/* LATER __CTOR_END__ = .; */
-		/* LATER __DTOR_LIST__ = .; */
-		/* LATER LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2) */
+		__CTOR_END__ = .;
+		__DTOR_LIST__ = .;
+		LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2)
 		*(.dtors)
 		LONG(0)
-		/* LATER __DTOR_END__ = .; */
+		__DTOR_END__ = .;
 
 		. = ALIGN(0x10) ; 
 		_edata = . ;
