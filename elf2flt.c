@@ -6,7 +6,8 @@
  * ELF format file handling. Extended relocation support for all of
  * text and data.
  *
- * (c) 2001, arm/arm-pic/arm-big-endian support <davidm@snapgear.com>
+ * (c) 2003, H8 support <davidm@snapgear.com>
+ * (c) 2001-2003, arm/arm-pic/arm-big-endian support <davidm@snapgear.com>
  * (c) 2001, v850 changes, Mile Bader <miles@lsi.nec.co.jp>
  * (c) 2001, zflat support <davidm@snapgear.com>
  * (c) 2001, Changes for GOT entries
@@ -45,7 +46,11 @@
 /* from $(INSTALLDIR)/include       */
 #include <bfd.h>      /* Main header file for the BFD library                */
 
+#if defined(TARGET_h8300)
+#include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
+#else
 #include <elf.h>      /* TARGET_* ELF support for the BFD library            */
+#endif
 
 /* from uClinux-x.x.x/include/linux */
 #include "flat.h"     /* Binary flat header description                      */
@@ -63,6 +68,8 @@
 #define	ARCH	"sparc"
 #elif defined(TARGET_v850)
 #define	ARCH	"v850"
+#elif defined(TARGET_h8300)
+#define	ARCH	"h8300"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -261,6 +268,7 @@ output_relocs (
   int			flat_reloc_count;
   int			sym_reloc_size, rc;
   int			got_size = 0;
+  int			bad_relocs = 0;
   asymbol		**symb;
   long			nsymb;
   
@@ -294,11 +302,13 @@ dump_symbols(symbols, number_of_symbols);
     if (verbose)
 	    printf("GOT table contains %d entries (%d bytes)\n",
 			    got_size/sizeof(unsigned long), got_size);
+#ifdef TARGET_m68k
     if (got_size > GOT_LIMIT) {
 	    fprintf(stderr, "GOT too large: %d bytes (limit = %d bytes)\n",
 			    got_size, GOT_LIMIT);
 	    exit(1);
     }
+#endif
   }
 
   for (a = abs_bfd->sections; (a != (asection *) NULL); a = a->next) {
@@ -451,12 +461,16 @@ dump_symbols(symbols, number_of_symbols);
 			} else {
 				/* Calculate the sym address ourselves.  */
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
+
+#ifndef TARGET_h8300
 				if (sym_reloc_size != 4) {
-					printf("ERROR: bad reloc size=%d for symbol=%s\n",
-							sym_reloc_size, sym_name);
+					printf("ERROR: bad reloc type %d size=%d for symbol=%s\n",
+							(*p)->howto->type, sym_reloc_size, sym_name);
+					bad_relocs++;
 					rc = -1;
 					continue;
 				}
+#endif
 
 				switch ((*p)->howto->type) {
 
@@ -528,6 +542,61 @@ dump_symbols(symbols, number_of_symbols);
 #endif /* R_V850_ZDA_16_16_OFFSET || R_V850_ZDA_16_16_SPLIT_OFFSET */
 #endif /* TARGET_v850 */
 
+#ifdef TARGET_h8300
+				case R_H8_DIR24R8:
+					if (sym_reloc_size != 4) {
+						printf("R_H8_DIR24R8 size %d\n", sym_reloc_size);
+						bad_relocs++;
+						continue;
+					}
+					relocation_needed = 1;
+					sym_addr = (*(q->sym_ptr_ptr))->value;
+					q->address -= 1;
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					sym_addr += sym_vma + q->addend;
+					sym_addr |= (*((unsigned char *)(sectionp+q->address))<<24);
+					break;
+				case R_H8_DIR24A8:
+					if (sym_reloc_size != 4) {
+						printf("R_H8_DIR24A8 size %d\n", sym_reloc_size);
+						bad_relocs++;
+						continue;
+					}
+					relocation_needed = 1;
+					sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					sym_addr += sym_vma + q->addend;
+					break;
+				case R_H8_DIR32:
+				case R_H8_DIR32A16: /* currently 32,  could be made 16 */
+					if (sym_reloc_size != 4) {
+						printf("R_H8_DIR32 size %d\n", sym_reloc_size);
+						bad_relocs++;
+						continue;
+					}
+					relocation_needed = 1;
+					sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					sym_addr += sym_vma + q->addend;
+					break;
+				case R_H8_PCREL16:
+					sym_vma = 0;
+					sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_addr += sym_vma + q->addend;
+					sym_addr -= (q->address + 2);
+					if (bfd_big_endian(abs_bfd))
+					* ((unsigned short *) (sectionp + q->address)) =
+						bfd_big_endian(abs_bfd) ? htons(sym_addr) : sym_addr;
+					continue;
+				case R_H8_PCREL8:
+					sym_vma = 0;
+					sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_addr += sym_vma + q->addend;
+					sym_addr -= (q->address + 1);
+					* ((unsigned char *) (sectionp + q->address)) = sym_addr;
+					continue;
+#endif
+
 #ifdef TARGET_sparc
 				case R_SPARC_32:
 				case R_SPARC_UA32:
@@ -543,14 +612,20 @@ dump_symbols(symbols, number_of_symbols);
 				case R_SPARC_WDISP30:
 					sym_addr = (((*(q->sym_ptr_ptr))->value-
 						q->address) >> 2) & 0x3fffffff;
-					sym_addr |= (ntohl(*((unsigned long *) (sectionp + q->address))) & 0xc0000000);
+					sym_addr |= (
+						ntohl(*((unsigned long *) (sectionp + q->address))) &
+						0xc0000000
+						);
 					break;
 				case R_SPARC_HI22:
 					relocation_needed = 1;
 					pflags = 0x80000000;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
-					sym_addr |= (htonl(*((unsigned long *) (sectionp + q->address))) & 0xffc00000);
+					sym_addr |= (
+						htonl(* ((unsigned long *) (sectionp + q->address))) &
+						0xffc00000
+						);
 					break;
 				case R_SPARC_LO10:
 					relocation_needed = 1;
@@ -558,13 +633,17 @@ dump_symbols(symbols, number_of_symbols);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					sym_addr &= 0x000003ff;
-					sym_addr |= (htonl(*((unsigned long *) (sectionp + q->address))) & 0xfffffc00);
+					sym_addr |= (
+						htonl(* ((unsigned long *) (sectionp + q->address))) &
+						0xfffffc00
+						);
 					break;
 #endif /* TARGET_sparc */
 
 				default:
 					/* missing support for other types of relocs */
 					printf("ERROR: bad reloc type %d\n", (*p)->howto->type);
+					bad_relocs++;
 					continue;
 				}
 			}
@@ -658,11 +737,16 @@ printf("%s(%d): symbol name=%s address=%x section=%s -> RELOC=%x\n",
 	}
   }
 
-  if (rc < 0)
-	return(NULL);
+  if (bad_relocs) {
+	  printf("%d bad relocs\n", bad_relocs);
+	  exit(1);
+  }
 
-    *n_relocs = flat_reloc_count;
-    return flat_relocs;
+  if (rc < 0)
+	return(0);
+
+  *n_relocs = flat_reloc_count;
+  return flat_relocs;
 }
 
 

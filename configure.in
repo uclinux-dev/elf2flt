@@ -19,6 +19,12 @@ AC_ARG_WITH(bfd-include-dir,
 	[ ac_bfd_include_dir=NONE ]
 )
 
+AC_ARG_WITH(binutils-include-dir,
+	[ --with-binutils-include-dir=<dir>  include path for binutils headers ],
+	[ ac_binutils_include_dir=$withval ],
+	[ ac_binutils_include_dir=NONE ]
+)
+
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
@@ -43,6 +49,11 @@ fi
 bfd_include_dir=
 if test "$ac_bfd_include_dir" != "NONE"; then
   bfd_include_dir="-I$ac_bfd_include_dir"
+fi
+
+binutils_include_dir=
+if test "$ac_binutils_include_dir" != "NONE"; then
+  binutils_include_dir="-I$ac_binutils_include_dir"
 fi
 
 if test "$ac_libbfd" = "NONE" -o "$ac_libiberty" = "NONE" ; then
@@ -88,6 +99,7 @@ AC_SUBST(target_cpu)
 AC_SUBST(target_os)
 AC_SUBST(target_vendor)
 AC_SUBST(bfd_include_dir)
+AC_SUBST(binutils_include_dir)
 
 AC_OUTPUT(Makefile ld-elf2flt)
 
