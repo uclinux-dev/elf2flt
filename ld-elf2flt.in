@@ -13,6 +13,7 @@
 LINKER="$0.real"            # the original renamed-linker
 ELF2FLT="`expr $0 : '\(.*\)ld'`elf2flt"
 TOOLDIR="`dirname $0`"      # let gcc find the tools for us
+LDSCRIPTPATH="${TOOLDIR}/../@target_alias@/lib"		# and the scripts
 SHARED_ID=""
 NEWLDSCRIPT=""
 
@@ -115,18 +116,18 @@ then
 		fi
 		
 		# provide a default linker script, we usually need one
-		[ -z "$LDSCRIPT" ] && LDSCRIPT="@prefix@/@target_alias@/lib/elf2flt.ld"
+		[ -z "$LDSCRIPT" ] && LDSCRIPT="${LDSCRIPTPATH}/elf2flt.ld"
 
 		# if we can find the linker script we preprocess it,  otherwise
 		# we assume the user knows what they are doing
 		if [ -f "$LDSCRIPT" ]; then
 			sed $SEDOP < "$LDSCRIPT" > "$NEWLDSCRIPT"
 			LDSCRIPT="$NEWLDSCRIPT"
-		elif [ -f "@prefix@/@target_alias@/lib/$LDSCRIPT" ]; then
-			sed $SEDOP < "@prefix@/@target_alias@/lib/$LDSCRIPT" > "$NEWLDSCRIPT"
+		elif [ -f "${LDSCRIPTPATH}/$LDSCRIPT" ]; then
+			sed $SEDOP < "${LDSCRIPTPATH}/$LDSCRIPT" > "$NEWLDSCRIPT"
 			LDSCRIPT="$NEWLDSCRIPT"
-		elif [ -f "@prefix@/@target_alias@/lib/ldscripts/$LDSCRIPT" ]; then
-			sed $SEDOP < "@prefix@/@target_alias@/lib/ldscripts/$LDSCRIPT" > "$NEWLDSCRIPT"
+		elif [ -f "${LDSCRIPTPATH}/ldscripts/$LDSCRIPT" ]; then
+			sed $SEDOP < "${LDSCRIPTPATH}/ldscripts/$LDSCRIPT" > "$NEWLDSCRIPT"
 			LDSCRIPT="$NEWLDSCRIPT"
 		fi
 
