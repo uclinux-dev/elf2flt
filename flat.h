@@ -1,13 +1,26 @@
-
-/* Copyright (C) 1998  Kenneth Albanowski <kjahds@kjahds.com>
- *                     The Silver Hammer Group, Ltd.
+/*
+ * Copyright (C) 2002-2003  David McCullough <davidm@snapgear.com>
+ * Copyright (C) 1998       Kenneth Albanowski <kjahds@kjahds.com>
+ *                          The Silver Hammer Group, Ltd.
  *
+ * This file provides the definitions and structures needed to
+ * support uClinux flat-format executables.
  */
 
 #ifndef _LINUX_FLAT_H
 #define _LINUX_FLAT_H
 
+#ifdef __KERNEL__
+#include <asm/flat.h>
+#endif
+
 #define	FLAT_VERSION			0x00000004L
+
+#ifdef CONFIG_BINFMT_SHARED_FLAT
+#define	MAX_SHARED_LIBS			(4)
+#else
+#define	MAX_SHARED_LIBS			(1)
+#endif
 
 /*
  * To make everything easier to port and manage cross platform
@@ -41,6 +54,7 @@ struct flat_hdr {
 #define FLAT_FLAG_GOTPIC 0x0002 /* program is PIC with GOT */
 #define FLAT_FLAG_GZIP   0x0004 /* all but the header is compressed */
 #define FLAT_FLAG_GZDATA 0x0008 /* only data/relocs are compressed (for XIP) */
+#define FLAT_FLAG_KTRACE 0x0010 /* output useful kernel trace for debugging */
 
 
 #ifdef __KERNEL__ /* so systems without linux headers can compile the apps */
@@ -81,6 +95,6 @@ typedef union {
 	} reloc;
 } flat_v2_reloc_t;
 
-#endif
+#endif /* __KERNEL__ */
 
 #endif /* _LINUX_FLAT_H */

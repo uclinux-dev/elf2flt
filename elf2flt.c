@@ -6,7 +6,7 @@
  * ELF format file handling. Extended relocation support for all of
  * text and data.
  *
- * (c) 2003, H8 support <davidm@snapgear.com>
+ * (c) 2003, H8 support, ktrace <davidm@snapgear.com>
  * (c) 2001-2003, arm/arm-pic/arm-big-endian support <davidm@snapgear.com>
  * (c) 2001, v850 changes, Mile Bader <miles@lsi.nec.co.jp>
  * (c) 2003, SuperH support, Paul Mundt <lethal@linux-sh.org>
@@ -95,6 +95,7 @@
 int verbose = 0;      /* extra output when running */
 int pic_with_got = 0; /* do elf/got processing with PIC code */
 int load_to_ram = 0;  /* instruct loader to allocate everything into RAM */
+int ktrace = 0;       /* instruct loader output kernel trace on load */
 int compress = 0;     /* 1 = compress everything, 2 = compress data only */
 int use_resolved = 0; /* If true, get the value of symbol references from */
 		      /* the program contents, not from the relocation table. */
@@ -1050,6 +1051,7 @@ static void usage(void)
 	"[-o <output-file>] <elf-file>\n\n"
 	"       -v              : verbose operation\n"
 	"       -r              : force load to RAM\n"
+	"       -k              : enable kernel trace on load (for debug)\n"
 	"       -z              : compress code/data/relocs\n"
 	"       -d              : compress data/relocs\n"
 	"       -a              : use existing symbol references\n"
@@ -1124,13 +1126,16 @@ int main(int argc, char *argv[])
   
   stack = 4096;
 
-  while ((opt = getopt(argc, argv, "avzdrp:s:o:R:")) != -1) {
+  while ((opt = getopt(argc, argv, "avzdrkp:s:o:R:")) != -1) {
     switch (opt) {
     case 'v':
       verbose++;
       break;
     case 'r':
       load_to_ram++;
+      break;
+    case 'k':
+      ktrace++;
       break;
     case 'z':
       compress = 1;
@@ -1333,6 +1338,7 @@ int main(int argc, char *argv[])
   hdr.reloc_count = htonl(reloc_len);
   hdr.flags       = htonl(0
 	  | (load_to_ram ? FLAT_FLAG_RAM : 0)
+	  | (ktrace ? FLAT_FLAG_KTRACE : 0)
 	  | (pic_with_got ? FLAT_FLAG_GOTPIC : 0)
 	  | (compress ? (compress == 2 ? FLAT_FLAG_GZDATA : FLAT_FLAG_GZIP) : 0)
 	  );

@@ -2,7 +2,7 @@
 /*
  *	A simple program to manipulate flat files
  *
- *	Copyright (C) 2001,2002 SnapGear Inc, davidm@snapgear.com
+ *	Copyright (C) 2001-2003 SnapGear Inc, davidm@snapgear.com
  *	Copyright (C) 2001 Lineo, davidm@lineo.com
  */
 /****************************************************************************/
@@ -22,7 +22,7 @@
 char *program_name;
 
 static char cmd[1024];
-static int print = 0, compress = 0, ramload = 0, stacksize = 0;
+static int print = 0, compress = 0, ramload = 0, stacksize = 0, ktrace = 0;
 static int short_format = 0;
 
 /****************************************************************************/
@@ -99,6 +99,11 @@ process_file(char *ifile, char *ofile)
 	else if (ramload < 0)
 		new_flags &= ~FLAT_FLAG_RAM;
 	
+	if (ktrace > 0)
+		new_flags |= FLAT_FLAG_KTRACE;
+	else if (ktrace < 0)
+		new_flags &= ~FLAT_FLAG_KTRACE;
+	
 	if (stacksize)
 		new_stack = stacksize;
 
@@ -127,6 +132,8 @@ process_file(char *ifile, char *ofile)
 				printf("Gzip-Compressed ");
 			if (old_flags & FLAT_FLAG_GZDATA)
 				printf("Gzip-Data-Compressed ");
+			if (old_flags & FLAT_FLAG_KTRACE)
+				printf("Kernel-Traced-Load ");
 			printf(")\n");
 		}
 	} else if (print > 1) {
@@ -139,6 +146,7 @@ process_file(char *ifile, char *ofile)
 			first = 0;
 		}
 		*tfile = '\0';
+		strcat(tfile, (old_flags & FLAT_FLAG_KTRACE) ? "k" : "");
 		strcat(tfile, (old_flags & FLAT_FLAG_RAM) ? "r" : "");
 		strcat(tfile, (old_flags & FLAT_FLAG_GOTPIC) ? "p" : "");
 		strcat(tfile, (old_flags & FLAT_FLAG_GZIP) ? "z" :
@@ -287,6 +295,8 @@ usage(char *s)
 	fprintf(stderr, "       -Z      : un-compressed flat file\n");
 	fprintf(stderr, "       -r      : ram load\n");
 	fprintf(stderr, "       -R      : do not RAM load\n");
+	fprintf(stderr, "       -k      : kernel traced load (for debug)\n");
+	fprintf(stderr, "       -K      : normal non-kernel traced load\n");
 	fprintf(stderr, "       -s size : stack size\n");
 	fprintf(stderr, "       -o file : output-file\n"
 	                "                 (default is to modify input file)\n");
@@ -303,7 +313,7 @@ main(int argc, char *argv[])
 
 	program_name = argv[0];
 
-	while ((c = getopt(argc, argv, "pdzZrRs:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "pdzZrRkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
 		case 'z': compress = 1;             break;
@@ -311,6 +321,8 @@ main(int argc, char *argv[])
 		case 'Z': compress = -1;            break;
 		case 'r': ramload = 1;              break;
 		case 'R': ramload = -1;             break;
+		case 'k': ktrace = 1;               break;
+		case 'K': ktrace = -1;              break;
 		case 's': stacksize = atoi(optarg); break;
 		case 'o': ofile = optarg;           break;
 		default:
