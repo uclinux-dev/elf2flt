@@ -42,6 +42,10 @@
 #include <elf.h>
 #include "flat.h"
 
+#ifdef TARGET_v850e
+#define TARGET_v850
+#endif
+
 #if defined(TARGET_m68k)
 #define	ARCH	"m68k/coldfire"
 #elif defined(TARGET_arm)
