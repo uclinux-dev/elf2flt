@@ -435,6 +435,7 @@ dump_symbols(symbols, number_of_symbols);
 				   the program text.  */
 				sym_addr = *((unsigned long *)
 					     (sectionp + q->address));
+				relocation_needed = 1;
 			} else {
 				/* Calculate the sym address ourselves.  */
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
@@ -492,12 +493,12 @@ dump_symbols(symbols, number_of_symbols);
 #endif
 
 #ifdef TARGET_v850
-#ifdef R_V850_32
 				case R_V850_32:
-#endif
+					relocation_needed = 1;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
+#if defined(R_V850_ZDA_16_16_OFFSET) || defined(R_V850_ZDA_16_16_SPLIT_OFFSET)
 #ifdef R_V850_ZDA_16_16_OFFSET
 				case R_V850_ZDA_16_16_OFFSET:
 #endif
@@ -508,6 +509,7 @@ dump_symbols(symbols, number_of_symbols);
 					printf ("ERROR: %s+0x%x: zero relocations not supported\n",
 							sym_name, q->addend);
 					continue;
+#endif /* R_V850_ZDA_16_16_OFFSET || R_V850_ZDA_16_16_SPLIT_OFFSET */
 #endif /* TARGET_v850 */
 
 #ifdef TARGET_sparc
@@ -599,11 +601,7 @@ dump_symbols(symbols, number_of_symbols);
 					*((unsigned long *) (sectionp + q->address)) = htonl(hl);
 				else
 					*((unsigned long *) (sectionp + q->address)) = tmp.l;
-#endif
-#if defined(TARGET_m68k)
-				*((unsigned long *) (sectionp + q->address)) = htonl(sym_addr);
-#endif
-#if defined(TARGET_sparc)
+#else /* ! TARGET_arm */
 				*((unsigned long *) (sectionp + q->address)) = htonl(sym_addr);
 #endif
 			}
@@ -745,11 +743,14 @@ static void usage(void)
 	"       -r              : force load to RAM\n"
 	"       -z              : compress code/data/relocs\n"
 	"       -d              : compress data/relocs\n"
+	"       -a              : use existing symbol references\n"
+	"                         instead of recalculating from\n"
+	"                         relocation info\n");
 	"       -p abs-pic-file : GOT/PIC processing with files\n"
 	"       -s stacksize    : set application stack size\n"
 	"       -o output-file  : output file name\n\n",
 	program);
-     fprintf(stderr, "Compiled for " ARCH " architecture\n\n");
+	fprintf(stderr, "Compiled for " ARCH " architecture\n\n");
     exit(2);
 }
 
@@ -796,7 +797,7 @@ int main(int argc, char *argv[])
   
   stack = 4096;
 
-  while ((opt = getopt(argc, argv, "vzdrp:s:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "avzdrp:s:o:")) != -1) {
     switch (opt) {
     case 'v':
       verbose++;
@@ -815,6 +816,9 @@ int main(int argc, char *argv[])
       break;
     case 'o':
       ofile = optarg;
+      break;
+    case 'a':
+      use_resolved = 1;
       break;
     case 's':
       stack = atoi(optarg);
