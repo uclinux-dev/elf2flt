@@ -716,13 +716,11 @@ dump_symbols(symbols, number_of_symbols);
 						bad_relocs++;
 						continue;
 					}
-					relocation_needed = 1;
+					/* Absolute symbol done not relocation */
+					relocation_needed = !bfd_is_abs_section(sym_section);
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
-					/* no reloc from area7 */
-					if (sym_addr > 0xe00000)
-						relocation_needed = 0;
 					break;
 				case R_H8_DIR32:
 				case R_H8_DIR32A16: /* currently 32,  could be made 16 */
