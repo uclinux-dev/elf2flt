@@ -87,7 +87,7 @@
 #error "Don't know how to support your CPU architecture??"
 #endif
 
-#ifdef TARGET_m68k
+#if defined(TARGET_m68k) || defined(TARGET_h8300)
 /*
  * Define a maximum number of bytes allowed in the offset table.
  * We'll fail if the table is larger than this.
@@ -720,6 +720,9 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
+					/* no reloc from area7 */
+					if (sym_addr > 0xe00000)
+						relocation_needed = 0;
 					break;
 				case R_H8_DIR32:
 				case R_H8_DIR32A16: /* currently 32,  could be made 16 */

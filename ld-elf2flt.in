@@ -17,6 +17,9 @@ LDSCRIPTPATH="${TOOLDIR}/../@target_alias@/lib"		# and the scripts
 SHARED_ID=""
 NEWLDSCRIPT=""
 
+# check TOOLDIR from prefix/bin/ or prefix/target-alias/bin/
+[ -d "${TOOLDIR}/../@target_alias@/lib" ] || LDSCRIPTPATH="${TOOLDIR}/../lib"
+
 #
 # if we have the elf2flt options, run it
 #
@@ -72,6 +75,9 @@ then
 				  VERBOSE="y"
 				  ;;
 
+		-m)       shift; EMUL="-m $1";;        # ld emulations for h8300
+		-m*)      EMUL=$1;;
+ 
 		*)        ARG1="$ARG1 $1"
 				  ;;
 		esac
@@ -112,7 +118,11 @@ then
 			fi
 
 			# Provide the magic parameter that defines the library data segment pointer offset
-			ARG1="$ARG1 -defsym _current_shared_library_a5_offset_=`expr ${SHARED_ID} '*' -4 - 4`"
+			case "@target_cpu@" in
+			    h8300) GOT_OFFSET="__current_shared_library_er5_offset_";;
+			    *)     GOT_OFFSET="_current_shared_library_a5_offset_";;
+			esac
+			ARG1="$ARG1 -defsym $GOT_OFFSET=`expr ${SHARED_ID} '*' -4 - 4`"
 		fi
 		
 		# provide a default linker script, we usually need one
@@ -133,12 +143,12 @@ then
 
 		if [ "@got_check@" = "no" ]
 		then
-		 $LINKER $SDIRS -T $LDSCRIPT -Ur -d -o "$OFILE.elf" $ARG1         ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" $ARG1                ||exit $?
+		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -Ur -d -o "$OFILE.elf" $ARG1         ||exit $?
+		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" $ARG1                ||exit $?
 		else
-		 $LINKER -r -d -o "$OFILE.elf2flt" $ARG1                          ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -Ur -o "$OFILE.elf" "$OFILE.elf2flt" ||exit $?
-		 $LINKER $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" "$OFILE.elf2flt"     ||exit $?
+		 $LINKER $EMUL -r -d -o "$OFILE.elf2flt" $ARG1                          ||exit $?
+		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -Ur -o "$OFILE.elf" "$OFILE.elf2flt" ||exit $?
+		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" "$OFILE.elf2flt"     ||exit $?
 		 rm -f "$OFILE.elf2flt"
 		fi
 		if grep _GLOBAL_OFFSET_TABLE_ "$OFILE.gdb" > /dev/null 
