@@ -745,7 +745,7 @@ static void usage(void)
 	"       -d              : compress data/relocs\n"
 	"       -a              : use existing symbol references\n"
 	"                         instead of recalculating from\n"
-	"                         relocation info\n");
+	"                         relocation info\n"
 	"       -p abs-pic-file : GOT/PIC processing with files\n"
 	"       -s stacksize    : set application stack size\n"
 	"       -o output-file  : output file name\n\n",
