@@ -42,6 +42,7 @@ struct flat_hdr {
 #define FLAT_FLAG_GZDATA 0x0008 /* only data/relocs are compressed (for XIP) */
 
 
+#ifdef __KERNEL__ /* so systems without linux headers can compile the apps */
 /*
  * While it would be nice to keep this header clean,  users of older
  * tools still need this support in the kernel.  So this section is
@@ -78,5 +79,7 @@ typedef union {
 # endif
 	} reloc;
 } flat_v2_reloc_t;
+
+#endif
 
 #endif /* _LINUX_FLAT_H */

@@ -7,10 +7,14 @@
  */
 /****************************************************************************/
 
-#include <stdio.h>
-#include <getopt.h>
-#include <unistd.h>
-#include "flat.h"
+#include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
+#include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
+
+/* macros for conversion between host and (internet) network byte order */
+#include <netinet/in.h> /* Consts and structs defined by the internet system */
+
+/* from uClinux-x.x.x/include/linux */
+#include "flat.h"     /* Binary flat header description                      */
 
 /****************************************************************************/
 

@@ -31,16 +31,24 @@
  * krab@california.daimi.aau.dk
  */
  
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <getopt.h>
-#include <stdarg.h>
-#include <bfd.h>
-#include <elf.h>
-#include "flat.h"
+#include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
+#include <stdlib.h>   /* Userland prototypes of the ANSI C std lib functions */
+#include <stdarg.h>   /* Allows va_list to exist in the these namespaces     */
+#include <string.h>   /* Userland prototypes of the string handling funcs    */
+#include <strings.h>
+#include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
+#include <fcntl.h>    /* Flag value for file handling functions              */
+
+#include <netinet/in.h> /* Consts and structs defined by the internet system */
+
+/* from $(INSTALLDIR)/include       */
+#include <bfd.h>      /* Main header file for the BFD library                */
+
+#include <elf.h>      /* TARGET_* ELF support for the BFD library            */
+
+/* from uClinux-x.x.x/include/linux */
+#include "flat.h"     /* Binary flat header description                      */
+
 
 #ifdef TARGET_v850e
 #define TARGET_v850
