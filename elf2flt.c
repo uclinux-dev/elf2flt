@@ -784,12 +784,19 @@ dump_symbols(symbols, number_of_symbols);
 					continue;
 				}
 				case R_MICROBLAZE_32:
-					relocation_needed = 1;
+				{	
+					unsigned char *p = r_mem;
+					unsigned long offset;
+
+					/* grab any offset from the text */
+					offset = (p[0]<<24) + (p[1] << 16) + (p[2] << 8) + (p[3]);
 					//sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
-					sym_addr += sym_vma + q->addend;
-					break;
+					sym_addr += offset + sym_vma + q->addend;
 
+					relocation_needed = 1;
+					break;
+				}
 				case R_MICROBLAZE_64_PCREL:
 					sym_vma = 0;
 					//sym_addr = (*(q->sym_ptr_ptr))->value;
