@@ -120,10 +120,16 @@ then
 			LDSCRIPT="$NEWLDSCRIPT"
 		fi
 
-		$LINKER -r -d -o $OFILE.elf2flt $ARG1                        || exit $?
-		$LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
-		$LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
-		rm -f $OFILE.elf2flt
+		if [ "@got_check@" = "no" ]
+		then
+		 $LINKER $SDIRS -T $LDSCRIPT -Ur -d -o $OFILE.elf $ARG1       ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $ARG1              ||exit $?
+		else
+		 $LINKER -r -d -o $OFILE.elf2flt $ARG1                        ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt ||exit $?
+		 $LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     ||exit $?
+		 rm -f $OFILE.elf2flt
+		fi
 		if grep _GLOBAL_OFFSET_TABLE_ $OFILE.gdb > /dev/null 
 		then
 			$ELF2FLT $FLTFLAGS -o $OFILE -p $OFILE.gdb $OFILE.elf || exit $?

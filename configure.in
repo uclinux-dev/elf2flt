@@ -25,6 +25,12 @@ AC_ARG_WITH(binutils-include-dir,
 	[ ac_binutils_include_dir=NONE ]
 )
 
+AC_ARG_ENABLE(got-check,
+	[ --disable-got-check - disable check for GOT (needed on H8) ],
+	[ got_check=$enableval ],
+	[ got_check=yes ]
+)
+
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
@@ -100,6 +106,7 @@ AC_SUBST(target_os)
 AC_SUBST(target_vendor)
 AC_SUBST(bfd_include_dir)
 AC_SUBST(binutils_include_dir)
+AC_SUBST(got_check)
 
 AC_OUTPUT(Makefile ld-elf2flt)
 
