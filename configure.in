@@ -1,21 +1,17 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(elf2flt.c)
 
-AC_MSG_CHECKING(--with-libbfd=?)
 AC_ARG_WITH(libbfd,
 	[ --with-libbfd=<file>  path to libbfd.a library to use ],
 	[ ac_libbfd=$withval ],
 	[ ac_libbfd=NONE ]
 )
-AC_MSG_RESULT($ac_libbfd)
 
-AC_MSG_CHECKING(--with-libiberty=?)
 AC_ARG_WITH(libiberty,
 	[ --with-libiberty=<file>  path to libiberty.a library to use ],
 	[ ac_libiberty=$withval ],
 	[ ac_libiberty=NONE ]
 )
-AC_MSG_RESULT($ac_libiberty)
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
@@ -25,6 +21,19 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 dnl Checks for libraries.
+if test "$ac_libiberty" = "NONE"; then
+  AC_CHECK_LIB(iberty, objalloc_create)
+  ac_libiberty=auto
+else
+  LIBS="$ac_libiberty $LIBS"
+fi
+if test "$ac_libbfd" = "NONE"; then
+  AC_CHECK_LIB(bfd, bfd_openr)
+  ac_libbfd=auto
+else
+  LIBS="$ac_libbfd $LIBS"
+fi
+
 if test "$ac_libbfd" = "NONE" -o "$ac_libiberty" = "NONE" ; then
 	echo
 	echo "You need to specify the location of the libfd.a and libiberty.a"
@@ -36,7 +45,6 @@ if test "$ac_libbfd" = "NONE" -o "$ac_libiberty" = "NONE" ; then
 	echo
 	exit 1
 fi
-LDFLAGS="$LDFLAGS $ac_libbfd $ac_libiberty"
 
 dnl Checks for header files.
 AC_HEADER_STDC

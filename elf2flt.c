@@ -77,11 +77,11 @@ int pic_with_got = 0; /* do elf/got processing with PIC code */
 int load_to_ram = 0;  /* instruct loader to allocate everything into RAM */
 int compress = 0;     /* 1 = compress everything, 2 = compress data only */
 int use_resolved = 0; /* If true, get the value of symbol references from */
-                      /* the program contents, not from the relocation table. */
-					  /* In this case, the input ELF file must be already */
-					  /* fully resolved (using the `-q' flag with recent */
-                      /* versions of GNU ld will give you a fully resolved */
-					  /* output file with relocation entries).  */
+		      /* the program contents, not from the relocation table. */
+		      /* In this case, the input ELF file must be already */
+		      /* fully resolved (using the `-q' flag with recent */
+		      /* versions of GNU ld will give you a fully resolved */
+		      /* output file with relocation entries).  */
 
 const char *progname, *filename;
 int lineno;
@@ -138,9 +138,9 @@ einfo (int type, const char *format, ...) {
   if (type & E_WARNING) {
     fprintf (stderr, "warning: ");
     nwarnings++;
-  }
-  else
+  } else {
     nerrors++;
+  }
 
   va_start (args, format);
   vfprintf (stderr, format, args);
@@ -165,9 +165,8 @@ get_symbols (bfd *abfd, long *num)
   if (storage_needed < 0)
     abort ();
       
-  if (storage_needed == 0) {
+  if (storage_needed == 0)
     return NULL;
-  }
 
   symbol_table = (asymbol **) malloc (storage_needed);
 
