@@ -2,7 +2,7 @@
 ENTRY (_start)
 
 MEMORY {
-	flatmem : ORIGIN = 0x0, LENGTH = 0xffffff
+	flatmem : ORIGIN = 0x0, LENGTH = 0xfffffff
 }
 
 SECTIONS {
