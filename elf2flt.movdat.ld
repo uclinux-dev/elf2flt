@@ -21,6 +21,10 @@ SECTIONS {
 		*(.init)
 		*(.fini)
 
+		*(.rodata)
+		*(.rodata1)
+		*(.rodata.*)
+
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
 		   the start followed by the code pointed to by entries
@@ -41,9 +45,6 @@ SECTIONS {
 		*(.got.plt)
 		*(.got)
 		LONG(-1)
-		*(.rodata)
-		*(.rodata1)
-		*(.rodata.*)
 		*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)

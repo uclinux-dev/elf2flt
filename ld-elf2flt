@@ -30,6 +30,7 @@ then
 	SDIRS=
 	LDSCRIPT=
 	FINAL="yes"
+	MOVDAT=
 
 	while [ $# -ne 0 ]
 	do
@@ -37,6 +38,9 @@ then
 
 		-elf2flt) ;;                           # we already know this
 		-elf2flt*)FLTFLAGS="`expr \"$1\" : '-elf2flt=\(.*\)'` $FLTFLAGS";; 
+
+		-move-rodata)
+		          MOVDAT="y";;                 # Put rodata in ROM if possible
 
 		-o)       shift; OFILE="$1";;          # the final outfile
 		-o*)      OFILE="`expr \"$1\" : '-o\(.*\)'`";;
@@ -65,6 +69,17 @@ then
 
 	if [ "$FINAL" = "yes" ]
 	then
+		if [ "$MOVDAT" ]
+		then
+			$LINKER -r -d -o $OFILE.elf2flt $ARG1  || exit $?
+			if [ "`m68k-elf-objdump -h $OFILE.elf2flt | \
+					egrep -A1 '[.]rodata' | grep RELOC`" ]
+			then
+				echo "warning: .rodata section contains relocations"
+			else
+				[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.movdat.ld"
+			fi
+		fi
 		[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.ld"
 		$LINKER -r -d -o $OFILE.elf2flt $ARG1                        || exit $?
 		$LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
