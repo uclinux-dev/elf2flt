@@ -78,6 +78,7 @@
 #error "Don't know how to support your CPU architecture??"
 #endif
 
+#ifdef TARGET_m68k
 /*
  * Define a maximum number of bytes allowed in the offset table.
  * We'll fail if the table is larger than this.
@@ -86,6 +87,14 @@
  * 8000 entries is a lot,  trust me :-) (davidm)
  */
 #define GOT_LIMIT 32767
+/*
+ * we have to mask out the shared library id here and there,  this gives
+ * us the real address bits when needed
+ */
+#define	real_address_bits(x)	(pic_with_got ? ((x) & 0xffffff) : (x))
+#else
+#define	real_address_bits(x)	(x)
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -1075,9 +1084,9 @@ static void write_zeroes (unsigned long num, FILE *stream)
     /* It'd be nice if we could just use fseek, but that doesn't seem to
        work for stdio output files.  */
     bzero(zeroes, 1024);
-    while (num > sizeof zeroes) {
-      fwrite(zeroes, num, 1, stream);
-      num -= sizeof zeroes;
+    while (num > sizeof(zeroes)) {
+      fwrite(zeroes, sizeof(zeroes), 1, stream);
+      num -= sizeof(zeroes);
     }
     if (num > 0)
       fwrite(zeroes, num, 1, stream);
@@ -1334,7 +1343,7 @@ int main(int argc, char *argv[])
   hdr.data_end    = htonl(16 * 4 + text_len + data_len);
   hdr.bss_end     = htonl(16 * 4 + text_len + data_len + bss_len);
   hdr.stack_size  = htonl(stack); /* FIXME */
-  hdr.reloc_start = htonl(16 * 4 + data_vma + data_len);
+  hdr.reloc_start = htonl(16 * 4 + real_address_bits(data_vma) + data_len);
   hdr.reloc_count = htonl(reloc_len);
   hdr.flags       = htonl(0
 	  | (load_to_ram ? FLAT_FLAG_RAM : 0)
@@ -1392,7 +1401,9 @@ int main(int argc, char *argv[])
   	START_COMPRESSOR;
 
   /* Fill in any hole at the beginning of the text segment.  */
-  write_zeroes (text_vma, gf);
+  if (verbose)
+	  printf("ZERO before text len=0x%x\n", real_address_bits(text_vma));
+  write_zeroes(real_address_bits(text_vma), gf);
 
   /* Write the text segment.  */
   fwrite(text, text_len, 1, gf);
@@ -1401,13 +1412,16 @@ int main(int argc, char *argv[])
   	START_COMPRESSOR;
 
   /* Fill in any hole at the beginning of the data segment.  */
-  write_zeroes (data_vma - (text_vma + text_len), gf);
+  /* this is text relative so we don't need to mask any bits */
+  if (verbose)
+	  printf("ZERO before data len=0x%x\n", data_vma - (text_vma + text_len));
+  write_zeroes(data_vma - (text_vma + text_len), gf);
 
   /* Write the data segment.  */
   fwrite(data, data_len, 1, gf);
 
   if (reloc)
-    fwrite(reloc, reloc_len*4, 1, gf);
+    fwrite(reloc, reloc_len * 4, 1, gf);
 
   fclose(gf);
 
