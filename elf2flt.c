@@ -347,9 +347,9 @@ dump_symbols(symbols, number_of_symbols);
 	 *	otherwise do text as well
 	 */
 	if (!pic_with_got && (a->flags & SEC_CODE))
-		sectionp = text;
+		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
-		sectionp = data;
+		sectionp = data + (a->vma - data_vma);
 	else
 		continue;
 
@@ -491,21 +491,35 @@ dump_symbols(symbols, number_of_symbols);
 				   still depend on the particular relocation
 				   though.  */
 				switch (q->howto->type) {
+					int r2_type;
 #ifdef TARGET_v850
 				case R_V850_HI16_S:
 					/* We specially handle adjacent
-					   HI16_S/ZDA_15_16_OFFSET pairs that
-					   reference the same address (these
-					   are usually movhi/ld pairs).  */
-					if (relcount > 1
-					    && (p[1]->howto->type
-						== R_V850_ZDA_15_16_OFFSET)
+					   HI16_S/ZDA_15_16_OFFSET and
+					   HI16_S/LO16 pairs that reference the
+					   same address (these are usually
+					   movhi/ld and movhi/movea pairs,
+					   respectively).  */
+					if (relcount == 0)
+						r2_type = R_V850_NONE;
+					else
+						r2_type = p[1]->howto->type;
+					if ((r2_type == R_V850_ZDA_15_16_OFFSET
+					     || r2_type == R_V850_LO16)
 					    && (p[0]->sym_ptr_ptr
 						== p[1]->sym_ptr_ptr)
 					    && (p[0]->addend == p[1]->addend))
 					{
 						relocation_needed = 1;
-						pflags = 0x80000000;
+
+						switch (r2_type) {
+						case R_V850_ZDA_15_16_OFFSET:
+							pflags = 0x10000000;
+							break;
+						case R_V850_LO16:
+							pflags = 0x20000000;
+							break;
+						}
 
 						/* We don't really need the
 						   actual value -- the bits
@@ -526,25 +540,43 @@ dump_symbols(symbols, number_of_symbols);
 							/* Sign extend LO.  */
 							lo = (lo ^ 0x8000)
 								- 0x8000;
-							/* Ignore the LSB of
-							   LO, which is
+
+							/* Maybe ignore the LSB
+							   of LO, which is
 							   actually part of the
 							   instruction.  */
-							lo &= ~1;
+							if (r2_type != R_V850_LO16)
+								lo &= ~1;
+
 							sym_addr =
 								(hi << 16)
 								+ lo;
 						}
 					} else
-				case R_V850_HI16:
+						goto bad_v850_reloc_err;
+					break;
+
 				case R_V850_LO16:
-					{
-						printf("ERROR: reloc type %s unsupported in this context\n",
-						       q->howto->name);
-						bad_relocs++;
-					}
+					/* See if this is actually the
+					   2nd half of a pair.  */
+					if (p > relpp
+					    && (p[-1]->howto->type
+						== R_V850_HI16_S)
+					    && (p[-1]->sym_ptr_ptr
+						== p[0]->sym_ptr_ptr)
+					    && (p[-1]->addend == p[0]->addend))
+						break; /* not an error */
+					else
+						goto bad_v850_reloc_err;
+
+				case R_V850_HI16:
+				bad_v850_reloc_err:
+					printf("ERROR: reloc type %s unsupported in this context\n",
+					       q->howto->name);
+					bad_relocs++;
 					break;
 #endif /* TARGET_V850 */
+
 				default:
 					/* The default is to assume that the
 					   relocation is relative and has
