@@ -52,6 +52,9 @@ distclean: clean
 	-rm -f Makefile config.log config.status config.cache ld-elf2flt
 
 install:
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) -d $(target_bindir)
+	$(INSTALL) -d $(target_libdir)
 	$(INSTALL) -s -m 755 $(PROG_FLTHDR) $(bindir)/$(TARGET)-$(PROG_FLTHDR)
 	$(INSTALL) -s -m 755 $(PROG_FLTHDR) $(target_bindir)/$(PROG_FLTHDR)
 	$(INSTALL) -s -m 755 $(PROG_ELF2FLT) $(bindir)/$(TARGET)-$(PROG_ELF2FLT)
