@@ -18,6 +18,7 @@ SECTIONS {
 		*(.gnu.linkonce.t*)
 		*(.glue_7t)
 		*(.glue_7)
+		*(.jcr)
 		*(.init)
 		*(.fini)
 
