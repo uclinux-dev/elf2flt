@@ -57,6 +57,9 @@
 /* from uClinux-x.x.x/include/linux */
 #include "flat.h"     /* Binary flat header description                      */
 
+#ifdef TARGET_e1
+#include <e1.h>
+#endif
 
 #ifdef TARGET_v850e
 #define TARGET_v850
@@ -76,6 +79,8 @@
 #define	ARCH	"h8300"
 #elif defined(TARGET_microblaze)
 #define ARCH	"microblaze"
+#elif defined(TARGET_e1)
+#define ARCH    "e1-coff"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -482,11 +487,14 @@ dump_symbols(symbols, number_of_symbols);
 			 *	Fixup offset in the actual section.
 			 */
 			addstr[0] = 0;
+#ifndef TARGET_e1
   			if ((sym_addr = get_symbol_offset((char *) sym_name,
 			    sym_section, symbols, number_of_symbols)) == -1) {
 				sym_addr = 0;
 			}
-
+#else
+			sym_addr = (*(q->sym_ptr_ptr))->value;
+#endif			
 			if (use_resolved) {
 				/* Use the address of the symbol already in
 				   the program text.  How this is handled may
@@ -605,7 +613,7 @@ dump_symbols(symbols, number_of_symbols);
 				/* Calculate the sym address ourselves.  */
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
 
-#ifndef TARGET_h8300
+#if !defined(TARGET_h8300) && !defined(TARGET_e1)
 				if (sym_reloc_size != 4) {
 					printf("ERROR: bad reloc type %d size=%d for symbol=%s\n",
 							(*p)->howto->type, sym_reloc_size, sym_name);
@@ -871,6 +879,180 @@ dump_symbols(symbols, number_of_symbols);
 					break;
 #endif /* TARGET_sh */
 
+#ifdef TARGET_e1
+#define  htoe1l(x)              htonl(x)
+					
+#if 0 
+#define  DEBUG_E1
+#endif
+
+#ifdef   DEBUG_E1
+#define  DBG_E1                 printf
+#else
+#define  DBG_E1(x, ...  )
+#endif
+
+#define _32BITS_RELOC 0x00000000
+#define _30BITS_RELOC 0x80000000
+#define _28BITS_RELOC 0x40000000
+					{
+				char *p;
+				unsigned long   sec_vma, exist_val, S;
+				case R_E1_CONST31:
+						relocation_needed = 1;
+						DBG_E1("Handling Reloc <CONST31>\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x], q->address : [0x%x]\n",
+										sec_vma, sym_addr, q->address);
+						sym_addr = sec_vma + sym_addr;
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);        
+						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
+						sym_addr += exist_val;
+						pflags = _30BITS_RELOC;
+						break;
+				case R_E1_CONST31_PCREL:
+						relocation_needed = 0;
+						DBG_E1("Handling Reloc <CONST31_PCREL>\n");
+						DBG_E1("DONT RELOCATE AT LOADING\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x], q->address : [0x%x]\n",
+										sec_vma, sym_addr, q->address);
+						sym_addr =  sec_vma + sym_addr;
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
+
+						DBG_E1("q->address : 0x%x, section_vma : 0x%x\n", q->address,
+																		section_vma );
+						q->address = q->address + section_vma;
+						DBG_E1("q->address += section_vma : 0x%x\n", q->address );
+
+						if( (sym_addr = (sym_addr - q->address - 6)) < 0 )
+								DBG_E1("NEGATIVE OFFSET in PC Relative instruction\n");
+						DBG_E1( "sym_addr := sym_addr - q->address  - "
+								"sizeof(CONST31_PCREL): [0x%x]\n",
+								sym_addr );
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);              
+						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
+						sym_addr |= exist_val;
+						DBG_E1("sym_addr |=  exist_val) : [0x%x]\n", sym_addr );
+						break;
+				case R_E1_DIS29W_PCREL:
+						relocation_needed = 0;
+						DBG_E1("Handling Reloc <DIS29W_PCREL>\n");
+						DBG_E1("DONT RELOCATE AT LOADING\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x], q->address : [0x%x]\n",
+										sec_vma, sym_addr, q->address);
+						sym_addr =  sec_vma + sym_addr;
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
+
+						DBG_E1("q->address : 0x%x, section_vma : 0x%x\n", q->address,
+																		section_vma );
+						q->address = q->address + section_vma;
+						DBG_E1("q->address += section_vma : 0x%x\n", q->address );
+
+						if( (sym_addr = (sym_addr - q->address - 6)) < 0 )
+								DBG_E1("NEGATIVE OFFSET in PC Relative instruction\n");
+						DBG_E1( "sym_addr := sym_addr - q->address  - "
+								"sizeof(CONST31_PCREL): [0x%x]\n",
+								sym_addr );
+						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);       
+						DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
+						sym_addr += exist_val;
+						break;
+				case R_E1_DIS29W:
+						DBG_E1("Handling Reloc <DIS29W>\n");
+						goto DIS29_RELOCATION;
+				case R_E1_DIS29H:
+						DBG_E1("Handling Reloc <DIS29H>\n");
+						goto DIS29_RELOCATION;
+				case R_E1_DIS29B:
+						DBG_E1("Handling Reloc <DIS29B>\n");
+DIS29_RELOCATION:
+						relocation_needed = 1;
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%08x]\n",
+										sec_vma, sym_addr);
+						sym_addr =  sec_vma + sym_addr;
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%08x]\n", sym_addr);
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                
+						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
+						sym_addr +=  exist_val;
+						DBG_E1("sym_addr +=  exist_val : [0x%08x]\n", sym_addr);
+						pflags = _28BITS_RELOC;
+						break;
+				case R_E1_IMM32_PCREL:
+						relocation_needed = 0;
+						DBG_E1("Handling Reloc <IMM32_PCREL>\n");
+						DBG_E1("DONT RELOCATE AT LOADING\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x]\n",
+										sec_vma, sym_addr);
+						sym_addr =  sec_vma + sym_addr;
+
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
+						DBG_E1("q->address : 0x%x, section_vma : 0x%x\n", q->address,
+																		section_vma );
+						q->address = q->address + section_vma;
+						DBG_E1("q->address += section_vma : 0x%x\n", q->address );
+
+						if( (sym_addr = (sym_addr - q->address - 6 )) < 0 )
+								DBG_E1("NEGATIVE OFFSET in PC Relative instruction\n");
+						DBG_E1( "sym_addr := sym_addr - q->address  - "
+								"sizeof(CONST31_PCREL): [0x%x]\n",
+								sym_addr );
+						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                 
+ 						DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
+						sym_addr += exist_val;
+						break;
+				case R_E1_IMM32:
+						relocation_needed = 1;
+						DBG_E1("Handling Reloc <IMM32>\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x]\n",
+										sec_vma, sym_addr);
+						sym_addr =  sec_vma + sym_addr;
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
+						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                     
+	 					DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
+						sym_addr += exist_val;
+						pflags = _32BITS_RELOC;
+						break;
+				case R_E1_WORD:
+						relocation_needed = 1;
+						DBG_E1("Handling Reloc <WORD>\n");
+						sec_vma = bfd_section_vma(abs_bfd, sym_section);
+						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x]\n",
+										sec_vma, sym_addr);
+						sym_addr =  sec_vma + sym_addr;
+						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address );
+						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
+						exist_val = htoe1l(exist_val);
+						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
+						sym_addr +=  exist_val;
+						DBG_E1("sym_addr +=  exist_val : [0x%08x]\n", sym_addr);
+						pflags = _32BITS_RELOC;
+						break;
+				}
+#undef _32BITS_RELOC
+#undef _30BITS_RELOC
+#undef _28BITS_RELOC
+#endif
 				default:
 					/* missing support for other types of relocs */
 					printf("ERROR: bad reloc type %d\n", (*p)->howto->type);
@@ -930,7 +1112,33 @@ dump_symbols(symbols, number_of_symbols);
 				else
 					*(unsigned long *)r_mem = tmp.l;
 
-#else /* ! TARGET_arm */
+#elif defined(TARGET_e1)
+#define OPCODE_SIZE 2           /* Add 2 bytes, counting the opcode size*/
+				switch ((*p)->howto->type) {
+				case R_E1_CONST31:
+				case R_E1_CONST31_PCREL:
+				case R_E1_DIS29W_PCREL:
+				case R_E1_DIS29W:
+				case R_E1_DIS29H:
+				case R_E1_DIS29B:
+				case R_E1_IMM32_PCREL:
+				case R_E1_IMM32:
+						DBG_E1("In addr + 2:[0x%x] <- write [0x%x]\n",
+								(sectionp + q->address + 2), sym_addr );
+						*((unsigned long *) (sectionp + q->address + OPCODE_SIZE)) =
+						htonl(sym_addr);
+				break;
+				case R_E1_WORD:
+						DBG_E1("In addr : [0x%x] <- write [0x%x]\n",
+								(sectionp + q->address), sym_addr );
+						*((unsigned long *) (sectionp + q->address )) = htonl(sym_addr);
+				break;
+				default:
+						printf("ERROR:Unhandled Relocation. Exiting...\n");
+						exit(0);
+				break;
+				}
+#else /* ! TARGET_arm && ! TARGET_e1 */
 
 				switch (q->howto->type) {
 #ifdef TARGET_v850
@@ -975,12 +1183,38 @@ dump_symbols(symbols, number_of_symbols);
 			if (relocation_needed) {
 				flat_relocs = realloc(flat_relocs,
 					(flat_reloc_count + 1) * sizeof(unsigned long));
+#ifndef TARGET_e1
 				flat_relocs[flat_reloc_count] = pflags |
 					(section_vma + q->address);
 
 				if (verbose)
 					printf("reloc[%d] = 0x%x\n", flat_reloc_count,
 							section_vma + q->address);
+#else
+				switch ((*p)->howto->type) {
+				case R_E1_CONST31:
+				case R_E1_CONST31_PCREL:
+				case R_E1_DIS29W_PCREL:
+				case R_E1_DIS29W:
+				case R_E1_DIS29H:
+				case R_E1_DIS29B:
+				case R_E1_IMM32_PCREL:
+				case R_E1_IMM32:
+				flat_relocs[flat_reloc_count] = pflags |
+						(section_vma + q->address + OPCODE_SIZE);
+				if (verbose)
+						printf("RELOCATION TABLE : reloc[%d] = [0x%x]\n", flat_reloc_count,
+										 flat_relocs[flat_reloc_count] );
+				break;
+				case R_E1_WORD:
+				flat_relocs[flat_reloc_count] = pflags |
+						(section_vma + q->address);
+				if (verbose)
+						printf("RELOCATION TABLE : reloc[%d] = [0x%x]\n", flat_reloc_count,
+										 flat_relocs[flat_reloc_count] );
+				break;
+				}
+#endif
 				flat_reloc_count++;
 				relocation_needed = 0;
 				pflags = 0;
@@ -1176,7 +1410,11 @@ int main(int argc, char *argv[])
   if (argc < 2)
   	usage();
   
+#ifndef TARGET_e1
   stack = 4096;
+#else /* We need plenty of stack for both of them (Aggregate and Register) */
+  stack = 0x2020;
+#endif
 
   while ((opt = getopt(argc, argv, "avzdrkp:s:o:R:")) != -1) {
     switch (opt) {

@@ -22,6 +22,13 @@ OBJEXT = @OBJEXT@
 
 CCFLAGS = $(CFLAGS) $(DEFS) $(INCLUDES)
 
+LDFILE= elf2flt.ld
+ifeq ($(strip $(CPU)),e1)
+SRC_LDFILE= $(CPU)-elf2flt.ld
+else 
+SRC_LDFILE= elf2flt.ld
+endif
+
 target_bindir = $(prefix)/$(TARGET)/bin
 target_libdir = $(prefix)/$(TARGET)/lib
 
@@ -55,5 +62,6 @@ install:
 		mv $(target_bindir)/ld$(EXEEXT) $(target_bindir)/ld.real$(EXEEXT)
 	$(INSTALL) -m 755 ld-elf2flt $(bindir)/$(TARGET)-ld
 	$(INSTALL) -m 755 ld-elf2flt $(target_bindir)/ld
-	$(INSTALL) -m 644 $(srcdir)/elf2flt.ld $(target_libdir)
+	$(INSTALL) -m 644 $(srcdir)/$(SRC_LDFILE) $(target_libdir)/$(LDFILE)
+
 
