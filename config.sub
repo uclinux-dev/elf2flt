@@ -266,6 +266,7 @@ case $basic_machine in
 	| strongarm \
 	| tahoe | thumb | tic4x | tic80 | tron \
 	| v850 | v850e \
+	| microblaze \
 	| we32k \
 	| x86 | xscale | xstormy16 | xtensa \
 	| z8k)
