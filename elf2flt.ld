@@ -34,7 +34,7 @@ W_RODAT		*(.rodata.*)
 		*(.call_table_data)
 		*(.call_table_text)
 
-		. = ALIGN(0x10) ;
+		. = ALIGN(0x20) ;
 		_etext = . ;
 	} > flatmem
 	.data : {
@@ -45,9 +45,9 @@ W_RODAT		*(.rodata.*)
 		*(.got.plt)
 		*(.got)
 		FILL(0) ;
-		. = ALIGN(0x10) ; 
+		. = ALIGN(0x20) ; 
 		LONG(-1)
-		. = ALIGN(0x10) ; 
+		. = ALIGN(0x20) ; 
 R_RODAT		*(.rodata)
 R_RODAT		*(.rodata1)
 R_RODAT		*(.rodata.*)
