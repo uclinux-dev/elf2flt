@@ -40,8 +40,11 @@
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
 #include <fcntl.h>    /* Flag value for file handling functions              */
 #include <time.h>
-
+#ifndef WIN32
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
+#else
+#include <winsock2.h>
+#endif
 
 /* from $(INSTALLDIR)/include       */
 #include <bfd.h>      /* Main header file for the BFD library                */
@@ -1686,9 +1689,9 @@ int main(int argc, char *argv[])
 		} \
 	} while (0)
 
-  gf = fopen(ofile, "a");
+  gf = fopen(ofile, "ab");	/* Add 'b' to support non-posix (ie windows) */
   if (!gf) {
-  	fprintf(stderr, "Can't opne file %s for writing\n", ofile); \
+  	fprintf(stderr, "Can't open file %s for writing\n", ofile); \
 	exit(4);
   }
 
