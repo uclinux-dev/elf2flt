@@ -257,7 +257,8 @@ output_relocs (
   asymbol **symbols,
   int number_of_symbols,
   unsigned long *n_relocs,
-  unsigned char *text, int text_len, unsigned char *data, int data_len,
+  unsigned char *text, int text_len, unsigned long text_vma,
+  unsigned char *data, int data_len, unsigned long data_vma,
   bfd *rel_bfd)
 {
   unsigned long		*flat_relocs;
@@ -335,9 +336,9 @@ dump_symbols(symbols, number_of_symbols);
 	 *	Only relocate things in the data sections if we are PIC/GOT.
 	 *	otherwise do text as well
 	 */
-	if (!pic_with_got && strcmp(".text", a->name) == 0)
+	if (!pic_with_got && (a->flags & SEC_CODE))
 		sectionp = text;
-	else if (strcmp(".data", a->name) == 0)
+	else if (a->flags & SEC_DATA)
 		sectionp = data;
 	else
 		continue;
@@ -972,6 +973,23 @@ static void usage(void)
 }
 
 
+/* Write NUM zeroes to STREAM.  */
+static void write_zeroes (unsigned long num, FILE *stream)
+{
+  char zeroes[1024];
+  if (num > 0) {
+    /* It'd be nice if we could just use fseek, but that doesn't seem to
+       work for stdio output files.  */
+    bzero(zeroes, 1024);
+    while (num > sizeof zeroes) {
+      fwrite(zeroes, num, 1, stream);
+      num -= sizeof zeroes;
+    }
+    if (num > 0)
+      fwrite(zeroes, num, 1, stream);
+  }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -990,14 +1008,14 @@ int main(int argc, char *argv[])
   asymbol **symbol_table;
   long number_of_symbols;
 
-  unsigned long data_len;
-  unsigned long bss_len;
-  unsigned long text_len;
+  unsigned long data_len = 0;
+  unsigned long bss_len = 0;
+  unsigned long text_len = 0;
   unsigned long reloc_len;
 
-  unsigned long data_vma;
-  unsigned long bss_vma;
-  unsigned long text_vma;
+  unsigned long data_vma = ~0;
+  unsigned long bss_vma = ~0;
+  unsigned long text_vma = ~0;
 
   void *text;
   void *data;
@@ -1108,38 +1126,62 @@ int main(int argc, char *argv[])
 
   symbol_table = get_symbols(abs_bfd, &number_of_symbols);
 
-  s = bfd_get_section_by_name (abs_bfd, ".text");
-  text_vma = s->vma;
-  text_len = s->_raw_size;
+  /* Group output sections into text, data, and bss, and calc their sizes.  */
+  for (s = abs_bfd->sections; s != NULL; s = s->next) {
+    unsigned long *vma, *len;
+
+    if (s->flags & SEC_CODE) {
+      vma = &text_vma;
+      len = &text_len;
+    } else if (s->flags & SEC_DATA) {
+      vma = &data_vma;
+      len = &data_len;
+    } else if (s->flags & SEC_ALLOC) {
+      vma = &bss_vma;
+      len = &bss_len;
+    } else
+      continue;
+
+    if (s->vma < *vma) {
+      if (*len > 0)
+	*len += s->vma - *vma;
+      else
+	*len = s->_raw_size;
+      *vma = s->vma;
+    } else if (s->vma + s->_raw_size > *vma + *len)
+      *len = s->vma + s->_raw_size - *vma;
+  }
+
+  if (text_len == 0) {
+    fprintf (stderr, "%s: no .text section", abs_file);
+    exit (2);
+  }
+
   text = malloc(text_len);
 
-  if (verbose) {
+  if (verbose)
     printf("TEXT -> vma=%x len=%x\n", text_vma, text_len);
-    printf("        lma=%x clen=%x oo=%x ap=%x fp=%x\n",
-			s->lma, s->_cooked_size, s->output_offset,
-			s->alignment_power, s->filepos);
-  }
 
-  if (bfd_get_section_contents(abs_bfd,
-			       s, 
-			       text,
-			       0,
-			       s->_raw_size) == false) {
-    fprintf(stderr, "read error section %s\n", s->name);
-    exit(2);
-  }
+  /* Read in all text sections.  */
+  for (s = abs_bfd->sections; s != NULL; s = s->next)
+    if (s->flags & SEC_CODE) 
+      if (bfd_get_section_contents(abs_bfd, s,
+				   text + (s->vma - text_vma), 0,
+				   s->_raw_size) == false)
+      {
+	fprintf(stderr, "read error section %s\n", s->name);
+	exit(2);
+      }
 
-  s = bfd_get_section_by_name (abs_bfd, ".data");
-  data_vma = s->vma;
-  data_len = s->_raw_size;
+  if (data_len == 0) {
+    fprintf (stderr, "%s: no .data section", abs_file);
+    exit (2);
+  }
   data = malloc(data_len);
 
-  if (verbose) {
-     printf("DATA -> vma=%x len=%x\n", data_vma, data_len);
-     printf("        lma=%x clen=%x oo=%x ap=%x fp=%x\n",
-	 		s->lma, s->_cooked_size, s->output_offset,
-			s->alignment_power, s->filepos);
-  }
+  if (verbose)
+    printf("DATA -> vma=%x len=%x\n", data_vma, data_len);
+
   if ((text_vma + text_len) != data_vma) {
     if ((text_vma + text_len) > data_vma) {
       printf("ERROR: text=%x overlaps data=%x ?\n", text_len, data_vma);
@@ -1151,26 +1193,22 @@ int main(int argc, char *argv[])
     text_len = data_vma - text_vma;
   }
 
-  if (bfd_get_section_contents(abs_bfd,
-			       s, 
-			       data,
-			       0,
-			       s->_raw_size) == false) {
-    fprintf(stderr, "read error section %s\n", s->name);
-    exit(2);
-  }
+  /* Read in all data sections.  */
+  for (s = abs_bfd->sections; s != NULL; s = s->next)
+    if (s->flags & SEC_DATA) 
+      if (bfd_get_section_contents(abs_bfd, s,
+				   data + (s->vma - data_vma), 0,
+				   s->_raw_size) == false)
+      {
+	fprintf(stderr, "read error section %s\n", s->name);
+	exit(2);
+      }
 
-  s = bfd_get_section_by_name (abs_bfd, ".bss");
-  bss_len = s->_raw_size;
-  bss_vma = s->vma;
+  /* Put common symbols in bss.  */
   bss_len += add_com_to_bss(symbol_table, number_of_symbols, bss_len);
 
-  if (verbose) {
-	printf("BSS  -> vma=%x len=%x\n", bss_vma, bss_len);
-    printf("        lma=%x clen=%x oo=%x ap=%x fp=%x\n",
-			s->lma, s->_cooked_size, s->output_offset,
-			s->alignment_power, s->filepos);
-  }
+  if (verbose)
+    printf("BSS  -> vma=%x len=%x\n", bss_vma, bss_len);
 
   if ((text_vma + text_len + data_len) != bss_vma) {
     if ((text_vma + text_len + data_len) > bss_vma) {
@@ -1184,8 +1222,9 @@ int main(int argc, char *argv[])
       data_len = bss_vma - data_vma;
   }
 
-  reloc = (unsigned long *) output_relocs (abs_bfd, symbol_table,
-      number_of_symbols, &reloc_len, text, text_len, data, data_len, rel_bfd);
+  reloc = (unsigned long *)
+    output_relocs(abs_bfd, symbol_table, number_of_symbols, &reloc_len,
+		  text, text_len, text_vma, data, data_len, data_vma, rel_bfd);
 
   if (reloc == NULL)
     printf("No relocations in code!\n");
@@ -1198,7 +1237,7 @@ int main(int argc, char *argv[])
   hdr.data_end    = htonl(16 * 4 + text_len + data_len);
   hdr.bss_end     = htonl(16 * 4 + text_len + data_len + bss_len);
   hdr.stack_size  = htonl(stack); /* FIXME */
-  hdr.reloc_start = htonl(16 * 4 + text_len + data_len);
+  hdr.reloc_start = htonl(16 * 4 + data_vma + data_len);
   hdr.reloc_count = htonl(reloc_len);
   hdr.flags       = htonl(0
 	  | (load_to_ram ? FLAT_FLAG_RAM : 0)
@@ -1254,16 +1293,25 @@ int main(int argc, char *argv[])
   if (compress == 1)
   	START_COMPRESSOR;
 
+  /* Fill in any hole at the beginning of the text segment.  */
+  write_zeroes (text_vma, gf);
+
+  /* Write the text segment.  */
   fwrite(text, text_len, 1, gf);
 
   if (compress == 2)
   	START_COMPRESSOR;
 
+  /* Fill in any hole at the beginning of the data segment.  */
+  write_zeroes (data_vma - (text_vma + text_len), gf);
+
+  /* Write the data segment.  */
   fwrite(data, data_len, 1, gf);
+
   if (reloc)
     fwrite(reloc, reloc_len*4, 1, gf);
+
   fclose(gf);
 
   exit(0);
 }
-
