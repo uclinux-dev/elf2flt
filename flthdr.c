@@ -10,6 +10,8 @@
 #include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
 #include <time.h>
+#include <stdlib.h>   /* exit() */
+#include <string.h>   /* strcat(), strcpy() */
 
 /* macros for conversion between host and (internet) network byte order */
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
