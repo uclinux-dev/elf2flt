@@ -1532,6 +1532,8 @@ int main(int argc, char *argv[])
   /* Group output sections into text, data, and bss, and calc their sizes.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next) {
     unsigned long *vma, *len;
+    bfd_size_type sec_size;
+    bfd_vma sec_vma;
 
     if (s->flags & SEC_CODE) {
       vma = &text_vma;
@@ -1545,14 +1547,17 @@ int main(int argc, char *argv[])
     } else
       continue;
 
-    if (s->vma < *vma) {
+    sec_size = bfd_section_size(abs_bfd, s);
+    sec_vma  = bfd_section_vma(abs_bfd, s);
+
+    if (sec_vma < *vma) {
       if (*len > 0)
-	*len += s->vma - *vma;
+	*len += sec_vma - *vma;
       else
-	*len = s->_raw_size;
-      *vma = s->vma;
-    } else if (s->vma + s->_raw_size > *vma + *len)
-      *len = s->vma + s->_raw_size - *vma;
+	*len = sec_size;
+      *vma = sec_vma;
+    } else if (sec_vma + sec_size > *vma + *len)
+      *len = sec_vma + sec_size - *vma;
   }
 
   if (text_len == 0) {
@@ -1570,7 +1575,7 @@ int main(int argc, char *argv[])
     if (s->flags & SEC_CODE) 
       if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
-				   s->_raw_size))
+				   bfd_section_size(abs_bfd, s)))
       {
 	fprintf(stderr, "read error section %s\n", s->name);
 	exit(2);
@@ -1601,7 +1606,7 @@ int main(int argc, char *argv[])
     if (s->flags & SEC_DATA) 
       if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
-				   s->_raw_size))
+				   bfd_section_size(abs_bfd, s)))
       {
 	fprintf(stderr, "read error section %s\n", s->name);
 	exit(2);
