@@ -9,9 +9,10 @@
  * (c) 2003, H8 support <davidm@snapgear.com>
  * (c) 2001-2003, arm/arm-pic/arm-big-endian support <davidm@snapgear.com>
  * (c) 2001, v850 changes, Mile Bader <miles@lsi.nec.co.jp>
+ * (c) 2003, SuperH support, Paul Mundt <lethal@linux-sh.org>
  * (c) 2001, zflat support <davidm@snapgear.com>
- * (c) 2001, Changes for GOT entries
- *           (Pale Dale, pauli@lineo.com, David McCullough davidm@lineo.com)
+ * (c) 2001, Changes for GOT entries Paul Dale <pauli@snapgear.com> and
+ *           David McCullough <davidm@snapgear.com>
  *
  * Now supports PIC with GOT tables.  This works by taking a '.elf' file
  * and a fully linked elf executable (at address 0) and produces a flat
@@ -23,8 +24,7 @@
  * (c) 1998, Kenneth Albanowski <kjahds@kjahds.com>
  * (c) 1998, D. Jeff Dionne
  * (c) 1998, The Silver Hammer Group Ltd.
- * (c) 1996, 1997 Dionne & Associates
- *           jeff@ryeham.ee.ryerson.ca
+ * (c) 1996, 1997 Dionne & Associates <jeff@ryeham.ee.ryerson.ca>
  *
  * This is Free Software, under the GNU Public Licence v2 or greater.
  *
@@ -68,6 +68,8 @@
 #define	ARCH	"sparc"
 #elif defined(TARGET_v850)
 #define	ARCH	"v850"
+#elif defined(TARGET_sh)
+#define	ARCH	"sh"
 #elif defined(TARGET_h8300)
 #define	ARCH	"h8300"
 #else
@@ -649,6 +651,19 @@ dump_symbols(symbols, number_of_symbols);
 						);
 					break;
 #endif /* TARGET_sparc */
+
+#ifdef TARGET_sh
+				case R_SH_DIR32:
+					relocation_needed = 1;
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					sym_addr += sym_vma + q->addend;
+					break;
+				case R_SH_REL32:
+					sym_vma = 0;
+					sym_addr += sym_vma + q->addend;
+					sym_addr -= q->address;
+					break;
+#endif /* TARGET_sh */
 
 				default:
 					/* missing support for other types of relocs */

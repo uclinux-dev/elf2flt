@@ -8,7 +8,7 @@ gerg@snapgear.com
 
 
 Elf2flt with PIC, ZFLAT and full reloc support. Currently supported
-targets include: m68k/ColdFire, ARM, Sparc, NEC v850.
+targets include: m68k/ColdFire, ARM, Sparc, NEC v850, h8300 and SuperH.
 
 
 COMPILING:
