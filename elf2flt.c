@@ -962,6 +962,7 @@ static void usage(void)
 	"       -a              : use existing symbol references\n"
 	"                         instead of recalculating from\n"
 	"                         relocation info\n"
+        "       -R reloc-file   : read relocations from a separate file\n"
 	"       -p abs-pic-file : GOT/PIC processing with files\n"
 	"       -s stacksize    : set application stack size\n"
 	"       -o output-file  : output file name\n\n",
@@ -977,7 +978,7 @@ int main(int argc, char *argv[])
   int fd;
   bfd *rel_bfd, *abs_bfd;
   asection *s;
-  char *ofile=NULL, *pfile=NULL;
+  char *ofile=NULL, *pfile=NULL, *abs_file = NULL, *rel_file = NULL;
   char *fname = NULL;
   int opt;
   int i;
@@ -1013,7 +1014,7 @@ int main(int argc, char *argv[])
   
   stack = 4096;
 
-  while ((opt = getopt(argc, argv, "avzdrp:s:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "avzdrp:s:o:R:")) != -1) {
     switch (opt) {
     case 'v':
       verbose++;
@@ -1039,6 +1040,9 @@ int main(int argc, char *argv[])
     case 's':
       stack = atoi(optarg);
       break;
+    case 'R':
+      rel_file = optarg;
+      break;
     default:
       fprintf(stderr, "%s Unknown option\n", argv[0]);
       usage();
@@ -1055,8 +1059,17 @@ int main(int argc, char *argv[])
 
   filename = fname = argv[argc-1];
 
-  if (!(rel_bfd = bfd_openr(fname, 0))) {
-    fprintf(stderr, "Can't open %s\n", fname);
+  if (pfile) {
+    pic_with_got = 1;
+    abs_file = pfile;
+  } else
+    abs_file = fname;
+
+  if (! rel_file)
+    rel_file = fname;
+
+  if (!(rel_bfd = bfd_openr(rel_file, 0))) {
+    fprintf(stderr, "Can't open %s\n", rel_file);
     exit(1);
   }
 
@@ -1065,11 +1078,11 @@ int main(int argc, char *argv[])
     exit(2);
   }
 
-  if (pfile) {
-    pic_with_got = 1;
-
-    if (!(abs_bfd = bfd_openr(pfile, 0))) {
-      fprintf(stderr, "Can't open %s\n", pfile);
+  if (abs_file == rel_file)
+    abs_bfd = rel_bfd; /* one file does all */
+  else {
+    if (!(abs_bfd = bfd_openr(abs_file, 0))) {
+      fprintf(stderr, "Can't open %s\n", abs_file);
       exit(1);
     }
 
@@ -1077,12 +1090,10 @@ int main(int argc, char *argv[])
       fprintf(stderr, "File is not an object file\n");
       exit(2);
     }
-  } else {
-    abs_bfd = rel_bfd; /* one file does all */
   }
 
   if (! (bfd_get_file_flags(rel_bfd) & HAS_RELOC)) {
-    fprintf (stderr, "%s: Input file contains no relocation info\n", fname);
+    fprintf (stderr, "%s: Input file contains no relocation info\n", rel_file);
     exit (2);
   }
 
