@@ -278,8 +278,8 @@ output_relocs (
   long			nsymb;
   
 #if 0
-  printf("%s(%d): output_relocs(abs_bfd=%d,synbols=%x,number_of_symbols=%d"
-	"n_relocs=%x,text=%x,text_len=%d,data=%x,data_len=%d)\n",
+  printf("%s(%d): output_relocs(abs_bfd=%d,synbols=0x%x,number_of_symbols=%d"
+	"n_relocs=0x%x,text=0x%x,text_len=%d,data=0x%x,data_len=%d)\n",
 	__FILE__, __LINE__, abs_bfd, symbols, number_of_symbols, n_relocs,
 	text, text_len, data, data_len);
 #endif
@@ -320,7 +320,7 @@ dump_symbols(symbols, number_of_symbols);
   	section_vma = bfd_section_vma(abs_bfd, a);
 
 	if (verbose)
-		printf("SECTION: %s [%x]: flags=%x vma=%x\n", a->name, a,
+		printf("SECTION: %s [0x%x]: flags=0x%x vma=0x%x\n", a->name, a,
 			a->flags, section_vma);
 
 //	if (bfd_is_abs_section(a))
@@ -353,14 +353,14 @@ dump_symbols(symbols, number_of_symbols);
 	if (r == NULL)
 	  continue;
 	if (verbose)
-	  printf(" RELOCS: %s [%x]: flags=%x vma=%x\n", r->name, r,
+	  printf(" RELOCS: %s [0x%x]: flags=0x%x vma=0x%x\n", r->name, r,
 			r->flags, bfd_section_vma(abs_bfd, r));
   	if ((r->flags & SEC_RELOC) == 0)
   	  continue;
 	relsize = bfd_get_reloc_upper_bound(rel_bfd, r);
 	if (relsize <= 0) {
 		if (verbose)
-			printf("%s(%d): no relocation entries section=%x\n",
+			printf("%s(%d): no relocation entries section=0x%x\n",
 				__FILE__, __LINE__, r->name);
 		continue;
 	}
@@ -375,6 +375,7 @@ dump_symbols(symbols, number_of_symbols);
 		continue;
 	} else {
 		for (p = relpp; (relcount && (*p != NULL)); p++, relcount--) {
+			unsigned char *r_mem;
 			int relocation_needed = 0;
 
 #ifdef TARGET_microblaze
@@ -461,6 +462,10 @@ dump_symbols(symbols, number_of_symbols);
 			if (pic_with_got)
 			  q->address += got_size;
 					
+			/* A pointer to what's being relocated, used often
+			   below.  */
+			r_mem = sectionp + q->address;
+
 			/*
 			 *	Fixup offset in the actual section.
 			 */
@@ -472,20 +477,86 @@ dump_symbols(symbols, number_of_symbols);
 
 			if (use_resolved) {
 				/* Use the address of the symbol already in
-				   the program text.  The alignment of the
-				   build host might be stricter, and the
-				   endian-ness different, than that of the
-				   target, so we have to be careful. */
-				unsigned char *p = sectionp + q->address;
-				if (bfd_big_endian (abs_bfd))
-					sym_addr =
-						(p[0] << 24) + (p[1] << 16)
-						+ (p[2] << 8) + p[3];
-				else
-					sym_addr =
-						p[0] + (p[1] << 8)
-						+ (p[2] << 16) + (p[3] << 24);
-				relocation_needed = 1;
+				   the program text.  How this is handled may
+				   still depend on the particular relocation
+				   though.  */
+				switch (q->howto->type) {
+#ifdef TARGET_v850
+				case R_V850_HI16_S:
+					/* We specially handle adjacent
+					   HI16_S/ZDA_15_16_OFFSET pairs that
+					   reference the same address (these
+					   are usually movhi/ld pairs).  */
+					if (relcount > 1
+					    && (p[1]->howto->type
+						== R_V850_ZDA_15_16_OFFSET)
+					    && (p[0]->sym_ptr_ptr
+						== p[1]->sym_ptr_ptr)
+					    && (p[0]->addend == p[1]->addend))
+					{
+						relocation_needed = 1;
+						pflags = 0x80000000;
+
+						/* We don't really need the
+						   actual value -- the bits
+						   produced by the linker are
+						   what we want in the final
+						   flat file -- but get it
+						   anyway if useful for
+						   debugging.  */
+						if (verbose) {
+							unsigned char *r2_mem =
+								sectionp
+								+ p[1]->address;
+							/* little-endian */
+							int hi = r_mem[0]
+								+ (r_mem[1] << 8);
+							int lo = r2_mem[0]
+								+ (r2_mem[1] << 8);
+							/* Sign extend LO.  */
+							lo = (lo ^ 0x8000)
+								- 0x8000;
+							/* Ignore the LSB of
+							   LO, which is
+							   actually part of the
+							   instruction.  */
+							lo &= ~1;
+							sym_addr =
+								(hi << 16)
+								+ lo;
+						}
+					} else
+				case R_V850_HI16:
+				case R_V850_LO16:
+					{
+						printf("ERROR: reloc type %s unsupported in this context\n",
+						       q->howto->name);
+						bad_relocs++;
+					}
+					break;
+#endif /* TARGET_V850 */
+				default:
+					/* The default is to assume that the
+					   relocation is relative and has
+					   already been fixed up by the
+					   linker (perhaps we ought to make
+					   give an error by default, and
+					   require `safe' relocations to be
+					   enumberated explicitly?).  */
+					if (bfd_big_endian (abs_bfd))
+						sym_addr =
+							(r_mem[0] << 24)
+							+ (r_mem[1] << 16)
+							+ (r_mem[2] << 8) 
+							+ r_mem[3];
+					else
+						sym_addr =
+							r_mem[0]
+							+ (r_mem[1] << 8)
+							+ (r_mem[2] << 16)
+							+ (r_mem[3] << 24);
+					relocation_needed = 1;
+				}
 			} else {
 				/* Calculate the sym address ourselves.  */
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
@@ -526,7 +597,7 @@ dump_symbols(symbols, number_of_symbols);
 							sym_vma, (*(q->sym_ptr_ptr))->value,
 							q->address, sym_addr,
 							(*p)->howto->rightshift,
-							*((unsigned long *) (sectionp + q->address)));
+							*(unsigned long *)r_mem);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
@@ -543,7 +614,7 @@ dump_symbols(symbols, number_of_symbols);
 							sym_vma, (*(q->sym_ptr_ptr))->value,
 							q->address, sym_addr,
 							(*p)->howto->rightshift,
-							*((unsigned long *) (sectionp + q->address)));
+							*(unsigned long *)r_mem);
 				case R_ARM_PC24:
 					sym_vma = 0;
 					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
@@ -580,9 +651,10 @@ dump_symbols(symbols, number_of_symbols);
 					relocation_needed = 1;
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					q->address -= 1;
+					r_mem -= 1; /* tracks q->address */
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
-					sym_addr |= (*((unsigned char *)(sectionp+q->address))<<24);
+					sym_addr |= (*(unsigned char *)r_mem<<24);
 					break;
 				case R_H8_DIR24A8:
 					if (sym_reloc_size != 4) {
@@ -613,7 +685,7 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr += sym_vma + q->addend;
 					sym_addr -= (q->address + 2);
 					if (bfd_big_endian(abs_bfd))
-					* ((unsigned short *) (sectionp + q->address)) =
+					*(unsigned short *)r_mem =
 						bfd_big_endian(abs_bfd) ? htons(sym_addr) : sym_addr;
 					continue;
 				case R_H8_PCREL8:
@@ -621,7 +693,7 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_addr += sym_vma + q->addend;
 					sym_addr -= (q->address + 1);
-					* ((unsigned char *) (sectionp + q->address)) = sym_addr;
+					*(unsigned char *)r_mem = sym_addr;
 					continue;
 #endif
 
@@ -631,7 +703,7 @@ dump_symbols(symbols, number_of_symbols);
 		   Flag this to the flat loader by setting the high bit of 
 		   the relocation symbol. */
 				{
-					unsigned char *p = sectionp + q->address;
+					unsigned char *p = r_mem;
 					unsigned long offset;
 					pflags=0x80000000;
 
@@ -657,9 +729,9 @@ dump_symbols(symbols, number_of_symbols);
 			sprintf(&addstr[0], "+0x%x", sym_addr - (*(q->sym_ptr_ptr))->value -
 					 bfd_section_vma(abs_bfd, sym_section));
 			if (verbose)
-				printf("  RELOC[%d]: offset=%x symbol=%s%s "
+				printf("  RELOC[%d]: offset=0x%x symbol=%s%s "
 					"section=%s size=%d "
-					"fixup=%x (reloc=0x%x)\n", flat_reloc_count,
+					"fixup=0x%x (reloc=0x%x)\n", flat_reloc_count,
 					q->address, sym_name, addstr,
 					section_name, sym_reloc_size,
 					sym_addr, section_vma + q->address);
@@ -683,9 +755,9 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr -= (q->address + 4);
 					sym_addr = htonl(sym_addr);
 					/* insert 16 MSB */
-					* ((unsigned short *) (sectionp + q->address+2)) |= (sym_addr) & 0xFFFF;
+					* ((unsigned short *) (r_mem+2)) |= (sym_addr) & 0xFFFF;
 					/* then 16 LSB */
-					* ((unsigned short *) (sectionp + q->address+6)) |= (sym_addr >> 16) & 0xFFFF;
+					* ((unsigned short *) (r_mem+6)) |= (sym_addr >> 16) & 0xFFFF;
 					/* We've done all the work, so continue
 					   to next reloc instead of break */
 					continue;
@@ -708,8 +780,8 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr = (((*(q->sym_ptr_ptr))->value-
 						q->address) >> 2) & 0x3fffffff;
 					sym_addr |= (
-						ntohl(*((unsigned long *) (sectionp + q->address))) &
-						0xc0000000
+						ntohl(*(unsigned long *)r_mem)
+						& 0xc0000000
 						);
 					break;
 				case R_SPARC_HI22:
@@ -718,8 +790,8 @@ dump_symbols(symbols, number_of_symbols);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					sym_addr |= (
-						htonl(* ((unsigned long *) (sectionp + q->address))) &
-						0xffc00000
+						htonl(*(unsigned long *)r_mem)
+						& 0xffc00000
 						);
 					break;
 				case R_SPARC_LO10:
@@ -729,8 +801,8 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr += sym_vma + q->addend;
 					sym_addr &= 0x000003ff;
 					sym_addr |= (
-						htonl(* ((unsigned long *) (sectionp + q->address))) &
-						0xfffffc00
+						htonl(*(unsigned long *)r_mem)
+						& 0xfffffc00
 						);
 					break;
 #endif /* TARGET_sparc */
@@ -788,7 +860,7 @@ dump_symbols(symbols, number_of_symbols);
 					i3 = 0;
 				}
 
-				tmp.l = *((unsigned long *) (sectionp + q->address));
+				tmp.l = *(unsigned long *)r_mem;
 				hl = tmp.c[i0] | (tmp.c[i1] << 8) | (tmp.c[i2] << 16);
 				if (((*p)->howto->type != R_ARM_PC24) &&
 				    ((*p)->howto->type != R_ARM_PLT32))
@@ -803,25 +875,45 @@ dump_symbols(symbols, number_of_symbols);
 				    ((*p)->howto->type != R_ARM_PLT32))
 					tmp.c[i3] = (hl >> 24) & 0xff;
 				if ((*p)->howto->type == R_ARM_ABS32)
-					*((unsigned long *) (sectionp + q->address)) = htonl(hl);
+					*(unsigned long *)r_mem = htonl(hl);
 				else
-					*((unsigned long *) (sectionp + q->address)) = tmp.l;
+					*(unsigned long *)r_mem = tmp.l;
+
 #else /* ! TARGET_arm */
-				/* The alignment of the build host might be
-				   stricter than that of the target, so be
-				   careful.  We store in network byte order. */
-				unsigned char *p = sectionp + q->address;
-				p[0] = (sym_addr >> 24) & 0xff;
-				p[1] = (sym_addr >> 16) & 0xff;
-				p[2] = (sym_addr >>  8) & 0xff;
-				p[3] =  sym_addr        & 0xff;
-#endif
+
+				switch (q->howto->type) {
+#ifdef TARGET_v850
+				case R_V850_HI16_S:
+				case R_V850_HI16:
+				case R_V850_LO16:
+					/* Do nothing -- for cases we handle,
+					   the bits produced by the linker are
+					   what we want in the final flat file
+					   (and other cases are errors).  Note
+					   that unlike most relocated values,
+					   it is stored in little-endian order,
+					   but this is necessary to avoid
+					   trashing the low-bit, and the float
+					   loaders knows about it.  */
+					break;
+#endif /* TARGET_V850 */
+				default:
+					/* The alignment of the build host
+					   might be stricter than that of the
+					   target, so be careful.  We store in
+					   network byte order. */
+					r_mem[0] = (sym_addr >> 24) & 0xff;
+					r_mem[1] = (sym_addr >> 16) & 0xff;
+					r_mem[2] = (sym_addr >>  8) & 0xff;
+					r_mem[3] =  sym_addr        & 0xff;
+				}
+#endif /* !TARGET_arm */
 			}
 
 			if (verbose)
-				printf("  RELOC[%d]: offset=%x symbol=%s%s "
+				printf("  RELOC[%d]: offset=0x%x symbol=%s%s "
 					"section=%s size=%d "
-					"fixup=%x (reloc=0x%x)\n", flat_reloc_count,
+					"fixup=0x%x (reloc=0x%x)\n", flat_reloc_count,
 					q->address, sym_name, addstr,
 					section_name, sym_reloc_size,
 					sym_addr, section_vma + q->address);
@@ -844,7 +936,7 @@ dump_symbols(symbols, number_of_symbols);
 			}
 
 #if 0
-printf("%s(%d): symbol name=%s address=%x section=%s -> RELOC=%x\n",
+printf("%s(%d): symbol name=%s address=0x%x section=%s -> RELOC=0x%x\n",
 	__FILE__, __LINE__, sym_name, q->address, section_name,
 	flat_relocs[flat_reloc_count]);
 #endif
@@ -1160,7 +1252,7 @@ int main(int argc, char *argv[])
   text = malloc(text_len);
 
   if (verbose)
-    printf("TEXT -> vma=%x len=%x\n", text_vma, text_len);
+    printf("TEXT -> vma=0x%x len=0x%x\n", text_vma, text_len);
 
   /* Read in all text sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
@@ -1180,15 +1272,15 @@ int main(int argc, char *argv[])
   data = malloc(data_len);
 
   if (verbose)
-    printf("DATA -> vma=%x len=%x\n", data_vma, data_len);
+    printf("DATA -> vma=0x%x len=0x%x\n", data_vma, data_len);
 
   if ((text_vma + text_len) != data_vma) {
     if ((text_vma + text_len) > data_vma) {
-      printf("ERROR: text=%x overlaps data=%x ?\n", text_len, data_vma);
+      printf("ERROR: text=0x%x overlaps data=0x%x ?\n", text_len, data_vma);
       exit(1);
     }
     if (verbose)
-      printf("WARNING: data=%x does not directly follow text=%x\n",
+      printf("WARNING: data=0x%x does not directly follow text=0x%x\n",
 	  		data_vma, text_len);
     text_len = data_vma - text_vma;
   }
@@ -1208,16 +1300,16 @@ int main(int argc, char *argv[])
   bss_len += add_com_to_bss(symbol_table, number_of_symbols, bss_len);
 
   if (verbose)
-    printf("BSS  -> vma=%x len=%x\n", bss_vma, bss_len);
+    printf("BSS  -> vma=0x%x len=0x%x\n", bss_vma, bss_len);
 
   if ((text_vma + text_len + data_len) != bss_vma) {
     if ((text_vma + text_len + data_len) > bss_vma) {
-      printf("ERROR: text=%x + data=%x overlaps bss=%x ?\n", text_len,
+      printf("ERROR: text=0x%x + data=0x%x overlaps bss=0x%x ?\n", text_len,
 	  		data_len, bss_vma);
       exit(1);
     }
     if (verbose)
-      printf("WARNING: bss=%x does not directly follow text=%x + data=%x(%x)\n",
+      printf("WARNING: bss=0x%x does not directly follow text=0x%x + data=0x%x(0x%x)\n",
       		bss_vma, text_len, data_len, text_len + data_len);
       data_len = bss_vma - data_vma;
   }
