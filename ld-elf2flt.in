@@ -60,7 +60,7 @@ then
 
 		-EB)      ARG1="$ARG1 $1"; SDIRS="$SDIRS $1";; # arm big endian
 
-		-relax)   FINAL_ONLY="$FINAL_ONLY $1" ;;
+		-relax)   ;;                           # eat this for microblaze
 
 		-r|-Ur)   FINAL=""                     # this is not a final link
 		          ARG1="$ARG1 $1"

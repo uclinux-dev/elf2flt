@@ -1152,6 +1152,8 @@ int main(int argc, char *argv[])
   unsigned long bss_vma = ~0;
   unsigned long text_vma = ~0;
 
+  unsigned long text_offs;
+
   void *text;
   void *data;
   unsigned long *reloc;
@@ -1348,8 +1350,8 @@ int main(int argc, char *argv[])
   if (verbose)
     printf("BSS  -> vma=0x%x len=0x%x\n", bss_vma, bss_len);
 
-  if ((text_vma + text_len + data_len) != bss_vma) {
-    if ((text_vma + text_len + data_len) > bss_vma) {
+  if ((data_vma + data_len) != bss_vma) {
+    if ((data_vma + data_len) > bss_vma) {
       printf("ERROR: text=0x%x + data=0x%x overlaps bss=0x%x ?\n", text_len,
 	  		data_len, bss_vma);
       exit(1);
@@ -1357,7 +1359,7 @@ int main(int argc, char *argv[])
     if (verbose)
       printf("WARNING: bss=0x%x does not directly follow text=0x%x + data=0x%x(0x%x)\n",
       		bss_vma, text_len, data_len, text_len + data_len);
-      data_len = bss_vma - data_vma;
+    data_len = bss_vma - data_vma;
   }
 
   reloc = (unsigned long *)
@@ -1367,15 +1369,17 @@ int main(int argc, char *argv[])
   if (reloc == NULL)
     printf("No relocations in code!\n");
 
+  text_offs = real_address_bits(text_vma);
+
   /* Fill in the binflt_flat header */
   memcpy(hdr.magic,"bFLT",4);
   hdr.rev         = htonl(FLAT_VERSION);
   hdr.entry       = htonl(16 * 4 + bfd_get_start_address(abs_bfd));
-  hdr.data_start  = htonl(16 * 4 + text_len);
-  hdr.data_end    = htonl(16 * 4 + text_len + data_len);
-  hdr.bss_end     = htonl(16 * 4 + text_len + data_len + bss_len);
+  hdr.data_start  = htonl(16 * 4 + text_offs + text_len);
+  hdr.data_end    = htonl(16 * 4 + text_offs + text_len + data_len);
+  hdr.bss_end     = htonl(16 * 4 + text_offs + text_len + data_len + bss_len);
   hdr.stack_size  = htonl(stack); /* FIXME */
-  hdr.reloc_start = htonl(16 * 4 + real_address_bits(data_vma) + data_len);
+  hdr.reloc_start = htonl(16 * 4 + text_offs + text_len + data_len);
   hdr.reloc_count = htonl(reloc_len);
   hdr.flags       = htonl(0
 	  | (load_to_ram ? FLAT_FLAG_RAM : 0)
@@ -1434,20 +1438,14 @@ int main(int argc, char *argv[])
 
   /* Fill in any hole at the beginning of the text segment.  */
   if (verbose)
-	  printf("ZERO before text len=0x%x\n", real_address_bits(text_vma));
-  write_zeroes(real_address_bits(text_vma), gf);
+	  printf("ZERO before text len=0x%x\n", text_offs);
+  write_zeroes(text_offs, gf);
 
   /* Write the text segment.  */
   fwrite(text, text_len, 1, gf);
 
   if (compress == 2)
   	START_COMPRESSOR;
-
-  /* Fill in any hole at the beginning of the data segment.  */
-  /* this is text relative so we don't need to mask any bits */
-  if (verbose)
-	  printf("ZERO before data len=0x%x\n", data_vma - (text_vma + text_len));
-  write_zeroes(data_vma - (text_vma + text_len), gf);
 
   /* Write the data segment.  */
   fwrite(data, data_len, 1, gf);
