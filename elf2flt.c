@@ -38,6 +38,7 @@
 #include <strings.h>
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
 #include <fcntl.h>    /* Flag value for file handling functions              */
+#include <time.h>
 
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
 
@@ -926,15 +927,15 @@ int main(int argc, char *argv[])
 	 		s->lma, s->_cooked_size, s->output_offset,
 			s->alignment_power, s->filepos);
   }
-  if (text_len != data_vma) {
-    if (text_len > data_vma) {
+  if ((text_vma + text_len) != data_vma) {
+    if ((text_vma + text_len) > data_vma) {
       printf("ERROR: text=%x overlaps data=%x ?\n", text_len, data_vma);
       exit(1);
     }
     if (verbose)
       printf("WARNING: data=%x does not directly follow text=%x\n",
 	  		data_vma, text_len);
-    text_len = data_vma;
+    text_len = data_vma - text_vma;
   }
 
   if (bfd_get_section_contents(abs_bfd,
@@ -958,8 +959,8 @@ int main(int argc, char *argv[])
 			s->alignment_power, s->filepos);
   }
 
-  if ((text_len + data_len) != bss_vma) {
-    if ((text_len + data_len) > bss_vma) {
+  if ((text_vma + text_len + data_len) != bss_vma) {
+    if ((text_vma + text_len + data_len) > bss_vma) {
       printf("ERROR: text=%x + data=%x overlaps bss=%x ?\n", text_len,
 	  		data_len, bss_vma);
       exit(1);
@@ -967,7 +968,7 @@ int main(int argc, char *argv[])
     if (verbose)
       printf("WARNING: bss=%x does not directly follow text=%x + data=%x(%x)\n",
       		bss_vma, text_len, data_len, text_len + data_len);
-      data_len = bss_vma - text_len;
+      data_len = bss_vma - data_vma;
   }
 
   reloc = (unsigned long *) output_relocs (abs_bfd, symbol_table,
@@ -991,6 +992,7 @@ int main(int argc, char *argv[])
 	  | (pic_with_got ? FLAT_FLAG_GOTPIC : 0)
 	  | (compress ? (compress == 2 ? FLAT_FLAG_GZDATA : FLAT_FLAG_GZIP) : 0)
 	  );
+  hdr.build_date = htonl((unsigned long)time(NULL));
   bzero(hdr.filler, sizeof(hdr.filler));
 
   for (i=0; i<reloc_len; i++) reloc[i] = htonl(reloc[i]);

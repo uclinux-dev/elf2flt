@@ -2,12 +2,12 @@
 ENTRY (_start)
 
 MEMORY {
-	flatmem : ORIGIN = 0x0, LENGTH = 0x100000
+	flatmem : ORIGIN = 0x0, LENGTH = 0xffffff
 	junk    : ORIGIN = 0x0, LENGTH = 0x100000
 }
 
 SECTIONS {
-	.text 0 : {
+	.text 0x0 : {
 		. = . + 4;
 		. = ALIGN(0x4) ;
 		_stext = . ;
@@ -20,6 +20,10 @@ SECTIONS {
 		*(.glue_7)
 		*(.init)
 		*(.fini)
+
+W_RODAT		*(.rodata)
+W_RODAT		*(.rodata1)
+W_RODAT		*(.rodata.*)
 
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
@@ -41,9 +45,9 @@ SECTIONS {
 		*(.got.plt)
 		*(.got)
 		LONG(-1)
-		*(.rodata)
-		*(.rodata1)
-		*(.rodata.*)
+R_RODAT		*(.rodata)
+R_RODAT		*(.rodata1)
+R_RODAT		*(.rodata.*)
 		*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)

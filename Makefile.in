@@ -51,5 +51,4 @@ install:
 	$(INSTALL) -m 755 $(srcdir)/ld-elf2flt $(bindir)/$(TARGET)-ld
 	$(INSTALL) -m 755 $(srcdir)/ld-elf2flt $(target_bindir)/ld
 	$(INSTALL) -m 644 $(srcdir)/elf2flt.ld $(target_libdir)
-	$(INSTALL) -m 644 $(srcdir)/elf2flt.movdat.ld $(target_libdir)
 

@@ -33,7 +33,8 @@ struct flat_hdr {
 	                               beginning of file */
 	unsigned long reloc_count;  /* Number of relocation records */
 	unsigned long flags;       
-	unsigned long filler[6];    /* Reservered, set to zero */
+	unsigned long build_date;   /* When the program/library was built */
+	unsigned long filler[5];    /* Reservered, set to zero */
 };
 
 #define FLAT_FLAG_RAM    0x0001 /* load program entirely into RAM */

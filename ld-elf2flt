@@ -9,13 +9,15 @@
 # Install by renaming all m68k-elf-ld/ld to XXX.real, and put this
 # script in their place.
 #
-# Copyright (C) 2000, Lineo.
-# davidm@lineo.com
+# Copyright (C) 2002 David McCullough <davidm@snapgear.com>
+# Copyright (C) 2000, Lineo. davidm@lineo.com
 #
 
 LINKER="$0.real"            # the original renamed-linker
 ELF2FLT="`expr $0 : '\(.*\)ld'`elf2flt"
 TOOLDIR="`dirname $0`"      # let gcc find the tools for us
+SHARED_ID=""
+NEWLDSCRIPT=""
 
 #
 # if we have the elf2flt options, run it
@@ -41,6 +43,9 @@ then
 
 		-move-rodata)
 		          MOVDAT="y";;                 # Put rodata in ROM if possible
+			 
+		-shared-lib-id)
+			shift; SHARED_ID="$1";;		# Shared library ID
 
 		-o)       shift; OFILE="$1";;          # the final outfile
 		-o*)      OFILE="`expr \"$1\" : '-o\(.*\)'`";;
@@ -69,6 +74,8 @@ then
 
 	if [ "$FINAL" = "yes" ]
 	then
+		NEWLDSCRIPT=`mktemp /tmp/flt-XXXXXX`
+		SEDOP=" -e s/^R_RODAT// -e /^W_RODAT/d"
 		if [ "$MOVDAT" ]
 		then
 			$LINKER -r -d -o $OFILE.elf2flt $ARG1  || exit $?
@@ -77,13 +84,41 @@ then
 			then
 				echo "warning: .rodata section contains relocations"
 			else
-				[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.movdat.ld"
+				SEDOP="-e /^R_RODAT/d -e s/^W_RODAT//"
 			fi
 		fi
+		if [ "$SHARED_ID" ]
+		then
+			# Massage the linker script into something useful.  These
+			# regexps are ugly due to some bizzare shell quoting rules.
+			#    SEDOP="$SEDOP -e \"s/ORIGIN = 0x0,/ORIGIN = 0x${SHARED_ID}000000,/\""
+			#    SEDOP="$SEDOP -e \"s/.text 0x0 :/.text 0x${SHARED_ID}000000 :/\""			
+			SEDOP="$SEDOP -e s/\\(ORIGIN.=.0\\)x0,/\\1x${SHARED_ID}000000,/"
+			SEDOP="$SEDOP -e s/\\([.]text.0\\)x0[^0-9]:/\\1x${SHARED_ID}000000:/"
+			
+			if [ "$SHARED_ID" -gt 0 ]
+			then
+				# Non application modules enter via main not _start
+				#    SEDOP="$SEDOP -e 's/ENTRY (_start)/ENTRY (main)/'"
+				SEDOP="$SEDOP -e s/\\(ENTRY.\\)(_start)/\1(lib_main)/"
+			fi
+
+			# Provide the magic parameter that defines the library data segment pointer offset
+			ARG1="$ARG1 -defsym _current_shared_library_a5_offset_=`expr ${SHARED_ID} '*' -4 - 4`"
+		fi
+		
+		# Provide a default linker script
 		[ -z "$LDSCRIPT" ] && LDSCRIPT="elf2flt.ld"
+
+		# Reprocess the linker script as required.
+		# We do this in a subshell so a relatively pathed script can be found
+		(	cd /usr/local/m68k-elf/lib
+			sed $SEDOP < "$LDSCRIPT" > "$NEWLDSCRIPT"
+		)
+
 		$LINKER -r -d -o $OFILE.elf2flt $ARG1                        || exit $?
-		$LINKER $SDIRS -T $LDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
-		$LINKER $SDIRS -T $LDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
+		$LINKER $SDIRS -T $NEWLDSCRIPT -Ur -o $OFILE.elf $OFILE.elf2flt || exit $?
+		$LINKER $SDIRS -T $NEWLDSCRIPT -o $OFILE.gdb $OFILE.elf2flt     || exit $?
 		rm -f $OFILE.elf2flt
 		if grep _GLOBAL_OFFSET_TABLE_ $OFILE.gdb > /dev/null 
 		then
@@ -92,6 +127,7 @@ then
 			$ELF2FLT $FLTFLAGS -o $OFILE -r $OFILE.elf || exit $?
 		fi
 		rm -f $OFILE.elf  # not needed for any reason
+		rm -f "$NEWLDSCRIPT"
 		exit 0
 	fi
 

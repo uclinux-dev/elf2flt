@@ -2,13 +2,14 @@
 /*
  *	A simple program to manipulate flat files
  *
- *	Copyright (C) 2001 SnapGear Inc, davidm@snapgear.com
+ *	Copyright (C) 2001,2002 SnapGear Inc, davidm@snapgear.com
  *	Copyright (C) 2001 Lineo, davidm@lineo.com
  */
 /****************************************************************************/
 
 #include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
+#include <time.h>
 
 /* macros for conversion between host and (internet) network byte order */
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
@@ -102,9 +103,13 @@ process_file(char *ifile, char *ofile)
 		new_stack = stacksize;
 
 	if (print == 1) {
+		time_t t;
+
 		printf("%s\n", ifile);
 		printf("    Magic:        %4.4s\n", old_hdr.magic);
 		printf("    Rev:          %d\n",    ntohl(old_hdr.rev));
+		t = (time_t) htonl(old_hdr.build_date);
+		printf("    Build Date:   %s",      t?ctime(&t):"not specified\n");
 		printf("    Entry:        0x%x\n",  ntohl(old_hdr.entry));
 		printf("    Data Start:   0x%x\n",  ntohl(old_hdr.data_start));
 		printf("    Data End:     0x%x\n",  ntohl(old_hdr.data_end));
