@@ -29,6 +29,7 @@ then
 	SDIRS=
 	LDSCRIPT=
 	FINAL="yes"
+	FINAL_ONLY=
 	MOVDAT=
 
 	while [ $# -ne 0 ]
@@ -59,6 +60,8 @@ then
 
 		-EB)      ARG1="$ARG1 $1"; SDIRS="$SDIRS $1";; # arm big endian
 
+		-relax)   FINAL_ONLY="$FINAL_ONLY $1" ;;
+
 		-r|-Ur)   FINAL=""                     # this is not a final link
 		          ARG1="$ARG1 $1"
 				  ;;
@@ -71,6 +74,7 @@ then
 
 	if [ "$FINAL" = "yes" ]
 	then
+		ARG1="$ARG1 $FINAL_ONLY"
 		NEWLDSCRIPT=`mktemp /tmp/flt-XXXXXX`
 		SEDOP=" -e s/^R_RODAT// -e /^W_RODAT/d"
 		if [ "$MOVDAT" ]
