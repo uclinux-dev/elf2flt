@@ -64,7 +64,7 @@
 #elif defined(TARGET_v850)
 #define	ARCH	"v850"
 #else
-#error "Don't know how to support you CPU archiecture??"
+#error "Don't know how to support your CPU architecture??"
 #endif
 
 /*
