@@ -488,6 +488,10 @@ dump_symbols(symbols, number_of_symbols);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
+				case R_ARM_GOT32:
+				case R_ARM_GOTPC:
+					/* Should be fine as is */
+					break;
 				case R_ARM_PLT32:
 					if (verbose)
 						fprintf(stderr,
