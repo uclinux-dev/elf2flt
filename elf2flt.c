@@ -72,6 +72,8 @@
 #define	ARCH	"sh"
 #elif defined(TARGET_h8300)
 #define	ARCH	"h8300"
+#elif defined(TARGET_microblaze)
+#define ARCH	"microblaze"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -374,6 +376,19 @@ dump_symbols(symbols, number_of_symbols);
 		for (p = relpp; (relcount && (*p != NULL)); p++, relcount--) {
 			int relocation_needed = 0;
 
+#ifdef TARGET_microblaze
+			/* The MICROBLAZE_XX_NONE relocs can be skipped.
+			   They represent PC relative branches that the
+			   linker has already resolved */
+				
+			switch ((*p)->howto->type) 
+			{
+			case R_MICROBLAZE_NONE:
+			case R_MICROBLAZE_64_NONE:
+				continue;
+			}
+#endif /* TARGET_microblaze */
+			   
 #ifdef TARGET_v850
 			/* Skip this relocation entirely if possible (we
 			   do this early, before doing any other
@@ -609,6 +624,73 @@ dump_symbols(symbols, number_of_symbols);
 					continue;
 #endif
 
+#ifdef TARGET_microblaze
+				case R_MICROBLAZE_64:
+		/* The symbol is split over two consecutive instructions.  
+		   Flag this to the flat loader by setting the high bit of 
+		   the relocation symbol. */
+				{
+					unsigned char *p = sectionp + q->address;
+					unsigned long offset;
+					pflags=0x80000000;
+
+					/* work out the relocation */
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					/* grab any offset from the text */
+					offset = (p[2]<<24) + (p[3] << 16) + (p[6] << 8) + (p[7]);
+					/* Update the address */
+					sym_addr += offset + sym_vma + q->addend;
+					/* Write relocated pointer back */
+					p[2] = (sym_addr >> 24) & 0xff;
+					p[3] = (sym_addr >> 16) & 0xff;
+					p[6] = (sym_addr >>  8) & 0xff;
+					p[7] =  sym_addr        & 0xff;
+
+					/* create a new reloc entry */
+					flat_relocs = realloc(flat_relocs,
+						(flat_reloc_count + 1) * sizeof(unsigned long));
+					flat_relocs[flat_reloc_count] = pflags | (section_vma + q->address);
+					flat_reloc_count++;
+					relocation_needed = 0;
+					pflags = 0;
+			sprintf(&addstr[0], "+0x%x", sym_addr - (*(q->sym_ptr_ptr))->value -
+					 bfd_section_vma(abs_bfd, sym_section));
+			if (verbose)
+				printf("  RELOC[%d]: offset=%x symbol=%s%s "
+					"section=%s size=%d "
+					"fixup=%x (reloc=0x%x)\n", flat_reloc_count,
+					q->address, sym_name, addstr,
+					section_name, sym_reloc_size,
+					sym_addr, section_vma + q->address);
+			if (verbose)
+				printf("reloc[%d] = 0x%x\n", flat_reloc_count,
+					 section_vma + q->address);
+
+					continue;
+				}
+				case R_MICROBLAZE_32:
+					relocation_needed = 1;
+					//sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_vma = bfd_section_vma(abs_bfd, sym_section);
+					sym_addr += sym_vma + q->addend;
+					break;
+
+				case R_MICROBLAZE_64_PCREL:
+					sym_vma = 0;
+					//sym_addr = (*(q->sym_ptr_ptr))->value;
+					sym_addr += sym_vma + q->addend;
+					sym_addr -= (q->address + 4);
+					sym_addr = htonl(sym_addr);
+					/* insert 16 MSB */
+					* ((unsigned short *) (sectionp + q->address+2)) |= (sym_addr) & 0xFFFF;
+					/* then 16 LSB */
+					* ((unsigned short *) (sectionp + q->address+6)) |= (sym_addr >> 16) & 0xFFFF;
+					/* We've done all the work, so continue
+					   to next reloc instead of break */
+					continue;
+
+#endif /* TARGET_microblaze */
+					
 #ifdef TARGET_sparc
 				case R_SPARC_32:
 				case R_SPARC_UA32:

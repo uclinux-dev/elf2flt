@@ -93,6 +93,7 @@ R_RODAT		*(.rodata.*)
 		*(.dynbss)
 		*(.bss)
 		*(.bss.*)
+		*(.bss*)
 		*(COMMON)
 		. = ALIGN(0x10) ;
 		_ebss = . ;
