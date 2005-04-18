@@ -9,6 +9,8 @@
 # Copyright (C) 2002,2003 David McCullough <davidm@snapgear.com>
 # Copyright (C) 2000, Lineo. davidm@lineo.com
 #
+# This is Free Software, under the GNU Public Licence v2 or greater.
+#
 
 LINKER="$0.real"            # the original renamed-linker
 ELF2FLT="`expr $0 : '\(.*\)ld'`elf2flt"

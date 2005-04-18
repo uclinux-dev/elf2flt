@@ -6,10 +6,12 @@ Copyright (C) 2001-2003, SnapGear (www.snapgear.com)
 davidm@snapgear.com
 gerg@snapgear.com
 
+This is Free Software, under the GNU Public Licence v2 or greater.  See
+LICENSE.TXT for more details.
 
 Elf2flt with PIC, ZFLAT and full reloc support. Currently supported
-targets include: m68k/ColdFire, ARM, Sparc, NEC v850, h8300 and SuperH.
-
+targets include: m68k/ColdFire, ARM, Sparc, NEC v850, MicroBlaze, 
+h8300 and SuperH.
 
 COMPILING:
 

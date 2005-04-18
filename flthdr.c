@@ -4,6 +4,9 @@
  *
  *	Copyright (C) 2001-2003 SnapGear Inc, davidm@snapgear.com
  *	Copyright (C) 2001 Lineo, davidm@lineo.com
+ *
+ * This is Free Software, under the GNU Public Licence v2 or greater.
+ *
  */
 /****************************************************************************/
 

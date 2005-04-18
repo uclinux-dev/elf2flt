@@ -7,6 +7,7 @@
  * text and data.
  *
  * (c) 2003, H8 support, ktrace <davidm@snapgear.com>
+ * (c) 2003-2004, MicroBlaze support, John Williams <jwilliams@itee.uq.edu.au>
  * (c) 2001-2003, arm/arm-pic/arm-big-endian support <davidm@snapgear.com>
  * (c) 2001, v850 changes, Mile Bader <miles@lsi.nec.co.jp>
  * (c) 2003, SuperH support, Paul Mundt <lethal@linux-sh.org>

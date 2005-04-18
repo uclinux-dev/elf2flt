@@ -5,6 +5,9 @@
  *
  * This file provides the definitions and structures needed to
  * support uClinux flat-format executables.
+ *
+ * This is Free Software, under the GNU Public Licence v2 or greater.
+ *
  */
 
 #ifndef _LINUX_FLAT_H
