@@ -2091,4 +2091,21 @@ typedef Elf32_Addr Elf32_Conflict;
 
 #define R_CRIS_NUM		20
 
+#define R_MICROBLAZE_NONE 		0
+#define R_MICROBLAZE_32 		1
+#define R_MICROBLAZE_32_PCREL 		2
+#define R_MICROBLAZE_64_PCREL 		3
+#define R_MICROBLAZE_32_PCREL_LO 	4
+#define R_MICROBLAZE_64 		5
+#define R_MICROBLAZE_32_LO 		6
+#define R_MICROBLAZE_SRO32 		7
+#define R_MICROBLAZE_SRW32 		8
+#define R_MICROBLAZE_64_NONE 		9
+#define R_MICROBLAZE_32_SYM_OP_SYM 	10
+#define R_MICROBLAZE_GNU_VTINHERIT 	11
+#define R_MICROBLAZE_GNU_VTENTRY 	12
+   
+#define R_MICROBLAZE_NUM 		13
+
+
 #endif	/* elf.h */

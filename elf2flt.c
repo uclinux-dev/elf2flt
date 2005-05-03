@@ -52,10 +52,10 @@
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
-#elif defined(TARGET_microblaze)
-#include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
 #elif defined(__CYGWIN__)
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
+#elif defined(TARGET_microblaze)
+#include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
 #else
 #include <elf.h>      /* TARGET_* ELF support for the BFD library            */
 #endif

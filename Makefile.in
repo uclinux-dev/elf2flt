@@ -20,6 +20,11 @@ DEFS = @DEFS@ -DTARGET_$(CPU)
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 
+# force link order under cygwin to avoid getopts / libiberty clash
+ifneq ($(strip $(shell gcc -v 2>&1 | grep "cygwin")),)
+   LIBS := -lcygwin $(LIBS)
+endif
+
 CCFLAGS = $(CFLAGS) $(DEFS) $(INCLUDES)
 
 LDFILE= elf2flt.ld
