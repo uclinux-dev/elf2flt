@@ -87,11 +87,13 @@
 #define ARCH	"microblaze"
 #elif defined(TARGET_e1)
 #define ARCH    "e1-coff"
+#elif defined(TARGET_bfin)
+#define ARCH	"bfin"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
 
-#if defined(TARGET_m68k) || defined(TARGET_h8300)
+#if defined(TARGET_m68k) || defined(TARGET_h8300) || defined(TARGET_bfin)
 /*
  * Define a maximum number of bytes allowed in the offset table.
  * We'll fail if the table is larger than this.
@@ -246,7 +248,7 @@ get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number
   for (i=0; i<number_of_symbols; i++) {
     if (symbol_table[i]->section == sec) {
       if (!strcmp(symbol_table[i]->name, name)) {
-	return symbol_table[i]->value;
+        return symbol_table[i]->value;
       }
     }
   }
@@ -274,7 +276,7 @@ add_com_to_bss(asymbol **symbol_table, long number_of_symbols, long bss_len)
 
 
 
-unsigned long *
+uint32_t *
 output_relocs (
   bfd *abs_bfd,
   asymbol **symbols,
@@ -284,7 +286,7 @@ output_relocs (
   unsigned char *data, int data_len, unsigned long data_vma,
   bfd *rel_bfd)
 {
-  unsigned long		*flat_relocs;
+  uint32_t		*flat_relocs;
   asection		*a, *sym_section, *r;
   arelent		**relpp, **p, *q;
   const char		*sym_name, *section_name;
@@ -780,7 +782,7 @@ dump_symbols(symbols, number_of_symbols);
 
 					/* create a new reloc entry */
 					flat_relocs = realloc(flat_relocs,
-						(flat_reloc_count + 1) * sizeof(unsigned long));
+						(flat_reloc_count + 1) * sizeof(uint32_t));
 					flat_relocs[flat_reloc_count] = pflags | (section_vma + q->address);
 					flat_reloc_count++;
 					relocation_needed = 0;
@@ -1198,7 +1200,7 @@ DIS29_RELOCATION:
 			 */
 			if (relocation_needed) {
 				flat_relocs = realloc(flat_relocs,
-					(flat_reloc_count + 1) * sizeof(unsigned long));
+					(flat_reloc_count + 1) * sizeof(uint32_t));
 #ifndef TARGET_e1
 				flat_relocs[flat_reloc_count] = pflags |
 					(section_vma + q->address);
@@ -1257,90 +1259,6 @@ printf("%s(%d): symbol name=%s address=0x%x section=%s -> RELOC=0x%x\n",
   return flat_relocs;
 }
 
-
-
-#if 0
-/* shared lib symbols stuff */
-
-long
-get_symbol(char *name, asection *sec, asymbol **symbol_table, long number_of_symbols)
-{
-  long i;
-  for (i=0; i<number_of_symbols; i++) {
-    if (symbol_table[i]->section == sec) {
-      if (!strcmp(symbol_table[i]->name, name)) {
-	return symbol_table[i]->value;
-      }
-    }
-  }
-  return -1;
-}  
-
-int
-output_offset_table(int fd, char *ename, bfd *abfd, asymbol **symbol_table, long number_of_symbols)
-{
-  long i;
-  FILE *ef;
-  char buf[80];
-  char libname[80];
-  long etext_addr;
-  long sym_addr;
-
-  int foobar = 0;
-  int count = 0;
-  signed short *tab = malloc(32768); /* we don't know how many yet*/
-
-  asection *text_section = bfd_get_section_by_name (abfd, ".text");
-
-  if (!(ef = fopen(ename, "rb"))) {
-    fprintf (stderr,"Can't open %s\n",ename);
-    exit(1);
-  }
-
-  fgets(libname, 80, ef);
-
-  if (number_of_symbols < 0) {
-    fprintf (stderr,"Corrupt symbol table!\n");
-    exit(1);
-  }
-
-  if ((etext_addr = get_symbol("etext",
-			       text_section,
-			       symbol_table,
-			       number_of_symbols)) == -1) {
-    fprintf (stderr,"Can't find the symbol etext\n");
-    exit(1);
-  }
-
-  fgets(buf, 80, ef);
-  while (!feof(ef)) {
-    buf[strlen(buf)-1] = 0; /* Arrrgh! linefeeds */
-
-    if ((sym_addr = get_symbol(buf,
-			       text_section,
-			       symbol_table,
-			       number_of_symbols)) == -1) {
-      fprintf (stderr,"Can't find the symbol %s\n",buf);
-      foobar++;
-    } else {
-      tab[++count] = htons(sym_addr - etext_addr);
-    }
-    fgets(buf, 80, ef);
-  }
-
-  fclose(ef);
-
-  if (foobar) {
-    fprintf (stderr,"*** %d symbols not found\n",foobar);
-    exit(10);
-  }
-
-  strcpy((char *)&tab[++count],libname);
-  tab[0] = htons(count * 2);
-  write(fd, tab, count * 2 + strlen(libname) + 2);
-  return 0;
-}
-#endif
 
 
 static char * program;
@@ -1734,3 +1652,14 @@ int main(int argc, char *argv[])
 
   exit(0);
 }
+
+
+/*
+ * this __MUST__ be at the VERY end of the file - do NOT move!!
+ *
+ * Local Variables:
+ * c-basic-offset: 4
+ * tab-width: 8
+ * end:
+ * vi: tabstop=8 shiftwidth=4 textwidth=79 noexpandtab
+ */
