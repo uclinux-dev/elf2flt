@@ -6,6 +6,7 @@ MEMORY {
 }
 
 SECTIONS {
+
 	.text 0x0 : {
 		. = . + 4;
 		. = ALIGN(0x4) ;
@@ -37,6 +38,7 @@ W_RODAT		*(.rodata.*)
 		. = ALIGN(0x20) ;
 		_etext = . ;
 	} > flatmem
+
 	.data : {
 		. = ALIGN(0x4) ;
 		_sdata = . ;
@@ -100,6 +102,7 @@ R_RODAT		*(.rodata.*)
 		. = ALIGN(0x10) ; 
 		_edata = . ;
 	} > flatmem
+
 	.bss : {
 		. = ALIGN(0x4) ;
 		_sbss = ALIGN(0x4) ;
@@ -119,6 +122,11 @@ R_RODAT		*(.rodata.*)
 		_end = . ;
 		end = . ;
 	} > flatmem
+
+	.stack : {
+		. = ALIGN(0x4);
+		__stack_start = .;
+	}
 
 	.junk 0 : { *(.rel*) *(.rela*) }
 	/* Stabs debugging sections.    */
