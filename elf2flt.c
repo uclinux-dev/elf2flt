@@ -52,7 +52,7 @@
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
-#elif defined(__CYGWIN__)
+#elif defined(__CYGWIN__) || defined(__MINGW32__)
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
 #elif defined(TARGET_microblaze)
 #include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
@@ -60,6 +60,10 @@
 #include "elf/bfin.h"
 #else
 #include <elf.h>      /* TARGET_* ELF support for the BFD library            */
+#endif
+
+#if defined(__MINGW32__)
+#include <getopt.h>
 #endif
 
 /* from uClinux-x.x.x/include/linux */

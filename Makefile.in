@@ -20,6 +20,12 @@ DEFS = @DEFS@ -DTARGET_$(CPU)
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 
+UNAME := $(shell uname -s)
+
+ifneq (,$(findstring MINGW,$(UNAME)))
+   LIBS :=  $(LIBS) -lws2_32
+endif
+
 # force link order under cygwin to avoid getopts / libiberty clash
 ifneq ($(strip $(shell gcc -v 2>&1 | grep "cygwin")),)
    LIBS := -lcygwin $(LIBS)

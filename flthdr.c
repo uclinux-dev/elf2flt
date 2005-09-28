@@ -17,10 +17,21 @@
 #include <string.h>   /* strcat(), strcpy() */
 
 /* macros for conversion between host and (internet) network byte order */
+#ifndef WIN32
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
+#else
+#include <winsock2.h>
+#endif
 
 /* from uClinux-x.x.x/include/linux */
 #include "flat.h"     /* Binary flat header description                      */
+
+#if defined(__MINGW32__)
+#include <getopt.h>
+
+#define mkstemp(p) mktemp(p)
+
+#endif
 
 /****************************************************************************/
 

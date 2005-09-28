@@ -20,8 +20,14 @@
 #ifndef _ELF_H
 #define	_ELF_H 1
 
+#if	defined(__MINGW32__)
+#include <stdint.h>
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+typedef uint64_t u_int64_t;
+#else
 #include <features.h>
-
+#endif
 /* Standard ELF types.  */
 
 #include <sys/types.h>
