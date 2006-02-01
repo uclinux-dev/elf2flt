@@ -20,9 +20,9 @@ DEFS = @DEFS@ -DTARGET_$(CPU)
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 
-UNAME := $(shell uname -s)
+HOST = @host_alias@
 
-ifneq (,$(findstring MINGW,$(UNAME)))
+ifneq (,$(findstring mingw32,$(HOST)))
    LIBS :=  $(LIBS) -lws2_32
 endif
 
