@@ -44,8 +44,10 @@
 #include <time.h>
 #ifndef WIN32
 #include <netinet/in.h> /* Consts and structs defined by the internet system */
+#define	BINARY_FILE_OPTS
 #else
 #include <winsock2.h>
+#define	BINARY_FILE_OPTS "b"
 #endif
 
 /* from $(INSTALLDIR)/include       */
@@ -2197,7 +2199,7 @@ int main(int argc, char *argv[])
 				pclose(gf); \
 			else \
 				fclose(gf); \
-		if (!(gf = popen(cmd, "wb"))) { \
+		if (!(gf = popen(cmd, "w" BINARY_FILE_OPTS))) { \
 			fprintf(stderr, "Can't run cmd %s\n", cmd); \
 			exit(4); \
 		} \
