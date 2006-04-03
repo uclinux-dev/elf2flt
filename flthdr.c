@@ -242,7 +242,7 @@ process_file(char *ifile, char *ofile)
 		}
 
 		sprintf(cmd, "gunzip >> %s", tfile2);
-		tfp = popen(cmd, "wb");
+		tfp = popen(cmd, "w");
 		if(!tfp) {
 			perror("popen");
 			exit(1);
@@ -264,7 +264,7 @@ process_file(char *ifile, char *ofile)
 		printf("zflat %s --> %s\n", ifile, ofile);
 		fclose(ofp);
 		sprintf(cmd, "gzip -9 -f >> %s", tfile);
-		ofp = popen(cmd, "wb");
+		ofp = popen(cmd, "w");
 		ofp_is_pipe = 1;
 	} else if (new_flags & FLAT_FLAG_GZDATA) {
 		printf("zflat-data %s --> %s\n", ifile, ofile);
@@ -272,7 +272,7 @@ process_file(char *ifile, char *ofile)
 				sizeof(struct flat_hdr));
 		fclose(ofp);
 		sprintf(cmd, "gzip -9 -f >> %s", tfile);
-		ofp = popen(cmd, "wb");
+		ofp = popen(cmd, "w");
 		ofp_is_pipe = 1;
 	}
 
