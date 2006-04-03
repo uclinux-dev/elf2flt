@@ -14,6 +14,7 @@
 
 LINKER="$0.real"            # the original renamed-linker
 ELF2FLT="`expr $0 : '\(.*\)ld'`elf2flt"
+NM="`expr $0 : '\(.*\)ld'`nm"
 TOOLDIR="`dirname $0`"      # let gcc find the tools for us
 LDSCRIPTPATH="@binutils_ldscript_dir@"	# and the scripts
 SHARED_ID=""
@@ -153,7 +154,7 @@ then
 		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" "$OFILE.elf2flt"     ||exit $?
 		 rm -f "$OFILE.elf2flt"
 		fi
-		if grep _GLOBAL_OFFSET_TABLE_ "$OFILE.gdb" > /dev/null 
+		if $NM "$OFILE.gdb" | grep _GLOBAL_OFFSET_TABLE_ > /dev/null 
 		then
 			$ELF2FLT $FLTFLAGS -o "$OFILE" -p "$OFILE.gdb" "$OFILE.elf" || exit $?
 		else
