@@ -25,6 +25,7 @@ SECTIONS {
 W_RODAT		*(.rodata)
 W_RODAT		*(.rodata1)
 W_RODAT		*(.rodata.*)
+W_RODAT		*(.gnu.linkonce.r*)
 
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
@@ -53,7 +54,7 @@ W_RODAT		*(.rodata.*)
 R_RODAT		*(.rodata)
 R_RODAT		*(.rodata1)
 R_RODAT		*(.rodata.*)
-		*(.gnu.linkonce.r*)
+R_RODAT		*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)
 		*(.data.*)
