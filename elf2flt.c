@@ -845,7 +845,7 @@ dump_symbols(symbols, number_of_symbols);
 				/* Calculate the sym address ourselves.  */
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
 
-#if !defined(TARGET_h8300) && !defined(TARGET_e1) && !defined(TARGET_bfin)
+#if !defined(TARGET_h8300) && !defined(TARGET_e1) && !defined(TARGET_bfin) && !defined(TARGET_m68k)
 				if (sym_reloc_size != 4) {
 					printf("ERROR: bad reloc type %d size=%d for symbol=%s\n",
 							(*p)->howto->type, sym_reloc_size, sym_name);
@@ -863,6 +863,7 @@ dump_symbols(symbols, number_of_symbols);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
+				case R_68K_PC16:
 				case R_68K_PC32:
 					sym_vma = 0;
 					sym_addr += sym_vma + q->addend;
@@ -1738,6 +1739,18 @@ DIS29_RELOCATION:
 					/* do nothing */
 					break;
 #endif /* TARGET_nios2 */
+
+#if defined(TARGET_m68k)
+				case R_68K_PC16:
+					if (sym_addr < -0x8000 || sym_addr > 0x7fff) {
+						fprintf (stderr, "Relocation overflow for R_68K_PC16 relocation against %s\n", sym_name);
+						bad_relocs++;
+					} else {
+						r_mem[0] = (sym_addr >>  8) & 0xff;
+						r_mem[1] =  sym_addr        & 0xff;
+					}
+					break;
+#endif
 
 				default:
 					/* The alignment of the build host
