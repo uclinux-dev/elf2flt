@@ -308,119 +308,6 @@ add_com_to_bss(asymbol **symbol_table, long number_of_symbols, long bss_len)
 }  
 
 #ifdef TARGET_bfin
-/* stack to handle "arithmetic" relocations */
-#define RELOC_STACK_SIZE 100
-static bfd_vma reloc_stack[RELOC_STACK_SIZE];
-static unsigned int reloc_stack_tos = 0;
-static char sym_section_name[80];
-static asection *stack_sym_section = 0;
-
-static void
-reloc_stack_set_section(asection *section, const char *sym_section_name_in)
-{
-    /* TODO : we can add checks to make sure we do not
-       add different section names to the same arithmetic
-       expression.  */
-    strcpy(sym_section_name, sym_section_name_in);
-    stack_sym_section = section;
-}
-
-static const char *
-reloc_stack_get_section_name()
-{
-    return sym_section_name;
-}
-static asection *reloc_stack_get_section()
-{
-    return stack_sym_section;
-}
-
-#define is_reloc_stack_empty() ((reloc_stack_tos > 0)?0:1)
-
-static void
-reloc_stack_push(bfd_vma value)
-{
-  reloc_stack[reloc_stack_tos++] = value;
-}
-
-static bfd_vma
-reloc_stack_pop()
-{
-  return reloc_stack[--reloc_stack_tos];
-}
-
-static bfd_vma
-reloc_stack_operate(unsigned int oper)
-{
-    bfd_vma value;
-    switch(oper){
-    case 0xE2 :
-	value = reloc_stack[reloc_stack_tos - 2] + reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE3 :
-	value = reloc_stack[reloc_stack_tos - 2] - reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE4 :
-	value = reloc_stack[reloc_stack_tos - 2] * reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE5 :
-	value = reloc_stack[reloc_stack_tos - 2] / reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE6 :
-	value = reloc_stack[reloc_stack_tos - 2] % reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE7 :
-	value = reloc_stack[reloc_stack_tos - 2] << reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE8 :
-	value = reloc_stack[reloc_stack_tos - 2] >> reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xE9 :
-	value = reloc_stack[reloc_stack_tos - 2] & reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xEA :
-	value = reloc_stack[reloc_stack_tos - 2] | reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xEB :
-	value = reloc_stack[reloc_stack_tos - 2] ^ reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xEC :
-	value = reloc_stack[reloc_stack_tos - 2] && reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xED :
-	value = reloc_stack[reloc_stack_tos - 2] || reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 2;
-	break;
-    case 0xEF :
-	value = -reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos --;
-	break;
-    case 0xF0 :
-	value = ~reloc_stack[reloc_stack_tos - 1];
-	reloc_stack_tos -= 1;
-	break;
-    default :
-	fprintf(stderr, "bfin relocation : Internal bug\n");
-	return 0;
-    }
-
-    // now push the new value back on stack
-    reloc_stack_push(value);
-
-    return value;
-}
-
 /* FUNCTION : weak_und_symbol
    ABSTRACT : return true if symbol is weak and undefined.
 */
@@ -684,16 +571,6 @@ dump_symbols(symbols, number_of_symbols);
 #endif /* USE_V850_RELOCS */
 
 			q = *p;
-#ifdef TARGET_bfin
-			if ((q->sym_ptr_ptr && *q->sym_ptr_ptr) &&
-			     (!is_reloc_stack_empty() && strstr((*(q->sym_ptr_ptr))->name, "operator"))){
-				/* must be an arith reloc ... get the value from the stack */
-				sym_name = (*(q->sym_ptr_ptr))->name;
-				sym_section = reloc_stack_get_section();
-				section_name = reloc_stack_get_section_name();
-			}
-			else
-#endif
 			if (q->sym_ptr_ptr && *q->sym_ptr_ptr) {
 				sym_name = (*(q->sym_ptr_ptr))->name;
 				sym_section = (*(q->sym_ptr_ptr))->section;
@@ -1284,14 +1161,12 @@ NIOS2_RELOC_ERR:
 				  sym_addr -= q->address; // make it PC relative 
 				  // implicitly assumes code section and symbol section are same
 				  break;
-				
+				case R_got:
+				    /* Ignore these.  */
+				    break;
+
 				case R_rimm16:
-				    if (is_reloc_stack_empty ())
-				    {
-					sym_addr += q->addend;
-				    } else {
-					sym_addr = reloc_stack_pop ();
-				    }
+				    sym_addr += q->addend;
 				    if(weak_und_symbol(sym_section->name, (*(q->sym_ptr_ptr))))
 					continue;
 				    if(0xFFFF0000 & sym_addr){
@@ -1321,11 +1196,8 @@ NIOS2_RELOC_ERR:
 				    else
 					hi_lo = FLAT_RELOC_PART_HI;
 				
-				    if (is_reloc_stack_empty ())
-					sym_addr += q->addend;
-				    else
-					sym_addr = reloc_stack_pop ();
-				    
+				    sym_addr += q->addend;
+
 				    flat_relocs = (uint32_t *)
 					(realloc (flat_relocs, (flat_reloc_count + 2) * sizeof (uint32_t)));
 				    reloc_count_incr = 1;
@@ -1362,10 +1234,8 @@ NIOS2_RELOC_ERR:
 				    break;
 				}
 				case R_byte4_data:
-				    if (is_reloc_stack_empty ())
-					sym_addr += q->addend;
-				    else
-					sym_addr = reloc_stack_pop ();
+				    sym_addr += q->addend;
+
 				    if (weak_und_symbol (sym_section->name, *q->sym_ptr_ptr))
 					continue;
 
@@ -1380,22 +1250,6 @@ NIOS2_RELOC_ERR:
 
 				    flat_reloc_count++;
 				    break;
-
-				case 0xE0: 
-				   /* push */
-				  sym_addr += q->addend;
-				  reloc_stack_push(sym_addr);
-				  reloc_stack_set_section(sym_section, section_name);
-				  break;
-
-				case 0xE1:
-				  /* const */
-				  reloc_stack_push(q->addend);
-				break;
-
-				case 0xE2 ... 0xF2:
-				  reloc_stack_operate((*p)->howto->type);
-				  break;
 
 #endif //TARGET_bfin
 
