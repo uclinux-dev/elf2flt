@@ -6,6 +6,8 @@
  * ELF format file handling. Extended relocation support for all of
  * text and data.
  *
+ * (c) 2006  Support the -a (use_resolved) option for TARGET_arm.
+ *           Shaun Jackman <sjackman@gmail.com>
  * (c) 2004, Nios II support, Wentao Xu <wentao@microtronix.com>
  * (c) 2003, H8 support, ktrace <davidm@snapgear.com>
  * (c) 2003-2004, MicroBlaze support, John Williams <jwilliams@itee.uq.edu.au>
@@ -584,7 +586,7 @@ dump_symbols(symbols, number_of_symbols);
 			/* Adjust the address to account for the GOT table which wasn't
 			 * present in the relative file link.
 			 */
-			if (pic_with_got)
+			if (pic_with_got && !use_resolved)
 			  q->address += got_size;
 #endif
 
@@ -696,6 +698,19 @@ dump_symbols(symbols, number_of_symbols);
 					break;
 #endif /* TARGET_V850 */
 
+#if defined(TARGET_arm)
+				case R_ARM_ABS32:
+					relocation_needed = 1;
+					break;
+				case R_ARM_THM_PC22:
+					relocation_needed = 0;
+					break;
+				default:
+					printf("ERROR: reloc type %s unsupported in this context\n",
+					       q->howto->name);
+					bad_relocs++;
+					break;
+#else
 				default:
 					/* The default is to assume that the
 					   relocation is relative and has
@@ -717,6 +732,7 @@ dump_symbols(symbols, number_of_symbols);
 							+ (r_mem[2] << 16)
 							+ (r_mem[3] << 24);
 					relocation_needed = 1;
+#endif
 				}
 			} else {
 				/* Calculate the sym address ourselves.  */
@@ -1482,17 +1498,20 @@ DIS29_RELOCATION:
 
 				tmp.l = *(unsigned long *)r_mem;
 				hl = tmp.c[i0] | (tmp.c[i1] << 8) | (tmp.c[i2] << 16);
-				if (((*p)->howto->type != R_ARM_PC24) &&
-				    ((*p)->howto->type != R_ARM_PLT32))
+				if (use_resolved ||
+					(((*p)->howto->type != R_ARM_PC24) &&
+					((*p)->howto->type != R_ARM_PLT32)))
 					hl |= (tmp.c[i3] << 24);
 				else if (tmp.c[i2] & 0x80)
 					hl |= 0xff000000; /* sign extend */
-				hl += sym_addr;
+				if (!use_resolved)
+					hl += sym_addr;
 				tmp.c[i0] = hl & 0xff;
 				tmp.c[i1] = (hl >> 8) & 0xff;
 				tmp.c[i2] = (hl >> 16) & 0xff;
-				if (((*p)->howto->type != R_ARM_PC24) &&
-				    ((*p)->howto->type != R_ARM_PLT32))
+				if (use_resolved ||
+					(((*p)->howto->type != R_ARM_PC24) &&
+					((*p)->howto->type != R_ARM_PLT32)))
 					tmp.c[i3] = (hl >> 24) & 0xff;
 				if ((*p)->howto->type == R_ARM_ABS32)
 					*(unsigned long *)r_mem = htonl(hl);
