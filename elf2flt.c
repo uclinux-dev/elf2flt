@@ -702,6 +702,7 @@ dump_symbols(symbols, number_of_symbols);
 				case R_ARM_ABS32:
 					relocation_needed = 1;
 					break;
+				case R_ARM_REL32:
 				case R_ARM_THM_PC22:
 					relocation_needed = 0;
 					break;
