@@ -425,7 +425,7 @@ dump_symbols(symbols, number_of_symbols);
    * Also note that both the relocatable and absolute versions have this
    * terminator even though the relocatable one doesn't have the GOT!
    */
-  if (pic_with_got) {
+  if (pic_with_got && !use_resolved) {
     unsigned long *lp = (unsigned long *)data;
     /* Should call ntohl(*lp) here but is isn't going to matter */
     while (*lp != 0xffffffff) lp++;
@@ -674,7 +674,7 @@ dump_symbols(symbols, number_of_symbols);
 								+ lo;
 						}
 					} else
-						goto bad_v850_reloc_err;
+						goto bad_resolved_reloc;
 					break;
 
 				case R_V850_LO16:
@@ -688,17 +688,13 @@ dump_symbols(symbols, number_of_symbols);
 					    && (p[-1]->addend == p[0]->addend))
 						break; /* not an error */
 					else
-						goto bad_v850_reloc_err;
+						goto bad_resolved_reloc;
 
 				case R_V850_HI16:
-				bad_v850_reloc_err:
-					printf("ERROR: reloc type %s unsupported in this context\n",
-					       q->howto->name);
-					bad_relocs++;
-					break;
-#endif /* TARGET_V850 */
-
-#if defined(TARGET_arm)
+					goto bad_resolved_reloc;
+				default:
+					goto good_32bit_resolved_reloc;
+#elif defined(TARGET_arm)
 				case R_ARM_ABS32:
 					relocation_needed = 1;
 					break;
@@ -707,10 +703,20 @@ dump_symbols(symbols, number_of_symbols);
 					relocation_needed = 0;
 					break;
 				default:
-					printf("ERROR: reloc type %s unsupported in this context\n",
-					       q->howto->name);
-					bad_relocs++;
-					break;
+					goto bad_resolved_reloc;
+#elif defined(TARGET_m68k)
+				case R_68K_32:
+					goto good_32bit_resolved_reloc;
+				case R_68K_PC32:
+				case R_68K_PC16:
+					/* The linker has already resolved
+					   PC relocs for us.  In PIC links,
+					   the symbol must be in the data
+					   segment.  */
+				case R_68K_NONE:
+					continue;
+				default:
+					goto bad_resolved_reloc;
 #else
 				default:
 					/* The default is to assume that the
@@ -720,6 +726,9 @@ dump_symbols(symbols, number_of_symbols);
 					   give an error by default, and
 					   require `safe' relocations to be
 					   enumberated explicitly?).  */
+					goto good_32bit_resolve_reloc;
+#endif
+				good_32bit_resolved_reloc:
 					if (bfd_big_endian (abs_bfd))
 						sym_addr =
 							(r_mem[0] << 24)
@@ -733,7 +742,13 @@ dump_symbols(symbols, number_of_symbols);
 							+ (r_mem[2] << 16)
 							+ (r_mem[3] << 24);
 					relocation_needed = 1;
-#endif
+					break;
+
+				bad_resolved_reloc:
+					printf("ERROR: reloc type %s unsupported in this context\n",
+					       q->howto->name);
+					bad_relocs++;
+					break;
 				}
 			} else {
 				/* Calculate the sym address ourselves.  */
