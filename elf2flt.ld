@@ -91,12 +91,31 @@ R_RODAT		*(.gnu.linkonce.r*)
 		. = ALIGN(4) ;
 		__CTOR_LIST__ = .;
 		LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2)
-		*(.ctors)
+SINGLE_LINK:	/* gcc uses crtbegin.o to find the start of
+SINGLE_LINK:	   the constructors, so we make sure it is
+SINGLE_LINK:	   first.  Because this is a wildcard, it
+SINGLE_LINK:	   doesn't matter if the user does not
+SINGLE_LINK:	   actually link against crtbegin.o; the
+SINGLE_LINK:	   linker won't look for a file to match a
+SINGLE_LINK:	   wildcard.  The wildcard also means that it
+SINGLE_LINK:	   doesn't matter which directory crtbegin.o
+SINGLE_LINK:	   is in.  */
+SINGLE_LINK:	KEEP (*crtbegin*.o(.ctors))
+SINGLE_LINK:	/* We don't want to include the .ctor section from
+SINGLE_LINK:	   from the crtend.o file until after the sorted ctors.
+SINGLE_LINK:	   The .ctor section from the crtend file contains the
+SINGLE_LINK:	   end of ctors marker and it must be last */
+SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
+SINGLE_LINK:	KEEP (*(SORT(.ctors.*)))
+		KEEP (*(.ctors))
 		LONG(0)
 		__CTOR_END__ = .;
 		__DTOR_LIST__ = .;
 		LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2)
-		*(.dtors)
+SINGLE_LINK:	KEEP (*crtbegin*.o(.dtors))
+SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
+SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
+		KEEP (*(.dtors))
 		LONG(0)
 		__DTOR_END__ = .;
 

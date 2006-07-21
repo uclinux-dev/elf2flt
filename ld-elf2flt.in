@@ -127,6 +127,12 @@ then
 			esac
 			ARG1="$ARG1 -defsym $GOT_OFFSET=`expr ${SHARED_ID} '*' -4 - 4`"
 		fi
+		if [ "@emit_relocs@" = "yes" ]
+		then
+			SEDOP="$SEDOP -e s/^SINGLE_LINK://"
+		else
+			SEDOP="$SEDOP -e /^SINGLE_LINK:/d"
+		fi
 		
 		# provide a default linker script, we usually need one
 		[ -z "$LDSCRIPT" ] && LDSCRIPT="${LDSCRIPTPATH}/elf2flt.ld"
