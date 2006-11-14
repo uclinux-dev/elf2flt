@@ -1775,7 +1775,7 @@ static void write_zeroes (unsigned long num, FILE *stream)
   if (num > 0) {
     /* It'd be nice if we could just use fseek, but that doesn't seem to
        work for stdio output files.  */
-    bzero(zeroes, 1024);
+    memset(zeroes, 0x00, 1024);
     while (num > sizeof(zeroes)) {
       fwrite(zeroes, sizeof(zeroes), 1, stream);
       num -= sizeof(zeroes);
@@ -2065,7 +2065,7 @@ int main(int argc, char *argv[])
 	  | (compress ? (compress == 2 ? FLAT_FLAG_GZDATA : FLAT_FLAG_GZIP) : 0)
 	  );
   hdr.build_date = htonl((unsigned long)time(NULL));
-  bzero(hdr.filler, sizeof(hdr.filler));
+  memset(hdr.filler, 0x00, sizeof(hdr.filler));
 
   for (i=0; i<reloc_len; i++) reloc[i] = htonl(reloc[i]);
 
