@@ -81,29 +81,29 @@ fi
 binutils_ldscript_dir="$ac_binutils_ldscript_dir"
 
 if test "$ac_libbfd" = "NONE" -o "$ac_libiberty" = "NONE" ; then
-	echo
-	echo "You need to specify the location of the libfd.a and libiberty.a"
-	echo "host libraries from the binutils package."
-	echo
-	echo "Run configure again specifying these options:"
-	echo
-	echo "  ./configure --target=<ARCH> --with-bfd-include-dir=<dir> --with-libbfd=<libbfd.a> --with-libiberty=<libiberty.a>"
-	echo
-	exit 1
+	AC_MSG_ERROR([
+
+You need to specify the location of the libfd.a and libiberty.a
+host libraries from the binutils package.
+	
+Run configure again specifying these options:
+	
+  ./configure --target=<ARCH> --with-bfd-include-dir=<dir> --with-libbfd=<libbfd.a> --with-libiberty=<libiberty.a>
+])
 fi
 
 if test "$ac_bfd_include_dir" = "NONE" ; then
-	echo
-	echo "You need to specify the location of the bfd.h header from a"
-	echo "configured/compiled version of the binutils package for your target."
-	echo "Without this your elf2flt may crash as it will try to use the"
-	echo "systems bfd.h which may be from a different binutils package."
-	echo
-	echo "Run configure again specifying these options:"
-	echo
-	echo "  ./configure --target=<ARCH> --with-bfd-include-dir=<dir> --with-libbfd=<libbfd.a> --with-libiberty=<libiberty.a>"
-	echo
-	exit 1
+	AC_MSG_ERROR([
+
+You need to specify the location of the bfd.h header from a
+configured/compiled version of the binutils package for your target.
+Without this your elf2flt may crash as it will try to use the
+systems bfd.h which may be from a different binutils package.
+
+Run configure again specifying these options:
+
+  ./configure --target=<ARCH> --with-bfd-include-dir=<dir> --with-libbfd=<libbfd.a> --with-libiberty=<libiberty.a>
+])
 fi
 
 dnl Checks for header files.
