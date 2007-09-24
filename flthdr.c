@@ -41,7 +41,6 @@ char *program_name;
 
 static char cmd[1024];
 static int print = 0, compress = 0, ramload = 0, stacksize = 0, ktrace = 0;
-static int short_format = 0;
 
 /****************************************************************************/
 
