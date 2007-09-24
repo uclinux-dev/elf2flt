@@ -350,8 +350,11 @@ main(int argc, char *argv[])
 		case 'R': ramload = -1;             break;
 		case 'k': ktrace = 1;               break;
 		case 'K': ktrace = -1;              break;
-		case 's': stacksize = atoi(optarg); break;
 		case 'o': ofile = optarg;           break;
+		case 's':
+			if (sscanf(optarg, "%i", &stacksize) != 1)
+				usage("invalid stack size");
+			break;
 		default:
 			usage("invalid option");
 			break;

@@ -1877,7 +1877,10 @@ int main(int argc, char *argv[])
       use_resolved = 1;
       break;
     case 's':
-      stack = atoi(optarg);
+      if (sscanf(optarg, "%i", &stack) != 1) {
+        fprintf(stderr, "%s invalid stack size %s\n", argv[0], optarg);
+        usage();
+      }
       break;
     case 'R':
       rel_file = optarg;
