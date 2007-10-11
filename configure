@@ -3667,7 +3667,7 @@ done
 
 
 
-for ac_func in dcgettext
+for ac_func in dcgettext libintl_dgettext
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5

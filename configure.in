@@ -116,7 +116,7 @@ AC_C_CONST
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS(dcgettext)
+AC_CHECK_FUNCS(dcgettext libintl_dgettext)
 
 dnl Subsitute values
 AC_SUBST(target)
