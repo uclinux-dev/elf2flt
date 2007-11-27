@@ -59,7 +59,7 @@ R_RODAT		*(.gnu.linkonce.r*)
 		*(.data1)
 		*(.data.*)
 		*(.gnu.linkonce.d*)
-		*(.data1)
+		*(.eh_frame_hdr)
 		*(.eh_frame)
 		*(.gcc_except_table)
 
@@ -69,6 +69,7 @@ R_RODAT		*(.gnu.linkonce.r*)
 		*(.sdata) 
 		*(.sdata.*)
 		*(.sbss)			/* Don't move this! */
+		*(.gnu.linkonce.sb*)
 		_essrw = . ;
 
 		_ssrw_size = _essrw - _ssrw;
