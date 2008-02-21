@@ -235,11 +235,7 @@ get_symbols (bfd *abfd, long *num)
   if (storage_needed == 0)
     return NULL;
 
-  symbol_table = (asymbol **) malloc (storage_needed);
-  if (symbol_table == NULL) {
-      perror("malloc");
-      exit(1);
-  }
+  symbol_table = xmalloc (storage_needed);
 
   number_of_symbols = bfd_canonicalize_symtab (abfd, symbol_table);
   
@@ -496,11 +492,7 @@ dump_symbols(symbols, number_of_symbols);
 	}
 
 	symb = get_symbols(rel_bfd, &nsymb);
-	relpp = (arelent **) malloc(relsize);
-	if (relpp == NULL) {
-	  perror("malloc");
-	  exit(1);
-	}
+	relpp = xmalloc(relsize);
 
 	relcount = bfd_canonicalize_reloc(rel_bfd, r, relpp, symb);
 	if (relcount <= 0) {
@@ -1829,6 +1821,7 @@ int main(int argc, char *argv[])
 
   program = argv[0];
   progname = argv[0];
+  xmalloc_set_program_name(program);
 
   if (argc < 2)
   	usage();
@@ -1983,11 +1976,7 @@ int main(int argc, char *argv[])
     exit (2);
   }
 
-  text = malloc(text_len);
-  if (text == NULL) {
-      perror("malloc");
-      exit(1);
-  }
+  text = xmalloc(text_len);
 
   if (verbose)
     printf("TEXT -> vma=0x%x len=0x%x\n", text_vma, text_len);
@@ -2007,11 +1996,7 @@ int main(int argc, char *argv[])
     fprintf (stderr, "%s: no .data section", abs_file);
     exit (2);
   }
-  data = malloc(data_len);
-  if (data == NULL) {
-      perror("malloc");
-      exit(1);
-  }
+  data = xmalloc(data_len);
 
   if (verbose)
     printf("DATA -> vma=0x%x len=0x%x\n", data_vma, data_len);
@@ -2095,11 +2080,7 @@ int main(int argc, char *argv[])
   }
   
   if (!ofile) {
-    ofile = malloc(strlen(fname) + 5 + 1); /* 5 to add suffix */
-    if (ofile == NULL) {
-	perror("malloc");
-	exit(1);
-    }
+    ofile = xmalloc(strlen(fname) + 5 + 1); /* 5 to add suffix */
     strcpy(ofile, fname);
     strcat(ofile, ".bflt");
   }
