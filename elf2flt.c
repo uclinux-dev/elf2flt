@@ -54,6 +54,7 @@
 
 /* from $(INSTALLDIR)/include       */
 #include <bfd.h>      /* Main header file for the BFD library                */
+#include <libiberty.h>
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
