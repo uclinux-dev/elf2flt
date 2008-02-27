@@ -15,6 +15,7 @@
 #include <time.h>
 #include <stdlib.h>   /* exit() */
 #include <string.h>   /* strcat(), strcpy() */
+#include <assert.h>
 
 /* macros for conversion between host and (internet) network byte order */
 #ifndef WIN32
@@ -24,6 +25,9 @@
 #include <winsock2.h>
 #define	BINARY_FILE_OPTS "b"
 #endif
+
+#include "compress.h"
+#include <libiberty.h>
 
 /* from uClinux-x.x.x/include/linux */
 #include "flat.h"     /* Binary flat header description                      */
@@ -39,57 +43,27 @@
 
 char *program_name;
 
-static char cmd[1024];
-static int print = 0, compress = 0, ramload = 0, stacksize = 0, ktrace = 0;
+static int print = 0, docompress = 0, ramload = 0, stacksize = 0, ktrace = 0;
 
-/****************************************************************************/
-
-void
-transferr(FILE *ifp, FILE *ofp, int count)
-{
-	int n, num;
-
-	while (count == -1 || count > 0) {
-		if (count == -1 || count > sizeof(cmd))
-			num = sizeof(cmd);
-		else
-			num = count;
-		n = fread(cmd, 1, num, ifp);
-		if (n == 0)
-			break;
-		if (fwrite(cmd, n, 1, ofp) != 1) {
-			fprintf(stderr, "Write failed :-(\n");
-			exit(1);
-		}
-		if (count != -1)
-			count -= n;
-	}
-	if (count > 0) {
-		fprintf(stderr, "Failed to transferr %d bytes\n", count);
-		exit(1);
-	}
-}
-	
 /****************************************************************************/
 
 void
 process_file(char *ifile, char *ofile)
 {
 	int old_flags, old_stack, new_flags, new_stack;
-	FILE *ifp, *ofp;
-	int ofp_is_pipe = 0;
+	stream ifp, ofp;
 	struct flat_hdr old_hdr, new_hdr;
-	char tfile[256];
-	char tfile2[256];
+	char *tfile, tmpbuf[256];
+	int input_error, output_error;
 
-	*tfile = *tfile2 = '\0';
+	*tmpbuf = '\0';
 
-	if ((ifp = fopen(ifile, "r" BINARY_FILE_OPTS)) == NULL) {
+	if (fopen_stream_u(&ifp, ifile, "r" BINARY_FILE_OPTS)) {
 		fprintf(stderr, "Cannot open %s\n", ifile);
 		return;
 	}
 
-	if (fread(&old_hdr, sizeof(old_hdr), 1, ifp) != 1) {
+	if (fread_stream(&old_hdr, sizeof(old_hdr), 1, &ifp) != 1) {
 		fprintf(stderr, "Cannot read header of %s\n", ifile);
 		return;
 	}
@@ -103,13 +77,13 @@ process_file(char *ifile, char *ofile)
 	new_stack = old_stack = ntohl(old_hdr.stack_size);
 	new_hdr = old_hdr;
 
-	if (compress == 1) {
+	if (docompress == 1) {
 		new_flags |= FLAT_FLAG_GZIP;
 		new_flags &= ~FLAT_FLAG_GZDATA;
-	} else if (compress == 2) {
+	} else if (docompress == 2) {
 		new_flags |= FLAT_FLAG_GZDATA;
 		new_flags &= ~FLAT_FLAG_GZIP;
-	} else if (compress < 0)
+	} else if (docompress < 0)
 		new_flags &= ~(FLAT_FLAG_GZIP|FLAT_FLAG_GZDATA);
 	
 	if (ramload > 0)
@@ -163,13 +137,13 @@ process_file(char *ifile, char *ofile)
 			printf("-----------------------------------------------------------\n");
 			first = 0;
 		}
-		*tfile = '\0';
-		strcat(tfile, (old_flags & FLAT_FLAG_KTRACE) ? "k" : "");
-		strcat(tfile, (old_flags & FLAT_FLAG_RAM) ? "r" : "");
-		strcat(tfile, (old_flags & FLAT_FLAG_GOTPIC) ? "p" : "");
-		strcat(tfile, (old_flags & FLAT_FLAG_GZIP) ? "z" :
+		*tmpbuf = '\0';
+		strcat(tmpbuf, (old_flags & FLAT_FLAG_KTRACE) ? "k" : "");
+		strcat(tmpbuf, (old_flags & FLAT_FLAG_RAM) ? "r" : "");
+		strcat(tmpbuf, (old_flags & FLAT_FLAG_GOTPIC) ? "p" : "");
+		strcat(tmpbuf, (old_flags & FLAT_FLAG_GZIP) ? "z" :
 					((old_flags & FLAT_FLAG_GZDATA) ? "d" : ""));
-		printf("-%-3.3s ", tfile);
+		printf("-%-3.3s ", tmpbuf);
 		printf("%3d ", ntohl(old_hdr.rev));
 		printf("%6d ", text=ntohl(old_hdr.data_start)-sizeof(struct flat_hdr));
 		printf("%6d ", data=ntohl(old_hdr.data_end)-ntohl(old_hdr.data_start));
@@ -205,106 +179,74 @@ process_file(char *ifile, char *ofile)
 	new_hdr.flags = htonl(new_flags);
 	new_hdr.stack_size = htonl(new_stack);
 
-	strcpy(tfile, "/tmp/flatXXXXXX");
-	mkstemp(tfile);
-	if ((ofp = fopen(tfile, "w" BINARY_FILE_OPTS)) == NULL) {
+	tfile = make_temp_file("flthdr");
+
+	if (fopen_stream_u(&ofp, tfile, "w" BINARY_FILE_OPTS)) {
 		fprintf(stderr, "Failed to open %s for writing\n", tfile);
 		unlink(tfile);
-		unlink(tfile2);
 		exit(1);
 	}
 
-	if (fwrite(&new_hdr, sizeof(new_hdr), 1, ofp) != 1) {
+	/* Copy header (always uncompressed).  */
+	if (fwrite_stream(&new_hdr, sizeof(new_hdr), 1, &ofp) != 1) {
 		fprintf(stderr, "Failed to write to  %s\n", tfile);
 		unlink(tfile);
-		unlink(tfile2);
 		exit(1);
 	}
 
-	/*
-	 * get ourselves a fully uncompressed copy of the text/data/relocs
-	 * so that we can manipulate it more easily
-	 */
-	if (old_flags & (FLAT_FLAG_GZIP|FLAT_FLAG_GZDATA)) {
-		FILE *tfp;
+	/* Whole input file (including text) is compressed: start decompressing
+	   now.  */
+	if (old_flags & FLAT_FLAG_GZIP)
+		reopen_stream_compressed(&ifp);
 
-		strcpy(tfile2, "/tmp/flat2XXXXXX");
-		mkstemp(tfile2);
-		
-		if (old_flags & FLAT_FLAG_GZDATA) {
-			tfp = fopen(tfile2, "w" BINARY_FILE_OPTS);
-			if (!tfp) {
-				fprintf(stderr, "Failed to open %s for writing\n", tfile2);
-				exit(1);
-			}
-			transferr(ifp, tfp, ntohl(old_hdr.data_start) -
-					sizeof(struct flat_hdr));
-			fclose(tfp);
-		}
-
-		sprintf(cmd, "gunzip >> %s", tfile2);
-		tfp = popen(cmd, "w" BINARY_FILE_OPTS);
-		if(!tfp) {
-			perror("popen");
-			exit(1);
-		}
-		transferr(ifp, tfp, -1);
-		pclose(tfp);
-
-		fclose(ifp);
-		ifp = fopen(tfile2, "r" BINARY_FILE_OPTS);
-		if (!ifp) {
-			fprintf(stderr, "Failed to open %s for reading\n", tfile2);
-			unlink(tfile);
-			unlink(tfile2);
-			exit(1);
-		}
-	}
-
+	/* Likewise, output file is compressed. Start compressing now.  */
 	if (new_flags & FLAT_FLAG_GZIP) {
 		printf("zflat %s --> %s\n", ifile, ofile);
-		fclose(ofp);
-		sprintf(cmd, "gzip -9 -f >> %s", tfile);
-		ofp = popen(cmd, "w" BINARY_FILE_OPTS);
-		ofp_is_pipe = 1;
-	} else if (new_flags & FLAT_FLAG_GZDATA) {
+		reopen_stream_compressed(&ofp);
+	}
+
+	transfer(&ifp, &ofp,
+		  ntohl(old_hdr.data_start) - sizeof(struct flat_hdr));
+
+	/* Only data and relocs were compressed in input.  Start decompressing
+	   from here.  */
+	if (old_flags & FLAT_FLAG_GZDATA)
+		reopen_stream_compressed(&ifp);
+
+	/* Only data/relocs to be compressed in output.  Start compressing
+	   from here.  */
+	if (new_flags & FLAT_FLAG_GZDATA) {
 		printf("zflat-data %s --> %s\n", ifile, ofile);
-		transferr(ifp, ofp, ntohl(new_hdr.data_start) -
-				sizeof(struct flat_hdr));
-		fclose(ofp);
-		sprintf(cmd, "gzip -9 -f >> %s", tfile);
-		ofp = popen(cmd, "w" BINARY_FILE_OPTS);
-		ofp_is_pipe = 1;
+		reopen_stream_compressed(&ofp);
 	}
 
-	if (!ofp) { /* can only happen if using gzip/gunzip */
-		fprintf(stderr, "Can't run cmd %s\n", cmd);
-		unlink(tfile);
-		unlink(tfile2);
-		exit(1);
-	}
+	transfer(&ifp, &ofp, -1);
 
-	transferr(ifp, ofp, -1);
-	
-	if (ferror(ifp) || ferror(ofp)) {
+	input_error = ferror_stream(&ifp);
+	output_error = ferror_stream(&ofp);
+
+	if (input_error || output_error) {
 		fprintf(stderr, "Error on file pointer%s%s\n",
-				ferror(ifp) ? " input" : "", ferror(ofp) ? " output" : "");
+				input_error ? " input" : "",
+				output_error ? " output" : "");
 		unlink(tfile);
-		unlink(tfile2);
 		exit(1);
 	}
 
-	fclose(ifp);
-	if (ofp_is_pipe)
-		pclose(ofp);
-	else
-		fclose(ofp);
+	fclose_stream(&ifp);
+	fclose_stream(&ofp);
 
-	/* cheat a little here to preserve file permissions */
-	sprintf(cmd, "cp %s %s", tfile, ofile);
-	system(cmd);
+	/* Copy temporary file to output location.  */
+	fopen_stream_u(&ifp, tfile, "r" BINARY_FILE_OPTS);
+	fopen_stream_u(&ofp, ofile, "w" BINARY_FILE_OPTS);
+
+	transfer(&ifp, &ofp, -1);
+
+	fclose_stream(&ifp);
+	fclose_stream(&ofp);
+
 	unlink(tfile);
-	unlink(tfile2);
+	free(tfile);
 }
 
 /****************************************************************************/
@@ -343,9 +285,9 @@ main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "pdzZrRkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
-		case 'z': compress = 1;             break;
-		case 'd': compress = 2;             break;
-		case 'Z': compress = -1;            break;
+		case 'z': docompress = 1;           break;
+		case 'd': docompress = 2;           break;
+		case 'Z': docompress = -1;          break;
 		case 'r': ramload = 1;              break;
 		case 'R': ramload = -1;             break;
 		case 'k': ktrace = 1;               break;
@@ -366,8 +308,8 @@ main(int argc, char *argv[])
 
 	if (ofile && argc - optind > 1)
 		usage("-o can only be used with a single file");
-	
-	if (!print && !compress && !ramload && !stacksize) /* no args == print */
+
+	if (!print && !docompress && !ramload && !stacksize) /* no args == print */
 		print = argc - optind; /* greater than 1 is short format */
 	
 	for (c = optind; c < argc; c++) {

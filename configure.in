@@ -1,6 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(elf2flt.c)
 
+AC_ARG_WITH(zlib-prefix,
+	[ --with-zlib-prefix=<dir>  path to installed zlib ],
+	[ ac_zlib_prefix=$withval ],
+	[ ac_zlib_prefix=NONE ]
+)
+
 AC_ARG_WITH(libbfd,
 	[ --with-libbfd=<file>  path to libbfd.a library to use ],
 	[ ac_libbfd=$withval ],
@@ -63,6 +69,11 @@ if test "$ac_libbfd" = "NONE"; then
 else
   LIBS="$ac_libbfd $LIBS"
 fi
+if test "$ac_zlib_prefix" = "NONE"; then
+  AC_CHECK_LIB(z, deflate)
+else
+  LIBS="-L$ac_zlib_prefix/lib -lz $LIBS"
+fi
 
 bfd_include_dir=
 if test "$ac_bfd_include_dir" != "NONE"; then
@@ -72,6 +83,11 @@ fi
 binutils_include_dir=
 if test "$ac_binutils_include_dir" != "NONE"; then
   binutils_include_dir="-I$ac_binutils_include_dir"
+fi
+
+zlib_include_dir=
+if test "$ac_zlib_prefix" != "NONE"; then
+  zlib_include_dir="-I$ac_zlib_prefix/include"
 fi
 
 binutils_ldscript_dir=
@@ -126,6 +142,7 @@ AC_SUBST(target_os)
 AC_SUBST(target_vendor)
 AC_SUBST(bfd_include_dir)
 AC_SUBST(binutils_include_dir)
+AC_SUBST(zlib_include_dir)
 AC_SUBST(binutils_ldscript_dir)
 AC_SUBST(got_check)
 AC_SUBST(emit_relocs)

@@ -11,7 +11,7 @@ CC = @CC@
 CPU = @target_cpu@
 TARGET = @target_alias@
 CFLAGS = @CFLAGS@
-INCLUDES = @bfd_include_dir@ @binutils_include_dir@
+INCLUDES = @bfd_include_dir@ @binutils_include_dir@ @zlib_include_dir@
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -50,11 +50,14 @@ PROGS = $(PROG_ELF2FLT) $(PROG_FLTHDR)
 
 all: $(PROGS)
 
-$(PROG_ELF2FLT): elf2flt.c stubs.c Makefile
-	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $(srcdir)/elf2flt.c $(srcdir)/stubs.c $(LIBS)
+$(PROG_ELF2FLT): $(srcdir)/elf2flt.c compress.o $(srcdir)/stubs.c
+	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(PROG_FLTHDR): flthdr.c Makefile
-	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $(srcdir)/flthdr.c $(LIBS)
+$(PROG_FLTHDR): $(srcdir)/flthdr.c compress.o
+	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+Makefile: $(srcdir)/Makefile.in
+	./config.status $@
 
 clean:
 	-rm -f $(PROGS) *.$(OBJEXT)
