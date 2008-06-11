@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CPP EGREP bfd_include_dir binutils_include_dir binutils_ldscript_dir got_check emit_relocs LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CPP EGREP bfd_include_dir binutils_include_dir zlib_include_dir binutils_ldscript_dir got_check emit_relocs LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -851,11 +851,13 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+ --with-zlib-prefix=<dir>  path to installed zlib
  --with-libbfd=<file>  path to libbfd.a library to use
  --with-libiberty=<file>  path to libiberty.a library to use
  --with-bfd-include-dir=<dir>  include path for correct bfd.h
  --with-binutils-include-dir=<dir>  include path for binutils headers
  --with-binutils-ldscript-dir=<dir>  path to install elf2flt.ld
+ --with-binutils-build-dir=<dir>  path to compiled binutils tree
 
 Some influential environment variables:
   CC          C compiler command
@@ -1306,6 +1308,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+# Check whether --with-zlib-prefix or --without-zlib-prefix was given.
+if test "${with_zlib_prefix+set}" = set; then
+  withval="$with_zlib_prefix"
+   ac_zlib_prefix=$withval
+else
+   ac_zlib_prefix=NONE
+
+fi;
+
+
 # Check whether --with-libbfd or --without-libbfd was given.
 if test "${with_libbfd+set}" = set; then
   withval="$with_libbfd"
@@ -1352,6 +1364,16 @@ if test "${with_binutils_ldscript_dir+set}" = set; then
    ac_binutils_ldscript_dir=$withval
 else
    ac_binutils_ldscript_dir=NONE
+
+fi;
+
+
+# Check whether --with-binutils-build-dir or --without-binutils-build-dir was given.
+if test "${with_binutils_build_dir+set}" = set; then
+  withval="$with_binutils_build_dir"
+   ac_binutils_build_dir=$withval
+else
+   ac_binutils_build_dir=NONE
 
 fi;
 
@@ -2491,6 +2513,13 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 
+if test "$ac_binutils_build_dir" != "NONE"; then
+  test "$ac_libbfd"               = "NONE" && ac_libbfd="$ac_binutils_build_dir/bfd/libbfd.a"
+  test "$ac_libiberty"            = "NONE" && ac_libiberty="$ac_binutils_build_dir/libiberty/libiberty.a"
+  test "$ac_bfd_include_dir"      = "NONE" && ac_bfd_include_dir="$ac_binutils_build_dir/bfd"
+  test "$ac_binutils_include_dir" = "NONE" && ac_binutils_include_dir="$ac_binutils_build_dir/include"
+fi
+
 if test "$ac_libiberty" = "NONE"; then
 
 
@@ -2650,6 +2679,84 @@ fi
 else
   LIBS="$ac_libbfd $LIBS"
 fi
+if test "$ac_zlib_prefix" = "NONE"; then
+
+echo "$as_me:$LINENO: checking for deflate in -lz" >&5
+echo $ECHO_N "checking for deflate in -lz... $ECHO_C" >&6
+if test "${ac_cv_lib_z_deflate+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char deflate ();
+int
+main ()
+{
+deflate ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_z_deflate=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_z_deflate=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_z_deflate" >&5
+echo "${ECHO_T}$ac_cv_lib_z_deflate" >&6
+if test $ac_cv_lib_z_deflate = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBZ 1
+_ACEOF
+
+  LIBS="-lz $LIBS"
+
+fi
+
+else
+  LIBS="-L$ac_zlib_prefix/lib -lz $LIBS"
+fi
 
 bfd_include_dir=
 if test "$ac_bfd_include_dir" != "NONE"; then
@@ -2659,6 +2766,11 @@ fi
 binutils_include_dir=
 if test "$ac_binutils_include_dir" != "NONE"; then
   binutils_include_dir="-I$ac_binutils_include_dir"
+fi
+
+zlib_include_dir=
+if test "$ac_zlib_prefix" != "NONE"; then
+  zlib_include_dir="-I$ac_zlib_prefix/include"
 fi
 
 binutils_ldscript_dir=
@@ -3667,6 +3779,7 @@ done
 
 
 
+
 for ac_func in dcgettext libintl_dgettext
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
@@ -3767,6 +3880,7 @@ _ACEOF
 
 fi
 done
+
 
 
 
@@ -4443,6 +4557,7 @@ s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@bfd_include_dir@,$bfd_include_dir,;t t
 s,@binutils_include_dir@,$binutils_include_dir,;t t
+s,@zlib_include_dir@,$zlib_include_dir,;t t
 s,@binutils_ldscript_dir@,$binutils_ldscript_dir,;t t
 s,@got_check@,$got_check,;t t
 s,@emit_relocs@,$emit_relocs,;t t
