@@ -59,6 +59,7 @@ struct flat_hdr {
 #define FLAT_FLAG_GZIP   0x0004 /* all but the header is compressed */
 #define FLAT_FLAG_GZDATA 0x0008 /* only data/relocs are compressed (for XIP) */
 #define FLAT_FLAG_KTRACE 0x0010 /* output useful kernel trace for debugging */
+#define FLAT_FLAG_L1STK  0x0020 /* use a 4k stack in L1 scratch memory.  */
 
 #ifdef __KERNEL__ /* so systems without linux headers can compile the apps */
 /*
