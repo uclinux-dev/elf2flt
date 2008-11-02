@@ -135,6 +135,13 @@ Run configure again specifying these options:
 ])
 fi
 
+dnl Make sure we resolve system symbols before libiberty/libbfd ones.
+dnl Otherwise, things like getopt get screwed up because the system headers
+dnl redirect some functions to the system symbols, but other local symbols
+dnl come from libiberty/libbfd.
+dnl int getopt(int, char * const [], const char *) __asm("_" "getopt" "$UNIX2003");
+AC_CHECK_LIB(c, malloc, LIBS="-lc $LIBS")
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h unistd.h bfd.h)
