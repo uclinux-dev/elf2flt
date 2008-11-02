@@ -37,6 +37,7 @@ size_t fread_stream(void *ptr, size_t size, size_t nmemb, stream *str);
 size_t fwrite_stream(const void *ptr, size_t size, size_t nmemb, stream *str);
 int fclose_stream(stream *str);
 int ferror_stream(stream *str);
+int fseek_stream(stream *str, long offset, int whence);
 void reopen_stream_compressed(stream *str);
 void transfer(stream *ifp, stream *ofp, int count);
 

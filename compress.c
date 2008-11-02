@@ -125,6 +125,21 @@ ferror_stream(stream *str)
 	return 0;
 }
 
+int
+fseek_stream(stream *str, long offset, int whence)
+{
+	switch (str->type) {
+		case UNCOMPRESSED:
+		return fseek(str->u.filep, offset, whence);
+
+		case COMPRESSED:
+		return gzseek(str->u.gzfilep, offset, whence);
+
+		default:
+		abort();
+	}
+}
+
 /* Reopen a stream at the current file position.  */
 
 void

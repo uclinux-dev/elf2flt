@@ -15,6 +15,7 @@
 #include <time.h>
 #include <stdlib.h>   /* exit() */
 #include <string.h>   /* strcat(), strcpy() */
+#include <inttypes.h>
 #include <assert.h>
 
 /* macros for conversion between host and (internet) network byte order */
@@ -39,11 +40,18 @@
 
 #endif
 
+#if defined TARGET_bfin
+# define flat_get_relocate_addr(addr) (addr & 0x03ffffff)
+#else
+# define flat_get_relocate_addr(addr) (addr)
+#endif
+
 /****************************************************************************/
 
 char *program_name;
 
-static int print = 0, docompress = 0, ramload = 0, stacksize = 0, ktrace = 0;
+static int print = 0, print_relocs = 0, docompress = 0, ramload = 0,
+           stacksize = 0, ktrace = 0;
 
 /****************************************************************************/
 
@@ -65,11 +73,13 @@ process_file(char *ifile, char *ofile)
 
 	if (fread_stream(&old_hdr, sizeof(old_hdr), 1, &ifp) != 1) {
 		fprintf(stderr, "Cannot read header of %s\n", ifile);
+		fclose_stream(&ifp);
 		return;
 	}
 
 	if (strncmp(old_hdr.magic, "bFLT", 4) != 0) {
 		fprintf(stderr, "Cannot read header of %s\n", ifile);
+		fclose_stream(&ifp);
 		return;
 	}
 
@@ -101,6 +111,7 @@ process_file(char *ifile, char *ofile)
 
 	if (print == 1) {
 		time_t t;
+		uint32_t reloc_count, reloc_start;
 
 		printf("%s\n", ifile);
 		printf("    Magic:        %4.4s\n", old_hdr.magic);
@@ -112,8 +123,10 @@ process_file(char *ifile, char *ofile)
 		printf("    Data End:     0x%x\n",  ntohl(old_hdr.data_end));
 		printf("    BSS End:      0x%x\n",  ntohl(old_hdr.bss_end));
 		printf("    Stack Size:   0x%x\n",  ntohl(old_hdr.stack_size));
-		printf("    Reloc Start:  0x%x\n",  ntohl(old_hdr.reloc_start));
-		printf("    Reloc Count:  0x%x\n",  ntohl(old_hdr.reloc_count));
+		reloc_start = ntohl(old_hdr.reloc_start);
+		printf("    Reloc Start:  0x%x\n",  reloc_start);
+		reloc_count = ntohl(old_hdr.reloc_count);
+		printf("    Reloc Count:  0x%x\n",  reloc_count);
 		printf("    Flags:        0x%x ( ",  ntohl(old_hdr.flags));
 		if (old_flags) {
 			if (old_flags & FLAT_FLAG_RAM)
@@ -127,6 +140,41 @@ process_file(char *ifile, char *ofile)
 			if (old_flags & FLAT_FLAG_KTRACE)
 				printf("Kernel-Traced-Load ");
 			printf(")\n");
+		}
+
+		if (print_relocs) {
+			uint32_t *relocs = xcalloc(reloc_count, sizeof(uint32_t));
+			uint32_t i;
+			unsigned long r;
+
+			printf("    Relocs:\n");
+			printf("    #\treloc      (  address )\tdata\n");
+
+			if (old_flags & FLAT_FLAG_GZIP)
+				reopen_stream_compressed(&ifp);
+			if (fseek_stream(&ifp, reloc_start, SEEK_SET)) {
+				fprintf(stderr, "Cannot seek to relocs of %s\n", ifile);
+				fclose_stream(&ifp);
+				return;
+			}
+			if (fread_stream(relocs, sizeof(uint32_t), reloc_count, &ifp) == -1) {
+				fprintf(stderr, "Cannot read relocs of %s\n", ifile);
+				fclose_stream(&ifp);
+				return;
+			}
+
+			for (i = 0; i < reloc_count; ++i) {
+				uint32_t raddr, addr;
+				r = ntohl(relocs[i]);
+				raddr = flat_get_relocate_addr(r);
+				printf("    %u\t0x%08lx (0x%08"PRIx32")\t", i, r, raddr);
+				fseek_stream(&ifp, sizeof(old_hdr) + raddr, SEEK_SET);
+				fread_stream(&addr, sizeof(addr), 1, &ifp);
+				printf("%"PRIx32"\n", addr);
+			}
+
+			/* reset file position for below */
+			fseek_stream(&ifp, sizeof(old_hdr), SEEK_SET);
 		}
 	} else if (print > 1) {
 		static int first = 1;
@@ -173,9 +221,11 @@ process_file(char *ifile, char *ofile)
 	}
 
 	/* if there is nothing else to do, leave */
-	if (new_flags == old_flags && new_stack == old_stack)
+	if (new_flags == old_flags && new_stack == old_stack) {
+		fclose_stream(&ifp);
 		return;
-	
+	}
+
 	new_hdr.flags = htonl(new_flags);
 	new_hdr.stack_size = htonl(new_stack);
 
@@ -259,6 +309,7 @@ usage(char *s)
 	fprintf(stderr, "usage: %s [options] flat-file\n", program_name);
 	fprintf(stderr, "       Allows you to change an existing flat file\n\n");
 	fprintf(stderr, "       -p      : print current settings\n");
+	fprintf(stderr, "       -P      : print relocations\n");
 	fprintf(stderr, "       -z      : compressed flat file\n");
 	fprintf(stderr, "       -d      : compressed data-only flat file\n");
 	fprintf(stderr, "       -Z      : un-compressed flat file\n");
@@ -282,9 +333,10 @@ main(int argc, char *argv[])
 
 	program_name = argv[0];
 
-	while ((c = getopt(argc, argv, "pdzZrRkKs:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "pPdzZrRkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
+		case 'P': print_relocs = 1;         break;
 		case 'z': docompress = 1;           break;
 		case 'd': docompress = 2;           break;
 		case 'Z': docompress = -1;          break;
