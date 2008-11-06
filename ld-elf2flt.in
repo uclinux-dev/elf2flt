@@ -126,11 +126,13 @@ then
 			fi
 
 			# Provide the magic parameter that defines the library data segment pointer offset
+			GOT_ADJ=4
 			case "@target_cpu@" in
+			    bfin)  GOT_OFFSET="_current_shared_library_p5_offset_" GOT_ADJ=1;;
 			    h8300) GOT_OFFSET="__current_shared_library_er5_offset_";;
 			    *)     GOT_OFFSET="_current_shared_library_a5_offset_";;
 			esac
-			ARG1="$ARG1 -defsym $GOT_OFFSET=`expr ${SHARED_ID} '*' -4 - 4`"
+			ARG1="$ARG1 -defsym $GOT_OFFSET=`expr ${SHARED_ID} '*' -${GOT_ADJ} - ${GOT_ADJ}`"
 		fi
 		if [ "@emit_relocs@" = "yes" ]
 		then
