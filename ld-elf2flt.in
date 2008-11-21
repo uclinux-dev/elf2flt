@@ -52,7 +52,8 @@ then
 
 		-move-rodata)
 		          MOVDAT="y";;                 # Put rodata in ROM if possible
-			 
+		-s)       ;;                           # Ignore -s (strip)
+
 		-shared-lib-id)
 		          shift; SHARED_ID="$1";;      # Shared library ID
 
