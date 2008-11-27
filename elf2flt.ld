@@ -19,8 +19,8 @@ SECTIONS {
 		*(.glue_7t)
 		*(.glue_7)
 		*(.jcr)
-		*(.init)
-		*(.fini)
+		KEEP (*(.init))
+		KEEP (*(.fini))
 
 W_RODAT		*(.rodata)
 W_RODAT		*(.rodata1)
