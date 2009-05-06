@@ -165,6 +165,7 @@ SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 	}
 
 	.junk 0 : { *(.rel*) *(.rela*) }
+	/DISCARD/ : { *(.note.GNU-stack) }
 	/* Stabs debugging sections.    */
 	.stab 0 : { *(.stab) }
 	.stabstr 0 : { *(.stabstr) }
