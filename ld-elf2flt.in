@@ -122,7 +122,7 @@ then
 			then
 				# Non application modules enter via main not _start
 				#    SEDOP="$SEDOP -e 's/ENTRY (_start)/ENTRY (main)/'"
-				SEDOP="$SEDOP -e s/\\(ENTRY.\\)(_start)/\1(lib_main)/"
+				SEDOP="$SEDOP -e s/\\(ENTRY.\\)(@SYMBOL_PREFIX@_start)/\1(lib_main)/"
 				OBJCOPYOP="--localize-hidden --weaken"
 			fi
 

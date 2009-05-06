@@ -1,5 +1,5 @@
 
-ENTRY (_start)
+ENTRY (@SYMBOL_PREFIX@_start)
 
 MEMORY {
 	flatmem : ORIGIN = 0x0, LENGTH = 0xfffffff
@@ -10,7 +10,7 @@ SECTIONS {
 	.text 0x0 : {
 		. = . + 4;
 		. = ALIGN(0x4) ;
-		_stext = . ;
+		@SYMBOL_PREFIX@_stext = . ;
 		*(.text)
 		*(.text.*)
 		*(.gnu.warning)
@@ -32,19 +32,19 @@ W_RODAT		*(.gnu.linkonce.r*)
 		   the start followed by the code pointed to by entries
 		   in the lookup table.  */
 		. = ALIGN (4) ;
-		PROVIDE(__ctbp = .);
+		PROVIDE(@SYMBOL_PREFIX@__ctbp = .);
 		*(.call_table_data)
 		*(.call_table_text)
 
 		. = ALIGN(0x20) ;
-		_etext = . ;
+		@SYMBOL_PREFIX@_etext = . ;
 	} > flatmem
 
 	.data : {
 		. = ALIGN(0x4) ;
-		_sdata = . ;
-		__data_start = . ;
-		data_start = . ;
+		@SYMBOL_PREFIX@_sdata = . ;
+		@SYMBOL_PREFIX@__data_start = . ;
+		@SYMBOL_PREFIX@data_start = . ;
 		*(.got.plt)
 		*(.got)
 		FILL(0) ;
@@ -62,15 +62,15 @@ R_RODAT		*(.gnu.linkonce.r*)
 
 		/* Microblaze has .sdata and .sbss (small bss).  They must
 		   be contiguous, so please don't move any of this. JW */
-		_ssrw = . ;
+		@SYMBOL_PREFIX@_ssrw = . ;
 		*(.sdata)
 		*(.sdata.*)
 		*(.sbss)			/* Don't move this! */
 		*(.gnu.linkonce.sb*)
-		_essrw = . ;
+		@SYMBOL_PREFIX@_essrw = . ;
 
-		_ssrw_size = _essrw - _ssrw;
-		PROVIDE(_SDA_BASE_ = _ssrw + (_ssrw_size / 2));
+		@SYMBOL_PREFIX@_ssrw_size = @SYMBOL_PREFIX@_essrw - @SYMBOL_PREFIX@_ssrw;
+		PROVIDE(@SYMBOL_PREFIX@_SDA_BASE_ = @SYMBOL_PREFIX@_ssrw + (@SYMBOL_PREFIX@_ssrw_size / 2));
 
 		*(.gnu.linkonce.s.*)
 		*(__libc_atexit)
@@ -80,15 +80,15 @@ R_RODAT		*(.gnu.linkonce.r*)
 
 		/* microblaze-specific read-only small data area
 		   and associated locating symbols */
-		_ssro = . ;
+		@SYMBOL_PREFIX@_ssro = . ;
 		*(.sdata2)
-		_essro = . ;
-		_ssro_size = _essro - _ssro;
-		PROVIDE(_SDA2_BASE_ = _ssro + (_ssro_size / 2));
+		@SYMBOL_PREFIX@_essro = . ;
+		@SYMBOL_PREFIX@_ssro_size = @SYMBOL_PREFIX@_essro - @SYMBOL_PREFIX@_ssro;
+		PROVIDE(@SYMBOL_PREFIX@_SDA2_BASE_ = @SYMBOL_PREFIX@_ssro + (@SYMBOL_PREFIX@_ssro_size / 2));
 
 		. = ALIGN(4) ;
-		__CTOR_LIST__ = .;
-		LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2)
+		@SYMBOL_PREFIX@__CTOR_LIST__ = .;
+		LONG((@SYMBOL_PREFIX@__CTOR_END__ - @SYMBOL_PREFIX@__CTOR_LIST__) / 4 - 2)
 SINGLE_LINK:	/* gcc uses crtbegin.o to find the start of
 SINGLE_LINK:	   the constructors, so we make sure it is
 SINGLE_LINK:	   first.  Because this is a wildcard, it
@@ -107,29 +107,29 @@ SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
 SINGLE_LINK:	KEEP (*(SORT(.ctors.*)))
 		KEEP (*(.ctors))
 		LONG(0)
-		__CTOR_END__ = .;
-		__DTOR_LIST__ = .;
-		LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2)
+		@SYMBOL_PREFIX@__CTOR_END__ = .;
+		@SYMBOL_PREFIX@__DTOR_LIST__ = .;
+		LONG((@SYMBOL_PREFIX@__DTOR_END__ - @SYMBOL_PREFIX@__DTOR_LIST__) / 4 - 2)
 SINGLE_LINK:	KEEP (*crtbegin*.o(.dtors))
 SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
 SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 		KEEP (*(.dtors))
 		LONG(0)
-		__DTOR_END__ = .;
+		@SYMBOL_PREFIX@__DTOR_END__ = .;
 
-		PROVIDE (__preinit_array_start = .);
+		PROVIDE (@SYMBOL_PREFIX@__preinit_array_start = .);
 		KEEP (*(.preinit_array))
-		PROVIDE (__preinit_array_end = .);
+		PROVIDE (@SYMBOL_PREFIX@__preinit_array_end = .);
 
-		PROVIDE (__init_array_start = .);
+		PROVIDE (@SYMBOL_PREFIX@__init_array_start = .);
 		KEEP (*(SORT(.init_array.*)))
 		KEEP (*(.init_array))
-		PROVIDE (__init_array_end = .);
+		PROVIDE (@SYMBOL_PREFIX@__init_array_end = .);
 
-		PROVIDE (__fini_array_start = .);
+		PROVIDE (@SYMBOL_PREFIX@__fini_array_start = .);
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
-		PROVIDE (__fini_array_end = .);
+		PROVIDE (@SYMBOL_PREFIX@__fini_array_end = .);
 	} > flatmem
 
 	.eh_frame_hdr : { *(.eh_frame_hdr) } > flatmem
@@ -137,12 +137,12 @@ SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 	.gcc_except_table : { KEEP(*(.gcc_except_table)) } >flatmem
 
 	. = ALIGN(0x10) ;
-	_edata = . ;
+	@SYMBOL_PREFIX@_edata = . ;
 
 	.bss : {
 		. = ALIGN(0x4) ;
-		_sbss = ALIGN(0x4) ;
-		__bss_start = . ;
+		@SYMBOL_PREFIX@_sbss = ALIGN(0x4) ;
+		@SYMBOL_PREFIX@__bss_start = . ;
 		*(.dynsbss)
 		*(.sbss)
 		*(.sbss.*)
@@ -154,14 +154,14 @@ SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 		*(.gnu.linkonce.b*)
 		*(COMMON)
 		. = ALIGN(0x10) ;
-		_ebss = . ;
-		_end = . ;
-		end = . ;
+		@SYMBOL_PREFIX@_ebss = . ;
+		@SYMBOL_PREFIX@_end = . ;
+		@SYMBOL_PREFIX@end = . ;
 	} > flatmem
 
 	.stack : {
 		. = ALIGN(0x4);
-		__stack_start = .;
+		@SYMBOL_PREFIX@_stack_start = .;
 	}
 
 	.junk 0 : { *(.rel*) *(.rela*) }

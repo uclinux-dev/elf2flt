@@ -135,6 +135,13 @@ Run configure again specifying these options:
 ])
 fi
 
+SYMBOL_PREFIX=
+case $target in
+	bfin*)
+		SYMBOL_PREFIX=_
+		;;
+esac
+
 dnl Make sure we resolve system symbols before libiberty/libbfd ones.
 dnl Otherwise, things like getopt get screwed up because the system headers
 dnl redirect some functions to the system symbols, but other local symbols
@@ -166,6 +173,7 @@ AC_SUBST(zlib_include_dir)
 AC_SUBST(binutils_ldscript_dir)
 AC_SUBST(got_check)
 AC_SUBST(emit_relocs)
+AC_SUBST(SYMBOL_PREFIX)
 
-AC_OUTPUT(Makefile ld-elf2flt)
+AC_OUTPUT(Makefile ld-elf2flt elf2flt.ld)
 
