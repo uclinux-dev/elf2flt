@@ -48,9 +48,9 @@ W_RODAT		*(.gnu.linkonce.r*)
 		*(.got.plt)
 		*(.got)
 		FILL(0) ;
-		. = ALIGN(0x20) ; 
+		. = ALIGN(0x20) ;
 		LONG(-1)
-		. = ALIGN(0x20) ; 
+		. = ALIGN(0x20) ;
 R_RODAT		*(.rodata)
 R_RODAT		*(.rodata1)
 R_RODAT		*(.rodata.*)
@@ -62,8 +62,8 @@ R_RODAT		*(.gnu.linkonce.r*)
 
 		/* Microblaze has .sdata and .sbss (small bss).  They must
 		   be contiguous, so please don't move any of this. JW */
-		_ssrw = . ;			
-		*(.sdata) 
+		_ssrw = . ;
+		*(.sdata)
 		*(.sdata.*)
 		*(.sbss)			/* Don't move this! */
 		*(.gnu.linkonce.sb*)
@@ -130,14 +130,13 @@ SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
 		PROVIDE (__fini_array_end = .);
-
 	} > flatmem
 
 	.eh_frame_hdr : { *(.eh_frame_hdr) } > flatmem
 	.eh_frame : { KEEP(*(.eh_frame)) } > flatmem
 	.gcc_except_table : { KEEP(*(.gcc_except_table)) } >flatmem
 
-  	. = ALIGN(0x10) ; 
+	. = ALIGN(0x10) ;
 	_edata = . ;
 
 	.bss : {
