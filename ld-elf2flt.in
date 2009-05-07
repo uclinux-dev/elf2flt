@@ -22,6 +22,7 @@ OBJDUMP="`expr $OBJCOPY : '\(.*\)objcopy'`objdump"
 LDSCRIPTPATH="@binutils_ldscript_dir@"	# and the scripts
 SHARED_ID=""
 NEWLDSCRIPT=""
+WANT_SHARED=""
 
 # check TOOLDIR from prefix/bin/ or prefix/target-alias/bin/
 [ -d "${LDSCRIPTPATH}" ] || LDSCRIPTPATH="${TOOLDIR}/../lib"
@@ -56,6 +57,8 @@ then
 
 		-shared-lib-id)
 		          shift; SHARED_ID="$1";;      # Shared library ID
+		-shared|-G)
+		          WANT_SHARED="y";;            # Shared library
 
 		-o)       shift; OFILE="$1";;          # the final outfile
 		-o*)      OFILE="`expr \"$1\" : '-o\(.*\)'`";;
@@ -91,6 +94,14 @@ then
 		shift
 	done
 
+	if [ "$WANT_SHARED" = "y" ]
+	then
+		if [ -z "$SHARED_ID" ]
+		then
+			echo "-shared used without passing a shared library ID"
+			exit 1
+		fi
+	fi
 	if [ "$FINAL" = "yes" ]
 	then
 		[ "$VERBOSE" = "y" ] && set -x
