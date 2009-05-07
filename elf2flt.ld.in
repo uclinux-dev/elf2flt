@@ -134,7 +134,10 @@ SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 
 	.eh_frame_hdr : { *(.eh_frame_hdr) } > flatmem
 	.eh_frame : { KEEP(*(.eh_frame)) } > flatmem
-	.gcc_except_table : { KEEP(*(.gcc_except_table)) } >flatmem
+	.gcc_except_table : {
+		KEEP(*(.gcc_except_table))
+		KEEP(*(.gcc_except_table.*))
+	} >flatmem
 
 	. = ALIGN(0x10) ;
 	@SYMBOL_PREFIX@_edata = . ;
