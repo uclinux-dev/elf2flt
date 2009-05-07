@@ -2022,6 +2022,9 @@ int main(int argc, char *argv[])
 	exit(2);
       }
 
+  if (bss_vma == ~0)
+    bss_vma = data_vma + data_len;
+
   /* Put common symbols in bss.  */
   bss_len += add_com_to_bss(symbol_table, number_of_symbols, bss_len);
 
