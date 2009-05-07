@@ -281,6 +281,7 @@ get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number
 
 
 
+#ifdef TARGET_nios2
 long
 get_gp_value(asymbol **symbol_table, long number_of_symbols)
 {
@@ -291,7 +292,8 @@ get_gp_value(asymbol **symbol_table, long number_of_symbols)
   }
   return -1;
 }
- 
+#endif
+
 
 
 int32_t
