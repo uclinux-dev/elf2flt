@@ -638,6 +638,7 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SYMBOL_PREFIX
+emit_ctor_dtor
 emit_relocs
 got_check
 binutils_ldscript_dir
@@ -718,6 +719,7 @@ with_binutils_ldscript_dir
 with_binutils_build_dir
 enable_got_check
 enable_emit_relocs
+enable_emit_ctor_dtor
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1354,6 +1356,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
  --disable-got-check - disable check for GOT (needed on H8)
  --disable-emit-relocs - don't use the --emit-relocs (-q) linker option
+  --enable-emit-ctor-dtor manually create ctor/dtor list
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1900,6 +1903,15 @@ if test "${enable_emit_relocs+set}" = set; then
   enableval=$enable_emit_relocs;  emit_relocs=$enableval
 else
    emit_relocs=yes
+
+fi
+
+
+# Check whether --enable-emit_ctor_dtor was given.
+if test "${enable_emit_ctor_dtor+set}" = set; then
+  enableval=$enable_emit_ctor_dtor;  emit_ctor_dtor=$enableval
+else
+   emit_ctor_dtor=no
 
 fi
 
@@ -4659,6 +4671,7 @@ _ACEOF
 
 fi
 done
+
 
 
 
