@@ -2049,7 +2049,7 @@ int main(int argc, char *argv[])
     output_relocs(abs_bfd, symbol_table, number_of_symbols, &reloc_len,
 		  text, text_len, text_vma, data, data_len, data_vma, rel_bfd);
 
-  if (reloc == NULL)
+  if (reloc == NULL && verbose)
     printf("No relocations in code!\n");
 
   text_offs = real_address_bits(text_vma);
