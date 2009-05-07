@@ -225,7 +225,7 @@ einfo (int type, const char *format, ...) {
 asymbol**
 get_symbols (bfd *abfd, long *num)
 {
-  long storage_needed;
+  int32_t storage_needed;
   asymbol **symbol_table;
   long number_of_symbols;
   
@@ -294,11 +294,11 @@ get_gp_value(asymbol **symbol_table, long number_of_symbols)
  
 
 
-long
-add_com_to_bss(asymbol **symbol_table, long number_of_symbols, long bss_len)
+int32_t
+add_com_to_bss(asymbol **symbol_table, int32_t number_of_symbols, int32_t bss_len)
 {
-  long i, comsize;
-  long offset;
+  int32_t i, comsize;
+  int32_t offset;
 
   comsize = 0;
   for (i=0; i<number_of_symbols; i++) {
@@ -384,9 +384,9 @@ output_relocs (
   bfd *abs_bfd,
   asymbol **symbols,
   int number_of_symbols,
-  unsigned long *n_relocs,
-  unsigned char *text, int text_len, unsigned long text_vma,
-  unsigned char *data, int data_len, unsigned long data_vma,
+  uint32_t *n_relocs,
+  unsigned char *text, int text_len, uint32_t text_vma,
+  unsigned char *data, int data_len, uint32_t data_vma,
   bfd *rel_bfd)
 {
   uint32_t		*flat_relocs;
@@ -396,7 +396,7 @@ output_relocs (
   unsigned char		*sectionp;
   unsigned long		pflags;
   char			addstr[16];
-  long			sym_addr, sym_vma, section_vma;
+  uint32_t		sym_addr, sym_vma, section_vma;
   int			relsize, relcount;
   int			flat_reloc_count;
   int			sym_reloc_size, rc;
@@ -428,13 +428,13 @@ dump_symbols(symbols, number_of_symbols);
    * terminator even though the relocatable one doesn't have the GOT!
    */
   if (pic_with_got && !use_resolved) {
-    unsigned long *lp = (unsigned long *)data;
+    uint32_t *lp = (uint32_t *)data;
     /* Should call ntohl(*lp) here but is isn't going to matter */
     while (*lp != 0xffffffff) lp++;
     got_size = ((unsigned char *)lp) - data;
     if (verbose)
 	    printf("GOT table contains %d entries (%d bytes)\n",
-			    got_size/sizeof(unsigned long), got_size);
+			    got_size/sizeof(uint32_t), got_size);
 #ifdef TARGET_m68k
     if (got_size > GOT_LIMIT) {
 	    fprintf(stderr, "GOT too large: %d bytes (limit = %d bytes)\n",
@@ -795,7 +795,7 @@ dump_symbols(symbols, number_of_symbols);
 							sym_vma, (*(q->sym_ptr_ptr))->value,
 							q->address, sym_addr,
 							(*p)->howto->rightshift,
-							*(unsigned long *)r_mem);
+							*(uint32_t *)r_mem);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
@@ -812,7 +812,7 @@ dump_symbols(symbols, number_of_symbols);
 							sym_vma, (*(q->sym_ptr_ptr))->value,
 							q->address, sym_addr,
 							(*p)->howto->rightshift,
-							*(unsigned long *)r_mem);
+							*(uint32_t *)r_mem);
 				case R_ARM_PC24:
 					sym_vma = 0;
 					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
@@ -903,7 +903,7 @@ dump_symbols(symbols, number_of_symbols);
 		   the relocation symbol. */
 				{
 					unsigned char *p = r_mem;
-					unsigned long offset;
+					uint32_t offset;
 					pflags=0x80000000;
 
 					/* work out the relocation */
@@ -1152,7 +1152,7 @@ NIOS2_RELOC_ERR:
 					sym_addr = (((*(q->sym_ptr_ptr))->value-
 						q->address) >> 2) & 0x3fffffff;
 					sym_addr |= (
-						ntohl(*(unsigned long *)r_mem)
+						ntohl(*(uint32_t *)r_mem)
 						& 0xc0000000
 						);
 					break;
@@ -1162,7 +1162,7 @@ NIOS2_RELOC_ERR:
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					sym_addr |= (
-						htonl(*(unsigned long *)r_mem)
+						htonl(*(uint32_t *)r_mem)
 						& 0xffc00000
 						);
 					break;
@@ -1173,7 +1173,7 @@ NIOS2_RELOC_ERR:
 					sym_addr += sym_vma + q->addend;
 					sym_addr &= 0x000003ff;
 					sym_addr |= (
-						htonl(*(unsigned long *)r_mem)
+						htonl(*(uint32_t *)r_mem)
 						& 0xfffffc00
 						);
 					break;
@@ -1493,9 +1493,9 @@ DIS29_RELOCATION:
 #if defined(TARGET_arm)
 				union {
 					unsigned char c[4];
-					unsigned long l;
+					uint32_t l;
 				} tmp;
-				long hl;
+				int32_t hl;
 				int i0, i1, i2, i3;
 
 				/*
@@ -1513,7 +1513,7 @@ DIS29_RELOCATION:
 					i3 = 0;
 				}
 
-				tmp.l = *(unsigned long *)r_mem;
+				tmp.l = *(uint32_t *)r_mem;
 				hl = tmp.c[i0] | (tmp.c[i1] << 8) | (tmp.c[i2] << 16);
 				if (use_resolved ||
 					(((*p)->howto->type != R_ARM_PC24) &&
@@ -1531,9 +1531,9 @@ DIS29_RELOCATION:
 					((*p)->howto->type != R_ARM_PLT32)))
 					tmp.c[i3] = (hl >> 24) & 0xff;
 				if ((*p)->howto->type == R_ARM_ABS32)
-					*(unsigned long *)r_mem = htonl(hl);
+					*(uint32_t *)r_mem = htonl(hl);
 				else
-					*(unsigned long *)r_mem = tmp.l;
+					*(uint32_t *)r_mem = tmp.l;
 
 #elif defined(TARGET_bfin)
 				if ((*p)->howto->type == R_pcrel24
@@ -1801,16 +1801,16 @@ int main(int argc, char *argv[])
   asymbol **symbol_table;
   long number_of_symbols;
 
-  unsigned long data_len = 0;
-  unsigned long bss_len = 0;
-  unsigned long text_len = 0;
-  unsigned long reloc_len;
+  uint32_t data_len = 0;
+  uint32_t bss_len = 0;
+  uint32_t text_len = 0;
+  uint32_t reloc_len;
 
-  unsigned long data_vma = ~0;
-  unsigned long bss_vma = ~0;
-  unsigned long text_vma = ~0;
+  uint32_t data_vma = ~0;
+  uint32_t bss_vma = ~0;
+  uint32_t text_vma = ~0;
 
-  unsigned long text_offs;
+  uint32_t text_offs;
 
   void *text;
   void *data;
@@ -1941,7 +1941,7 @@ int main(int argc, char *argv[])
 
   /* Group output sections into text, data, and bss, and calc their sizes.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next) {
-    unsigned long *vma, *len;
+    uint32_t *vma, *len;
     bfd_size_type sec_size;
     bfd_vma sec_vma;
 
@@ -2043,9 +2043,9 @@ int main(int argc, char *argv[])
     data_len = bss_vma - data_vma;
   }
 
-  reloc = output_relocs(abs_bfd, symbol_table, number_of_symbols, &reloc_len,
-			text, text_len, text_vma, data, data_len, data_vma,
-			rel_bfd);
+  reloc = (uint32_t *)
+    output_relocs(abs_bfd, symbol_table, number_of_symbols, &reloc_len,
+		  text, text_len, text_vma, data, data_len, data_vma, rel_bfd);
 
   if (reloc == NULL)
     printf("No relocations in code!\n");
@@ -2068,7 +2068,7 @@ int main(int argc, char *argv[])
 	  | (pic_with_got ? FLAT_FLAG_GOTPIC : 0)
 	  | (docompress ? (docompress == 2 ? FLAT_FLAG_GZDATA : FLAT_FLAG_GZIP) : 0)
 	  );
-  hdr.build_date = htonl((unsigned long)time(NULL));
+  hdr.build_date = htonl((uint32_t)time(NULL));
   memset(hdr.filler, 0x00, sizeof(hdr.filler));
 
   for (i=0; i<reloc_len; i++) reloc[i] = htonl(reloc[i]);
