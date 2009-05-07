@@ -152,6 +152,12 @@ then
 		else
 			SEDOP="$SEDOP -e /^SINGLE_LINK:/d"
 		fi
+		if [ "@emit_ctor_dtor@" = "yes" ]
+		then
+			SEDOP="$SEDOP -e s/^TOR://"
+		else
+			SEDOP="$SEDOP -e /^TOR:/d"
+		fi
 		
 		# provide a default linker script, we usually need one
 		[ -z "$LDSCRIPT" ] && LDSCRIPT="${LDSCRIPTPATH}/elf2flt.ld"

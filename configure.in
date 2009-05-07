@@ -55,6 +55,12 @@ AC_ARG_ENABLE(emit_relocs,
 	[ emit_relocs=yes ]
 )
 
+AC_ARG_ENABLE(emit_ctor_dtor,
+	AS_HELP_STRING([--enable-emit-ctor-dtor], [manually create ctor/dtor list]),
+	[ emit_ctor_dtor=$enableval ],
+	[ emit_ctor_dtor=no ]
+)
+
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
@@ -173,6 +179,7 @@ AC_SUBST(zlib_include_dir)
 AC_SUBST(binutils_ldscript_dir)
 AC_SUBST(got_check)
 AC_SUBST(emit_relocs)
+AC_SUBST(emit_ctor_dtor)
 AC_SUBST(SYMBOL_PREFIX)
 
 AC_OUTPUT(Makefile ld-elf2flt elf2flt.ld)

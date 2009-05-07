@@ -87,8 +87,8 @@ R_RODAT		*(.gnu.linkonce.r*)
 		PROVIDE(@SYMBOL_PREFIX@_SDA2_BASE_ = @SYMBOL_PREFIX@_ssro + (@SYMBOL_PREFIX@_ssro_size / 2));
 
 		. = ALIGN(4) ;
-		@SYMBOL_PREFIX@__CTOR_LIST__ = .;
-		LONG((@SYMBOL_PREFIX@__CTOR_END__ - @SYMBOL_PREFIX@__CTOR_LIST__) / 4 - 2)
+TOR:		@SYMBOL_PREFIX@__CTOR_LIST__ = .;
+TOR:		LONG((@SYMBOL_PREFIX@__CTOR_END__ - @SYMBOL_PREFIX@__CTOR_LIST__) / 4 - 2)
 SINGLE_LINK:	/* gcc uses crtbegin.o to find the start of
 SINGLE_LINK:	   the constructors, so we make sure it is
 SINGLE_LINK:	   first.  Because this is a wildcard, it
@@ -106,16 +106,16 @@ SINGLE_LINK:	   end of ctors marker and it must be last */
 SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
 SINGLE_LINK:	KEEP (*(SORT(.ctors.*)))
 		KEEP (*(.ctors))
-		LONG(0)
-		@SYMBOL_PREFIX@__CTOR_END__ = .;
-		@SYMBOL_PREFIX@__DTOR_LIST__ = .;
-		LONG((@SYMBOL_PREFIX@__DTOR_END__ - @SYMBOL_PREFIX@__DTOR_LIST__) / 4 - 2)
+TOR:		LONG(0)
+TOR:		@SYMBOL_PREFIX@__CTOR_END__ = .;
+TOR:		@SYMBOL_PREFIX@__DTOR_LIST__ = .;
+TOR:		LONG((@SYMBOL_PREFIX@__DTOR_END__ - @SYMBOL_PREFIX@__DTOR_LIST__) / 4 - 2)
 SINGLE_LINK:	KEEP (*crtbegin*.o(.dtors))
 SINGLE_LINK:	KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
 SINGLE_LINK:	KEEP (*(SORT(.dtors.*)))
 		KEEP (*(.dtors))
-		LONG(0)
-		@SYMBOL_PREFIX@__DTOR_END__ = .;
+TOR:		LONG(0)
+TOR:		@SYMBOL_PREFIX@__DTOR_END__ = .;
 
 		PROVIDE (@SYMBOL_PREFIX@__preinit_array_start = .);
 		KEEP (*(.preinit_array))
