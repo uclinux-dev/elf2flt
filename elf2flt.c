@@ -62,10 +62,15 @@
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
 #elif defined(TARGET_microblaze)
 #include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
-#elif defined(TARGET_bfin)
-#include "elf/bfin.h"
 #else
 #include <elf.h>      /* TARGET_* ELF support for the BFD library            */
+#endif
+
+/* Always include Blackfin-specific defines in addition to common ELF stuff
+ * above as the common elf headers often do not have our relocs.
+ */
+#ifdef TARGET_bfin
+#include "elf/bfin.h"
 #endif
 
 #if defined(__MINGW32__)
