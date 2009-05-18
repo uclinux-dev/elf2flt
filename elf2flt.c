@@ -527,6 +527,7 @@ dump_symbols(symbols, number_of_symbols);
 			{
 			case R_MICROBLAZE_NONE:
 			case R_MICROBLAZE_64_NONE:
+			case R_MICROBLAZE_32_PCREL_LO:
 				continue;
 			}
 #endif /* TARGET_microblaze */
@@ -984,15 +985,11 @@ dump_symbols(symbols, number_of_symbols);
 		   the relocation symbol. */
 				{
 					unsigned char *p = r_mem;
-					uint32_t offset;
 					pflags=0x80000000;
 
 					/* work out the relocation */
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
-					/* grab any offset from the text */
-					offset = (p[2]<<24) + (p[3] << 16) + (p[6] << 8) + (p[7]);
-					/* Update the address */
-					sym_addr += offset + sym_vma + q->addend;
+					sym_addr += sym_vma + q->addend;
 					/* Write relocated pointer back */
 					p[2] = (sym_addr >> 24) & 0xff;
 					p[3] = (sym_addr >> 16) & 0xff;
@@ -1024,36 +1021,21 @@ dump_symbols(symbols, number_of_symbols);
 				case R_MICROBLAZE_32:
 				{	
 					unsigned char *p = r_mem;
-					unsigned long offset;
 
-					/* grab any offset from the text */
-					offset = (p[0]<<24) + (p[1] << 16) + (p[2] << 8) + (p[3]);
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
-					/* This is a horrible kludge.  For some
-					   reason, *sometimes* the offset is in
-					   both addend and the code.  Detect
-					   it, and cancel the effect.  Otherwise
-					   the offset gets added twice - ouch.
-					   There should be a better test
-					   for this condition, based on the
-					   BFD data structures */
-					if(offset==q->addend)
-						offset=0;
-
-					sym_addr += offset + sym_vma + q->addend;
+					sym_addr += sym_vma + q->addend;
 					relocation_needed = 1;
 					break;
 				}
 				case R_MICROBLAZE_64_PCREL:
 					sym_vma = 0;
-					//sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_addr += sym_vma + q->addend;
 					sym_addr -= (q->address + 4);
 					sym_addr = htonl(sym_addr);
 					/* insert 16 MSB */
-					* ((unsigned short *) (r_mem+2)) |= (sym_addr) & 0xFFFF;
+					* ((unsigned short *) (r_mem+2)) = (sym_addr) & 0xFFFF;
 					/* then 16 LSB */
-					* ((unsigned short *) (r_mem+6)) |= (sym_addr >> 16) & 0xFFFF;
+					* ((unsigned short *) (r_mem+6)) = (sym_addr >> 16) & 0xFFFF;
 					/* We've done all the work, so continue
 					   to next reloc instead of break */
 					continue;
