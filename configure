@@ -1898,7 +1898,7 @@ else
 fi
 
 
-# Check whether --enable-emit_relocs was given.
+# Check whether --enable-emit-relocs was given.
 if test "${enable_emit_relocs+set}" = set; then
   enableval=$enable_emit_relocs;  emit_relocs=$enableval
 else
@@ -1907,7 +1907,7 @@ else
 fi
 
 
-# Check whether --enable-emit_ctor_dtor was given.
+# Check whether --enable-emit-ctor-dtor was given.
 if test "${enable_emit_ctor_dtor+set}" = set; then
   enableval=$enable_emit_ctor_dtor;  emit_ctor_dtor=$enableval
 else

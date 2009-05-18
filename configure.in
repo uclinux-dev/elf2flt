@@ -49,13 +49,13 @@ AC_ARG_ENABLE(got-check,
 	[ got_check=yes ]
 )
 
-AC_ARG_ENABLE(emit_relocs,
+AC_ARG_ENABLE(emit-relocs,
 	[ --disable-emit-relocs - don't use the --emit-relocs (-q) linker option ],
 	[ emit_relocs=$enableval ],
 	[ emit_relocs=yes ]
 )
 
-AC_ARG_ENABLE(emit_ctor_dtor,
+AC_ARG_ENABLE(emit-ctor-dtor,
 	AS_HELP_STRING([--enable-emit-ctor-dtor], [manually create ctor/dtor list]),
 	[ emit_ctor_dtor=$enableval ],
 	[ emit_ctor_dtor=no ]
