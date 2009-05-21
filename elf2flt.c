@@ -716,6 +716,10 @@ dump_symbols(symbols, number_of_symbols);
 				case R_ARM_REL32:
 				case R_ARM_THM_PC11:
 				case R_ARM_THM_PC22:
+				case R_ARM_PC24:
+				case R_ARM_PLT32:
+				case R_ARM_GOTPC:
+				case R_ARM_GOT32:
 					relocation_needed = 0;
 					break;
 				default:
