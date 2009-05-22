@@ -51,7 +51,7 @@
 char *program_name;
 
 static int print = 0, print_relocs = 0, docompress = 0, ramload = 0,
-           stacksize = 0, ktrace = 0;
+           stacksize = 0, ktrace = 0, l1stack = 0;
 
 /****************************************************************************/
 
@@ -106,6 +106,11 @@ process_file(char *ifile, char *ofile)
 	else if (ktrace < 0)
 		new_flags &= ~FLAT_FLAG_KTRACE;
 	
+	if (l1stack > 0)
+		new_flags |= FLAT_FLAG_L1STK;
+	else if (l1stack < 0)
+		new_flags &= ~FLAT_FLAG_L1STK;
+
 	if (stacksize)
 		new_stack = stacksize;
 
@@ -139,6 +144,8 @@ process_file(char *ifile, char *ofile)
 				printf("Gzip-Data-Compressed ");
 			if (old_flags & FLAT_FLAG_KTRACE)
 				printf("Kernel-Traced-Load ");
+			if (old_flags & FLAT_FLAG_L1STK)
+				printf("L1-Scratch-Stack ");
 			printf(")\n");
 		}
 
@@ -317,6 +324,8 @@ usage(char *s)
 	fprintf(stderr, "       -R      : do not RAM load\n");
 	fprintf(stderr, "       -k      : kernel traced load (for debug)\n");
 	fprintf(stderr, "       -K      : normal non-kernel traced load\n");
+	fprintf(stderr, "       -u      : place stack in L1 scratchpad memory\n");
+	fprintf(stderr, "       -U      : place stack in normal SDRAM memory\n");
 	fprintf(stderr, "       -s size : stack size\n");
 	fprintf(stderr, "       -o file : output-file\n"
 	                "                 (default is to modify input file)\n");
@@ -333,7 +342,7 @@ main(int argc, char *argv[])
 
 	program_name = argv[0];
 
-	while ((c = getopt(argc, argv, "pPdzZrRkKs:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "pPdzZrRuUkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
 		case 'P': print_relocs = 1;         break;
@@ -344,6 +353,8 @@ main(int argc, char *argv[])
 		case 'R': ramload = -1;             break;
 		case 'k': ktrace = 1;               break;
 		case 'K': ktrace = -1;              break;
+		case 'u': l1stack = 1;              break;
+		case 'U': l1stack = -1;             break;
 		case 'o': ofile = optarg;           break;
 		case 's':
 			if (sscanf(optarg, "%i", &stacksize) != 1)
