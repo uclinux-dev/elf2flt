@@ -1,0 +1,18 @@
+# standard patterns
+*.o
+*~
+*.orig
+*.rej
+*.patch
+
+# autotool files
+autom4te.cache
+config.log
+config.status
+Makefile
+
+# our generated files
+elf2flt
+elf2flt.ld
+flthdr
+ld-elf2flt
