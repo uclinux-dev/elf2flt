@@ -740,6 +740,7 @@ dump_symbols(symbols, number_of_symbols);
 #elif defined TARGET_bfin
 				case R_rimm16:
 				case R_luimm16:
+				case R_huimm16:
 				    sym_vma = bfd_section_vma(abs_bfd, sym_section);
 				    sym_addr += sym_vma + q->addend;
 
@@ -749,28 +750,9 @@ dump_symbols(symbols, number_of_symbols);
 					fprintf (stderr, "Relocation overflow for rN = %s\n",sym_name);
 					bad_relocs++;
 				    }
+				    if ((0xFFFF0000 & sym_addr) != persistent_data) {
 				    flat_relocs = (uint32_t *)
 					(realloc (flat_relocs, (flat_reloc_count + 1) * sizeof (uint32_t)));
-				    if (bfin_set_reloc (flat_relocs + flat_reloc_count,
-							sym_section->name, sym_name,
-							(*(q->sym_ptr_ptr)),
-							0, section_vma + q->address))
-					bad_relocs++;
-				    if (a->flags & SEC_CODE)
-					text_has_relocs = 1;
-				    flat_reloc_count++;
-				    break;
-
-				case R_huimm16:
-				    sym_vma = bfd_section_vma(abs_bfd, sym_section);
-				    sym_addr += sym_vma + q->addend;
-
-				    if (weak_und_symbol (sym_section->name, (*(q->sym_ptr_ptr))))
-					continue;
-
-				    flat_relocs = (uint32_t *)
-					(realloc (flat_relocs, (flat_reloc_count + 2) * sizeof (uint32_t)));
-				    if ((0xFFFF0000 & sym_addr) != persistent_data) {
 					    if (verbose)
 						    printf ("New persistent data for %08lx\n", sym_addr);
 					    persistent_data = 0xFFFF0000 & sym_addr;
@@ -778,10 +760,13 @@ dump_symbols(symbols, number_of_symbols);
 						    = (sym_addr >> 16) | (3 << 26);
 				    }
 
+				    flat_relocs = (uint32_t *)
+					(realloc (flat_relocs, (flat_reloc_count + 1) * sizeof (uint32_t)));
 				    if (bfin_set_reloc (flat_relocs + flat_reloc_count,
 							sym_section->name, sym_name,
 							(*(q->sym_ptr_ptr)),
-							1, section_vma + q->address))
+							q->howto->type == R_huimm16 ? 1 : 0,
+							section_vma + q->address))
 					bad_relocs++;
 				    if (a->flags & SEC_CODE)
 					text_has_relocs = 1;
