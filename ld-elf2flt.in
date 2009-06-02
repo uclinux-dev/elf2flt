@@ -107,6 +107,7 @@ then
 		[ "$VERBOSE" = "y" ] && set -x
 		ARG1="$ARG1 $FINAL_ONLY"
 		NEWLDSCRIPT=`mktemp /tmp/flt-XXXXXX`
+		trap 'rm -f "$NEWLDSCRIPT"' EXIT
 		SEDOP=" -e s/^R_RODAT// -e /^W_RODAT/d"
 		OBJCOPYOP=""
 		if [ "$MOVDAT" ]
@@ -225,7 +226,6 @@ then
 		 fi
 		fi
 		[ "$RFILE" = "$OFILE.gdb" ] || rm -f "$RFILE"  # not needed for any reason
-		rm -f "$NEWLDSCRIPT"
 		exit 0
 	fi
 
