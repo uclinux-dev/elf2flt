@@ -69,7 +69,7 @@
 /* Always include Blackfin-specific defines in addition to common ELF stuff
  * above as the common elf headers often do not have our relocs.
  */
-#ifdef TARGET_bfin
+#if defined(TARGET_bfin) && !defined(R_BFIN_RIMM16)
 #include "elf/bfin.h"
 #endif
 
@@ -738,15 +738,15 @@ dump_symbols(symbols, number_of_symbols);
 				default:
 					goto bad_resolved_reloc;
 #elif defined TARGET_bfin
-				case R_rimm16:
-				case R_luimm16:
-				case R_huimm16:
+				case R_BFIN_RIMM16:
+				case R_BFIN_LUIMM16:
+				case R_BFIN_HUIMM16:
 				    sym_vma = bfd_section_vma(abs_bfd, sym_section);
 				    sym_addr += sym_vma + q->addend;
 
 				    if (weak_und_symbol(sym_section->name, (*(q->sym_ptr_ptr))))
 					continue;
-				    if (q->howto->type == R_rimm16 && (0xFFFF0000 & sym_addr)) {
+				    if (q->howto->type == R_BFIN_RIMM16 && (0xFFFF0000 & sym_addr)) {
 					fprintf (stderr, "Relocation overflow for rN = %s\n",sym_name);
 					bad_relocs++;
 				    }
@@ -765,7 +765,7 @@ dump_symbols(symbols, number_of_symbols);
 				    if (bfin_set_reloc (flat_relocs + flat_reloc_count,
 							sym_section->name, sym_name,
 							(*(q->sym_ptr_ptr)),
-							q->howto->type == R_huimm16 ? 1 : 0,
+							q->howto->type == R_BFIN_HUIMM16 ? 1 : 0,
 							section_vma + q->address))
 					bad_relocs++;
 				    if (a->flags & SEC_CODE)
@@ -773,7 +773,7 @@ dump_symbols(symbols, number_of_symbols);
 				    flat_reloc_count++;
 				    break;
 
-				case R_byte4_data:
+				case R_BFIN_BYTE4_DATA:
 				    sym_vma = bfd_section_vma(abs_bfd, sym_section);
 				    sym_addr += sym_vma + q->addend;
 
@@ -1507,13 +1507,13 @@ DIS29_RELOCATION:
 				break;
 				}
 #elif defined TARGET_bfin
-				if ((*p)->howto->type == R_rimm16
-				    || (*p)->howto->type == R_huimm16
-				    || (*p)->howto->type == R_luimm16)
+				if ((*p)->howto->type == R_BFIN_RIMM16
+				    || (*p)->howto->type == R_BFIN_HUIMM16
+				    || (*p)->howto->type == R_BFIN_LUIMM16)
 				{
 					/* for l and h we set the lower 16 bits which is only when it will be used */
 					bfd_putl16 (sym_addr, sectionp + q->address);
-				} else if ((*p)->howto->type == R_byte4_data) {
+				} else if ((*p)->howto->type == R_BFIN_BYTE4_DATA) {
 					bfd_putl32 (sym_addr, sectionp + q->address);
 				}
 #else /* ! TARGET_arm && ! TARGET_e1 && ! TARGET_bfin */
