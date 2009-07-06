@@ -17,6 +17,7 @@
 #include <linux/types.h>
 #include <asm/flat.h>
 #endif
+#include <stdint.h>
 
 #define	FLAT_VERSION			0x00000004L
 
