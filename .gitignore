@@ -1,9 +1,15 @@
 # standard patterns
+*.a
 *.o
 *~
 *.orig
 *.rej
 *.patch
+.deps
+
+a.out
+*.gdb
+*.exe
 
 # autotool files
 autom4te.cache
