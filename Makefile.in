@@ -65,7 +65,7 @@ Makefile: $(srcdir)/Makefile.in
 	./config.status $@
 
 clean:
-	-rm -f $(PROGS) *.$(OBJEXT)
+	-rm -f $(PROGS) *.$(OBJEXT) .deps
 
 distclean: clean
 	-rm -f Makefile config.log config.status config.cache ld-elf2flt
@@ -86,4 +86,6 @@ install:
 	$(INSTALL) -m 755 ld-elf2flt $(target_bindir)/ld
 	$(INSTALL) -m 644 $(SRC_LDFILE) $(target_libdir)/$(LDFILE)
 
-
+sinclude .deps
+.deps:
+	$(CC) -MM $(CPPFLAGS) *.c > .deps
