@@ -13,6 +13,7 @@
 
 #include <zlib.h>
 #include "compress.h"
+#include "stubs.h"
 
 /* Open an (uncompressed) file as a stream.  Return 0 on success, 1 on
    error.
@@ -187,15 +188,11 @@ transfer(stream *ifp, stream *ofp, int count)
 		n = fread_stream(cmd, 1, num, ifp);
 		if (n == 0)
 			break;
-		if (fwrite_stream(cmd, n, 1, ofp) != 1) {
-			fprintf(stderr, "Write failed :-(\n");
-			exit(1);
-		}
+		if (fwrite_stream(cmd, n, 1, ofp) != 1)
+			fatal_perror("Write failed :-(\n");
 		if (count != -1)
 			count -= n;
 	}
-	if (count > 0) {
-		fprintf(stderr, "Failed to transfer %d bytes\n", count);
-		exit(1);
-	}
+	if (count > 0)
+		fatal("Failed to transfer %d bytes\n", count);
 }

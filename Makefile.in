@@ -55,7 +55,7 @@ link = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 $(PROG_ELF2FLT): elf2flt.o compress.o stubs.o
 	$(link)
 
-$(PROG_FLTHDR): flthdr.o compress.o
+$(PROG_FLTHDR): flthdr.o compress.o stubs.o
 	$(link)
 
 ld-elf2flt: $(srcdir)/ld-elf2flt.in

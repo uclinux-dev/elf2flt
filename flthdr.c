@@ -18,17 +18,11 @@
 #include <inttypes.h>
 #include <assert.h>
 
-/* macros for conversion between host and (internet) network byte order */
-#ifndef WIN32
-#include <netinet/in.h> /* Consts and structs defined by the internet system */
-#define	BINARY_FILE_OPTS
-#else
-#include <winsock2.h>
-#define	BINARY_FILE_OPTS "b"
-#endif
-
 #include "compress.h"
 #include <libiberty.h>
+
+#include "stubs.h"
+const char *elf2flt_progname;
 
 /* from uClinux-x.x.x/include/linux */
 #include "flat.h"     /* Binary flat header description                      */
@@ -47,8 +41,6 @@
 #endif
 
 /****************************************************************************/
-
-char *program_name;
 
 static int print = 0, print_relocs = 0, docompress = 0, ramload = 0,
            stacksize = 0, ktrace = 0, l1stack = 0;
@@ -239,16 +231,14 @@ process_file(char *ifile, char *ofile)
 	tfile = make_temp_file("flthdr");
 
 	if (fopen_stream_u(&ofp, tfile, "w" BINARY_FILE_OPTS)) {
-		fprintf(stderr, "Failed to open %s for writing\n", tfile);
 		unlink(tfile);
-		exit(1);
+		fatal("Failed to open %s for writing\n", tfile);
 	}
 
 	/* Copy header (always uncompressed).  */
 	if (fwrite_stream(&new_hdr, sizeof(new_hdr), 1, &ofp) != 1) {
-		fprintf(stderr, "Failed to write to  %s\n", tfile);
 		unlink(tfile);
-		exit(1);
+		fatal("Failed to write to  %s\n", tfile);
 	}
 
 	/* Whole input file (including text) is compressed: start decompressing
@@ -283,11 +273,10 @@ process_file(char *ifile, char *ofile)
 	output_error = ferror_stream(&ofp);
 
 	if (input_error || output_error) {
-		fprintf(stderr, "Error on file pointer%s%s\n",
+		unlink(tfile);
+		fatal("Error on file pointer%s%s\n",
 				input_error ? " input" : "",
 				output_error ? " output" : "");
-		unlink(tfile);
-		exit(1);
 	}
 
 	fclose_stream(&ifp);
@@ -313,7 +302,7 @@ usage(char *s)
 {
 	if (s)
 		fprintf(stderr, "%s\n", s);
-	fprintf(stderr, "usage: %s [options] flat-file\n", program_name);
+	fprintf(stderr, "usage: %s [options] flat-file\n", elf2flt_progname);
 	fprintf(stderr, "       Allows you to change an existing flat file\n\n");
 	fprintf(stderr, "       -p      : print current settings\n");
 	fprintf(stderr, "       -P      : print relocations\n");
@@ -340,7 +329,7 @@ main(int argc, char *argv[])
 	int c;
 	char *ofile = NULL, *ifile;
 
-	program_name = argv[0];
+	elf2flt_progname = argv[0];
 
 	while ((c = getopt(argc, argv, "pPdzZrRuUkKs:o:")) != EOF) {
 		switch (c) {

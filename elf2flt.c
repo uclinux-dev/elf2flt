@@ -44,17 +44,13 @@
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
 #include <fcntl.h>    /* Flag value for file handling functions              */
 #include <time.h>
-#ifndef WIN32
-#include <netinet/in.h> /* Consts and structs defined by the internet system */
-#define	BINARY_FILE_OPTS
-#else
-#include <winsock2.h>
-#define	BINARY_FILE_OPTS "b"
-#endif
 
 /* from $(INSTALLDIR)/include       */
 #include <bfd.h>      /* Main header file for the BFD library                */
 #include <libiberty.h>
+
+#include "stubs.h"
+const char *elf2flt_progname;
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
@@ -153,75 +149,6 @@ int use_resolved = 0; /* If true, get the value of symbol references from */
 /* Set if the text section contains any relocations.  If it does, we must
    set the load_to_ram flag.  */
 int text_has_relocs = 0;
-const char *progname, *filename;
-int lineno;
-
-int nerrors = 0;
-int nwarnings = 0;
-
-static char where[200];
-
-enum {
-  /* Use exactly one of these: */
-  E_NOFILE = 0,         /* "progname: " */
-  E_FILE = 1,           /* "filename: " */
-  E_FILELINE = 2,       /* "filename:lineno: " */
-  E_FILEWHERE = 3,      /* "filename:%s: " -- set %s with ewhere() */
-          
-  /* Add in any of these with |': */
-  E_WARNING = 0x10,
-  E_PERROR = 0x20
-};
-                  
-void ewhere (const char *format, ...);
-void einfo (int type, const char *format, ...);
-                  
-
-void
-ewhere (const char *format, ...) {
-  va_list args;
-  va_start (args, format);
-  vsprintf (where, format, args);
-  va_end (args);
-}
-
-
-void
-einfo (int type, const char *format, ...) {
-  va_list args;
-
-  switch (type & 0x0f) {
-  case E_NOFILE:
-    fprintf (stderr, "%s: ", progname);
-    break;
-  case E_FILE:
-    fprintf (stderr, "%s: ", filename);
-    break;
-  case E_FILELINE:
-    ewhere ("%d", lineno);
-    /* fall-through */
-  case E_FILEWHERE:
-    fprintf (stderr, "%s:%s: ", filename, where);
-    break;
-  }
-
-  if (type & E_WARNING) {
-    fprintf (stderr, "warning: ");
-    nwarnings++;
-  } else {
-    nerrors++;
-  }
-
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
-
-  if (type & E_PERROR)
-    perror ("");
-  else
-    fprintf (stderr, "\n");
-}
-
 
 asymbol**
 get_symbols (bfd *abfd, long *num)
@@ -443,11 +370,9 @@ dump_symbols(symbols, number_of_symbols);
 	    printf("GOT table contains %d entries (%d bytes)\n",
 			    got_size/sizeof(uint32_t), got_size);
 #ifdef TARGET_m68k
-    if (got_size > GOT_LIMIT) {
-	    fprintf(stderr, "GOT too large: %d bytes (limit = %d bytes)\n",
-			    got_size, GOT_LIMIT);
-	    exit(1);
-    }
+    if (got_size > GOT_LIMIT)
+	    fatal("GOT too large: %d bytes (limit = %d bytes)",
+			got_size, GOT_LIMIT);
 #endif
   }
 
@@ -1645,10 +1570,8 @@ printf("%s(%d): symbol name=%s address=0x%x section=%s -> RELOC=0x%x\n",
 
 
 
-static char * program;
-
 static void usage(void)
-{  
+{
     fprintf(stderr, "Usage: %s [vrzd] [-p <abs-pic-file>] [-s stack-size] "
 	"[-o <output-file>] <elf-file>\n\n"
 	"       -v              : verbose operation\n"
@@ -1663,7 +1586,7 @@ static void usage(void)
 	"       -p abs-pic-file : GOT/PIC processing with files\n"
 	"       -s stacksize    : set application stack size\n"
 	"       -o output-file  : output file name\n\n",
-	program);
+	elf2flt_progname);
 	fprintf(stderr, "Compiled for " ARCH " architecture\n\n");
     exit(2);
 }
@@ -1716,23 +1639,20 @@ int main(int argc, char *argv[])
   void *text;
   void *data;
   uint32_t *reloc;
-  
+
   struct flat_hdr hdr;
 
-  program = argv[0];
-  progname = argv[0];
-  xmalloc_set_program_name(program);
+  elf2flt_progname = argv[0];
+  xmalloc_set_program_name(elf2flt_progname);
 
   if (argc < 2)
   	usage();
-  
-  if (sizeof(hdr) != 64) {
-    fprintf(stderr,
+
+  if (sizeof(hdr) != 64)
+    fatal(
 	    "Potential flat header incompatibility detected\n"
-	    "header size should be 64 but is %d\n",
+	    "header size should be 64 but is %d",
 	    sizeof(hdr));
-    exit(64);
-  }
 
 #ifndef TARGET_e1
   stack = 4096;
@@ -1789,7 +1709,7 @@ int main(int argc, char *argv[])
   if (!load_to_ram && !pfile)
     load_to_ram = 1;
 
-  filename = fname = argv[argc-1];
+  fname = argv[argc-1];
 
   if (pfile) {
     pic_with_got = 1;
@@ -1800,43 +1720,30 @@ int main(int argc, char *argv[])
   if (! rel_file)
     rel_file = fname;
 
-  if (!(rel_bfd = bfd_openr(rel_file, 0))) {
-    fprintf(stderr, "Can't open %s\n", rel_file);
-    exit(1);
-  }
+  if (!(rel_bfd = bfd_openr(rel_file, 0)))
+    fatal_perror("Can't open '%s'", rel_file);
 
-  if (bfd_check_format (rel_bfd, bfd_object) == 0) {
-    fprintf(stderr, "File is not an object file\n");
-    exit(2);
-  }
+  if (bfd_check_format (rel_bfd, bfd_object) == 0)
+    fatal("File is not an object file");
 
   if (abs_file == rel_file)
     abs_bfd = rel_bfd; /* one file does all */
   else {
-    if (!(abs_bfd = bfd_openr(abs_file, 0))) {
-      fprintf(stderr, "Can't open %s\n", abs_file);
-      exit(1);
-    }
+    if (!(abs_bfd = bfd_openr(abs_file, 0)))
+      fatal_perror("Can't open '%s'", abs_file);
 
-    if (bfd_check_format (abs_bfd, bfd_object) == 0) {
-      fprintf(stderr, "File is not an object file\n");
-      exit(2);
-    }
+    if (bfd_check_format (abs_bfd, bfd_object) == 0)
+      fatal("File is not an object file");
   }
 
-  if (! (bfd_get_file_flags(rel_bfd) & HAS_RELOC)) {
-    fprintf (stderr, "%s: Input file contains no relocation info\n", rel_file);
-    exit (2);
-  }
+  if (! (bfd_get_file_flags(rel_bfd) & HAS_RELOC))
+    fatal("%s: Input file contains no relocation info", rel_file);
 
-  if (use_resolved && !(bfd_get_file_flags(abs_bfd) & EXEC_P)) {
+  if (use_resolved && !(bfd_get_file_flags(abs_bfd) & EXEC_P))
     /* `Absolute' file is not absolute, so neither are address
        contained therein.  */
-    fprintf (stderr,
-	     "%s: `-a' option specified with non-fully-resolved input file\n",
+    fatal("%s: `-a' option specified with non-fully-resolved input file",
 	     bfd_get_filename (abs_bfd));
-    exit (2);
-  }
 
   symbol_table = get_symbols(abs_bfd, &number_of_symbols);
 
@@ -1871,10 +1778,8 @@ int main(int argc, char *argv[])
       *len = sec_vma + sec_size - *vma;
   }
 
-  if (text_len == 0) {
-    fprintf (stderr, "%s: no .text section", abs_file);
-    exit (2);
-  }
+  if (text_len == 0)
+    fatal("%s: no .text section", abs_file);
 
   text = xmalloc(text_len);
 
@@ -1888,14 +1793,11 @@ int main(int argc, char *argv[])
 				   text + (s->vma - text_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
       {
-	fprintf(stderr, "read error section %s\n", s->name);
-	exit(2);
+	fatal("read error section %s", s->name);
       }
 
-  if (data_len == 0) {
-    fprintf (stderr, "%s: no .data section", abs_file);
-    exit (2);
-  }
+  if (data_len == 0)
+    fatal("%s: no .data section", abs_file);
   data = xmalloc(data_len);
 
   if (verbose)
@@ -1919,8 +1821,7 @@ int main(int argc, char *argv[])
 				   data + (s->vma - data_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
       {
-	fprintf(stderr, "read error section %s\n", s->name);
-	exit(2);
+	fatal("read error section %s", s->name);
       }
 
   if (bss_vma == ~0)
@@ -1988,18 +1889,14 @@ int main(int argc, char *argv[])
     strcat(ofile, ".bflt");
   }
 
-  if ((fd = open (ofile, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0744)) < 0) {
-    fprintf (stderr, "Can't open output file %s\n", ofile);
-    exit(4);
-  }
+  if ((fd = open (ofile, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0744)) < 0)
+    fatal_perror("Can't open output file %s", ofile);
 
   write(fd, &hdr, sizeof(hdr));
   close(fd);
 
-  if (fopen_stream_u(&gf, ofile, "a" BINARY_FILE_OPTS)) {
-    fprintf(stderr, "Can't open file %s for writing\n", ofile);
-    exit(4);
-  }
+  if (fopen_stream_u(&gf, ofile, "a" BINARY_FILE_OPTS))
+    fatal_perror("Can't open file %s for writing", ofile);
 
   if (docompress == 1)
     reopen_stream_compressed(&gf);
