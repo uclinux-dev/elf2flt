@@ -53,7 +53,8 @@ then
 
 		-move-rodata)
 		          MOVDAT="y";;                 # Put rodata in ROM if possible
-		-s)       ;;                           # Ignore -s (strip)
+		-s|-S|--strip-all|--strip-debug)
+		          ;;                           # Ignore strip flags
 
 		-shared-lib-id)
 		          shift; SHARED_ID="$1";;      # Shared library ID
@@ -81,7 +82,8 @@ then
 		          ARG1="$ARG1 $1"
 				  ;;
 
-		-v)       ARG1="$ARG1 $1"
+		-v|--verbose)
+				  ARG1="$ARG1 $1"
 				  VERBOSE="y"
 				  ;;
 
