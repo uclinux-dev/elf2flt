@@ -11,10 +11,10 @@ CC = @CC@
 CPU = @target_cpu@
 TARGET = @target_alias@
 CFLAGS = @CFLAGS@
-INCLUDES = @bfd_include_dir@ @binutils_include_dir@ @zlib_include_dir@
-CPPFLAGS = @CPPFLAGS@
+INCLUDES = -I$(srcdir) @bfd_include_dir@ @binutils_include_dir@ @zlib_include_dir@
+CPPFLAGS = @CPPFLAGS@ $(DEFS) $(INCLUDES)
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
+LDLIBS = @LIBS@
 INSTALL = @INSTALL@
 DEFS = @DEFS@ -DTARGET_$(CPU)
 EXEEXT = @EXEEXT@
@@ -23,15 +23,13 @@ OBJEXT = @OBJEXT@
 HOST = @host_alias@
 
 ifneq (,$(findstring mingw32,$(HOST)))
-   LIBS :=  $(LIBS) -lws2_32
+   LDLIBS += -lws2_32
 endif
 
 # force link order under cygwin to avoid getopts / libiberty clash
 ifneq ($(strip $(shell gcc -v 2>&1 | grep "cygwin")),)
-   LIBS := -lcygwin $(LIBS)
+   LDLIBS := -lcygwin $(LDLIBS)
 endif
-
-CCFLAGS = $(CFLAGS) $(DEFS) $(INCLUDES)
 
 LDFILE= elf2flt.ld
 ifeq ($(strip $(CPU)),e1)
@@ -50,11 +48,15 @@ PROGS = $(PROG_ELF2FLT) $(PROG_FLTHDR)
 
 all: $(PROGS) ld-elf2flt
 
-$(PROG_ELF2FLT): $(srcdir)/elf2flt.c compress.o $(srcdir)/stubs.c
-	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+# We need to declare the link explicitly because make only provides
+# implicit rules when EXEEXT is set to nothing
+link = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-$(PROG_FLTHDR): $(srcdir)/flthdr.c compress.o
-	$(CC) $(CCFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+$(PROG_ELF2FLT): elf2flt.o compress.o stubs.o
+	$(link)
+
+$(PROG_FLTHDR): flthdr.o compress.o
+	$(link)
 
 ld-elf2flt: $(srcdir)/ld-elf2flt.in
 	./config.status $@
