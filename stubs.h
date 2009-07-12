@@ -32,7 +32,44 @@
 # define strsignal(sig) "SIG???"
 #endif
 
+#define streq(str1, str2) (strcmp(str1, str2) == 0)
+#define streqn(str1, str2) (strncmp(str1, str2, strlen(str2)) == 0)
+
+#ifndef DEBUG
+# define DEBUG -1
+#endif
+#define _debug(lvl, fmt, args...) \
+	do { \
+		if (lvl <= DEBUG) { \
+			fprintf(stderr, "%s:%i: " fmt, __func__, __LINE__, ## args); \
+			fflush(stderr); \
+		} \
+	} while (0)
+#define debug2(...) _debug(2, __VA_ARGS__)
+#define debug1(...) _debug(1, __VA_ARGS__)
+#define debug0(...) _debug(0, __VA_ARGS__)
+#define debug(...)  debug0(__VA_ARGS__)
+
+#ifndef HAVE_GETLINE
+ssize_t getline(char **line, size_t *alloc, FILE *in);
+#endif
+
 extern const char *elf2flt_progname;
 
 void fatal(const char *, ...);
 void fatal_perror(const char *, ...);
+
+FILE *xfopen(const char *path, const char *mode);
+
+/* Structure to hold a list of options */
+typedef struct
+{
+  const char **options;
+  size_t num;
+  size_t alloc;
+} options_t;
+/* Initialize an options structure */
+#define init_options(DST) ((DST)->options = NULL, (DST)->num = (DST)->alloc = 0)
+void append_options(options_t *dst, const options_t *src);
+void append_option(options_t *dst, const char *src);
+void append_option_str(options_t *dst, const char *src, const char *delim);

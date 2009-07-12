@@ -43,29 +43,48 @@ AC_ARG_WITH(binutils-build-dir,
 	[ ac_binutils_build_dir=NONE ]
 )
 
+AC_ARG_ENABLE(ld-elf2flt-binary,
+	AS_HELP_STRING([--disable-ld-elf2flt-binary], [use ld-elf2flt shell script]),
+	[ use_ld_elf2flt_binary=$enableval ],
+	[ use_ld_elf2flt_binary=yes ]
+)
+
+dnl convert a yes/no variable to 1/0 for C code
+var_yn_to_10() {
+	if eval test \"\$$1\" = yes ; then
+		eval $1=1
+	else
+		eval $1=0
+	fi
+}
+
 AC_ARG_ENABLE(got-check,
 	[ --disable-got-check - disable check for GOT (needed on H8) ],
 	[ got_check=$enableval ],
 	[ got_check=yes ]
 )
+var_yn_to_10 got_check
 
 AC_ARG_ENABLE(emit-relocs,
 	[ --disable-emit-relocs - don't use the --emit-relocs (-q) linker option ],
 	[ emit_relocs=$enableval ],
 	[ emit_relocs=yes ]
 )
+var_yn_to_10 emit_relocs
 
 AC_ARG_ENABLE(emit-ctor-dtor,
 	AS_HELP_STRING([--enable-emit-ctor-dtor], [manually create ctor/dtor list]),
 	[ emit_ctor_dtor=$enableval ],
 	[ emit_ctor_dtor=no ]
 )
+var_yn_to_10 emit_ctor_dtor
 
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_INSTALL
 
 if test "$ac_binutils_build_dir" != "NONE"; then
@@ -143,7 +162,7 @@ fi
 
 SYMBOL_PREFIX=
 case $target in
-	bfin*)
+	h8300|bfin*)
 		SYMBOL_PREFIX=_
 		;;
 esac
@@ -165,7 +184,14 @@ AC_C_CONST
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS(dcgettext libintl_dgettext)
+AC_CHECK_FUNCS([ \
+	dcgettext \
+	getline \
+	libintl_dgettext \
+	strsignal \
+])
+
+test "$GCC" = yes && CFLAGS="-Wall $CFLAGS"
 
 dnl Subsitute values
 AC_SUBST(target)
@@ -177,10 +203,11 @@ AC_SUBST(bfd_include_dir)
 AC_SUBST(binutils_include_dir)
 AC_SUBST(zlib_include_dir)
 AC_SUBST(binutils_ldscript_dir)
+AC_SUBST(use_ld_elf2flt_binary)
 AC_SUBST(got_check)
 AC_SUBST(emit_relocs)
 AC_SUBST(emit_ctor_dtor)
 AC_SUBST(SYMBOL_PREFIX)
 
-AC_OUTPUT(Makefile ld-elf2flt elf2flt.ld)
+AC_OUTPUT(ld-elf2flt.sh:ld-elf2flt.in Makefile elf2flt.ld)
 

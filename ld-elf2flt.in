@@ -149,13 +149,13 @@ then
 			esac
 			ARG1="$ARG1 -defsym $GOT_OFFSET=`expr ${SHARED_ID} '*' -${GOT_ADJ} - ${GOT_ADJ}`"
 		fi
-		if [ "@emit_relocs@" = "yes" ]
+		if [ "@emit_relocs@" = "1" ]
 		then
 			SEDOP="$SEDOP -e s/^SINGLE_LINK://"
 		else
 			SEDOP="$SEDOP -e /^SINGLE_LINK:/d"
 		fi
-		if [ "@emit_ctor_dtor@" = "yes" ]
+		if [ "@emit_ctor_dtor@" = "1" ]
 		then
 			SEDOP="$SEDOP -e s/^TOR://"
 		else
@@ -178,13 +178,13 @@ then
 			LDSCRIPT="$NEWLDSCRIPT"
 		fi
 
-		if [ "@emit_relocs@" = "yes" ]
+		if [ "@emit_relocs@" = "1" ]
 		then
 		 $LINKER $EMUL $SDIRS -T $LDSCRIPT -q -o "$OFILE.gdb" $ARG1             ||exit $?
 		 RFILE="$OFILE.gdb"
 		 FLTFLAGS="$FLTFLAGS -a"
 		else
-		 if [ "@got_check@" = "no" ]
+		 if [ "@got_check@" = "0" ]
 		 then
 		  $LINKER $EMUL $SDIRS -T $LDSCRIPT -Ur -d -o "$OFILE.elf" $ARG1         ||exit $?
 		  $LINKER $EMUL $SDIRS -T $LDSCRIPT -o "$OFILE.gdb" $ARG1                ||exit $?
