@@ -79,8 +79,9 @@ $(PROG_FLTHDR): flthdr.o compress.o stubs.o
 ld-elf2flt$(EXEEXT): ld-elf2flt.o stubs.o
 	$(link)
 
-ld-elf2flt.sh: $(srcdir)/ld-elf2flt.sh.in
+ld-elf2flt.sh: $(srcdir)/ld-elf2flt.in
 	./config.status $@
+	chmod 755 $@
 
 Makefile: $(srcdir)/Makefile.in
 	./config.status $@
