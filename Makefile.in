@@ -64,7 +64,7 @@ endif
 
 PROGS = $(PROG_ELF2FLT) $(PROG_FLTHDR) $(PROG_LD_ELF2FLT_C) $(PROG_LD_ELF2FLT_SH)
 
-all: $(PROGS) ld-elf2flt
+all: $(PROGS)
 
 # We need to declare the link explicitly because make only provides
 # implicit rules when EXEEXT is set to nothing
