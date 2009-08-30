@@ -110,4 +110,4 @@ install:
 
 sinclude .deps
 .deps:
-	$(CC) -MM $(CPPFLAGS) *.c > .deps
+	$(CC) -MM $(CPPFLAGS) $(srcdir)/*.c > .deps
