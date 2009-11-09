@@ -76,7 +76,14 @@ static void append_sed(sed_commands_t *dst, const char *pattern,
 
 /* Execute an external program COMMAND.  Write its stdout to OUTPUT,
    unless that is NULL.  Pass the trailing NULL terminated list of
-   options, followed by all those in OPTIONS, if that is non-NULL.  */
+   options, followed by all those in OPTIONS, if that is non-NULL.
+   Order of options is important here as we may run on systems that
+   do not allow options after non-options (i.e. many BSDs).  So the
+   final command line will look like:
+   <command> [options] [... va args ...]
+   This is because [options] will (should?) never contain non-options,
+   while non-options will always be passed via the [va args].
+ */
 static int
 execute(const char *command, const char *output, const options_t *options, ...)
 {
@@ -92,12 +99,12 @@ execute(const char *command, const char *output, const options_t *options, ...)
 
 	init_options(&opts);
 	append_option(&opts, command);
+	if (options)
+		append_options(&opts, options);
 	va_start(args, options);
 	while ((opt = va_arg(args, const char *)))
 		append_option(&opts, opt);
 	va_end(args);
-	if (options)
-		append_options(&opts, options);
 	append_option(&opts, NULL);
 
 	fflush(stdout);
