@@ -11,7 +11,7 @@ LICENSE.TXT for more details.
 
 Elf2flt with PIC, ZFLAT and full reloc support. Currently supported
 targets include: m68k/ColdFire, ARM, Sparc, NEC v850, MicroBlaze, 
-h8300 and SuperH.
+h8300, SuperH, and Blackfin.
 
 COMPILING:
 
