@@ -41,7 +41,7 @@
 #define _debug(lvl, fmt, args...) \
 	do { \
 		if (lvl <= DEBUG) { \
-			fprintf(stderr, "%s:%i: " fmt, __func__, __LINE__, ## args); \
+			fprintf(stderr, "%s:%i: " fmt, __func__, __LINE__ , ## args); \
 			fflush(stderr); \
 		} \
 	} while (0)
