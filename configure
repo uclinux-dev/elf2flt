@@ -1360,8 +1360,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-ld-elf2flt-binary
                           use ld-elf2flt shell script
- --disable-got-check - disable check for GOT (needed on H8)
- --disable-emit-relocs - don't use the --emit-relocs (-q) linker option
+  --disable-got-check     disable check for GOT (needed on H8)
+  --disable-emit-relocs   don't use the --emit-relocs (-q) linker option
   --enable-emit-ctor-dtor manually create ctor/dtor list
   --enable-always-reloc-text
                           always process text relocs ignoring pic/got (needed
@@ -1370,13 +1370,18 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
- --with-zlib-prefix=<dir>  path to installed zlib
- --with-libbfd=<file>  path to libbfd.a library to use
- --with-libiberty=<file>  path to libiberty.a library to use
- --with-bfd-include-dir=<dir>  include path for correct bfd.h
- --with-binutils-include-dir=<dir>  include path for binutils headers
- --with-binutils-ldscript-dir=<dir>  path to install elf2flt.ld
- --with-binutils-build-dir=<dir>  path to compiled binutils tree
+  --with-zlib-prefix=<dir>
+                          path to installed zlib
+  --with-libbfd=<file>    path to libbfd.a library to use
+  --with-libiberty=<file> path to libiberty.a library to use
+  --with-bfd-include-dir=<dir>
+                          include path for correct bfd.h
+  --with-binutils-include-dir=<dir>
+                          include path for binutils headers
+  --with-binutils-ldscript-dir=<dir>
+                          path to install elf2flt.ld
+  --with-binutils-build-dir=<dir>
+                          path to compiled binutils tree
 
 Some influential environment variables:
   CC          C compiler command
