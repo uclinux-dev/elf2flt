@@ -638,6 +638,7 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SYMBOL_PREFIX
+always_reloc_text
 emit_ctor_dtor
 emit_relocs
 got_check
@@ -722,6 +723,7 @@ enable_ld_elf2flt_binary
 enable_got_check
 enable_emit_relocs
 enable_emit_ctor_dtor
+enable_always_reloc_text
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1361,6 +1363,9 @@ Optional Features:
  --disable-got-check - disable check for GOT (needed on H8)
  --disable-emit-relocs - don't use the --emit-relocs (-q) linker option
   --enable-emit-ctor-dtor manually create ctor/dtor list
+  --enable-always-reloc-text
+                          always process text relocs ignoring pic/got (needed
+                          on Blackfin)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1939,6 +1944,21 @@ else
 fi
 
 var_yn_to_10 emit_ctor_dtor
+
+# Check whether --enable-always-reloc-text was given.
+if test "${enable_always_reloc_text+set}" = set; then
+  enableval=$enable_always_reloc_text;  always_reloc_text=$enableval
+else
+
+	case $target in
+		bfin*) always_reloc_text=yes;;
+		*)     always_reloc_text=no;;
+	esac
+
+
+fi
+
+var_yn_to_10 always_reloc_text
 
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
@@ -5112,6 +5132,7 @@ done
 
 
 test "$GCC" = yes && CFLAGS="-Wall $CFLAGS"
+
 
 
 

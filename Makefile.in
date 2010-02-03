@@ -25,7 +25,8 @@ DEFS = @DEFS@ \
 	-DTARGET_ALIAS=\"$(TARGET)\" \
 	-DNO_GOT_CHECK=@got_check@ \
 	-DUSE_EMIT_RELOCS=@emit_relocs@ \
-	-DEMIT_CTOR_DTOR=@emit_ctor_dtor@
+	-DEMIT_CTOR_DTOR=@emit_ctor_dtor@ \
+	-DALWAYS_RELOC_TEXT=@always_reloc_text@
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 

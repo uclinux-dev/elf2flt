@@ -79,6 +79,18 @@ AC_ARG_ENABLE(emit-ctor-dtor,
 )
 var_yn_to_10 emit_ctor_dtor
 
+AC_ARG_ENABLE(always-reloc-text,
+	AS_HELP_STRING([--enable-always-reloc-text], [always process text relocs ignoring pic/got (needed on Blackfin)]),
+	[ always_reloc_text=$enableval ],
+	[
+	case $target in
+		bfin*) always_reloc_text=yes;;
+		*)     always_reloc_text=no;;
+	esac
+	]
+)
+var_yn_to_10 always_reloc_text
+
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
@@ -207,6 +219,7 @@ AC_SUBST(use_ld_elf2flt_binary)
 AC_SUBST(got_check)
 AC_SUBST(emit_relocs)
 AC_SUBST(emit_ctor_dtor)
+AC_SUBST(always_reloc_text)
 AC_SUBST(SYMBOL_PREFIX)
 
 AC_OUTPUT(ld-elf2flt.sh:ld-elf2flt.in Makefile elf2flt.ld)

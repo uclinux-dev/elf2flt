@@ -396,7 +396,7 @@ dump_symbols(symbols, number_of_symbols);
 	 *	Only relocate things in the data sections if we are PIC/GOT.
 	 *	otherwise do text as well
 	 */
-	if (!pic_with_got && (a->flags & SEC_CODE))
+	if ((!pic_with_got || ALWAYS_RELOC_TEXT) && (a->flags & SEC_CODE))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
