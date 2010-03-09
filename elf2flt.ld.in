@@ -5,6 +5,11 @@ MEMORY {
 	flatmem : ORIGIN = 0x0, LENGTH = 0xfffffff
 }
 
+PHDRS {
+	text PT_LOAD ;
+	data PT_LOAD ;
+}
+
 SECTIONS {
 
 	.text 0x0 : {
@@ -38,7 +43,7 @@ W_RODAT		*(.gnu.linkonce.r*)
 
 		. = ALIGN(0x20) ;
 		@SYMBOL_PREFIX@_etext = . ;
-	} > flatmem
+	} > flatmem :text
 
 	.data : {
 		. = ALIGN(0x4) ;
@@ -130,7 +135,7 @@ TOR:		@SYMBOL_PREFIX@__DTOR_END__ = .;
 		KEEP (*(.fini_array))
 		KEEP (*(SORT(.fini_array.*)))
 		PROVIDE (@SYMBOL_PREFIX@__fini_array_end = .);
-	} > flatmem
+	} > flatmem :data
 
 	.eh_frame_hdr : { *(.eh_frame_hdr) } > flatmem
 	.eh_frame : { KEEP(*(.eh_frame)) } > flatmem
