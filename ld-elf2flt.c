@@ -120,6 +120,8 @@ execute(const char *command, const char *output, const options_t *options, ...)
 		fprintf(stderr, "Invoking:");
 		for (ix = 0; ix != opts.num - 1; ix++)
 			fprintf(stderr, " '%s'", opts.options[ix]);
+		if (output)
+			fprintf(stderr, " > '%s'", output);
 		fprintf(stderr, "\n");
 	}
 
@@ -173,7 +175,7 @@ do_sed(const sed_commands_t *sed, const char *name_in, const char *name_out)
 			if (replacement)
 				fprintf(stderr, "\t-e 's/%s/%s/' \\\n", pattern, replacement);
 			else
-				fprintf(stderr, "\t-e 'd/%s/' \\\n", pattern);
+				fprintf(stderr, "\t-e '/%s/d' \\\n", pattern);
 		}
 		fprintf(stderr, "\t%s > %s\n", name_in, name_out);
 	}
