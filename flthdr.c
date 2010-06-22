@@ -326,11 +326,12 @@ usage(char *s)
 int
 main(int argc, char *argv[])
 {
-	int c;
+	int c, noargs;
 	char *ofile = NULL, *ifile;
 
 	elf2flt_progname = argv[0];
 
+	noargs = 1;
 	while ((c = getopt(argc, argv, "pPdzZrRuUkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
@@ -353,6 +354,7 @@ main(int argc, char *argv[])
 			usage("invalid option");
 			break;
 		}
+		noargs = 0;
 	}
 
 	if (optind >= argc)
@@ -361,9 +363,9 @@ main(int argc, char *argv[])
 	if (ofile && argc - optind > 1)
 		usage("-o can only be used with a single file");
 
-	if (!print && !docompress && !ramload && !stacksize) /* no args == print */
+	if (!print && noargs) /* no args == print */
 		print = argc - optind; /* greater than 1 is short format */
-	
+
 	for (c = optind; c < argc; c++) {
 		ifile = argv[c];
 		if (!ofile)
