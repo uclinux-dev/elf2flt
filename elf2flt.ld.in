@@ -81,7 +81,6 @@ R_RODAT		*(.gnu.linkonce.r*)
 		*(__libc_atexit)
 		*(__libc_subinit)
 		*(__libc_subfreeres)
-		*(.note.ABI-tag)
 
 		/* microblaze-specific read-only small data area
 		   and associated locating symbols */
@@ -137,6 +136,7 @@ TOR:		@SYMBOL_PREFIX@__DTOR_END__ = .;
 		PROVIDE (@SYMBOL_PREFIX@__fini_array_end = .);
 	} > flatmem :data
 
+	.note.ABI-tag : { *(.note.ABI-tag) } > flatmem
 	.eh_frame_hdr : { *(.eh_frame_hdr) } > flatmem
 	.eh_frame : { KEEP(*(.eh_frame)) } > flatmem
 	.gcc_except_table : {
