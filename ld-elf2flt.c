@@ -506,13 +506,15 @@ int main(int argc, char *argv[])
 	   Make bindir point to the bin dir for bin/<TARGET_ALIAS>-foo.
 	   Make tooldir point to the bin dir for <TARGET_ALIAS>/bin/foo.  */
 	if (streqn(elf2flt_progname, TARGET_ALIAS)) {
-		tmp = concat(argv0_dir, "../" TARGET_ALIAS "/bin/", NULL);
-		if (stat(tmp, &buf) == 0 && S_ISDIR(buf.st_mode))
-			tooldir = tmp;
+		tmp = concat(argv0_dir, "../" TARGET_ALIAS "/bin", NULL);
+		if (stat(tmp, &buf) == 0 && S_ISDIR(buf.st_mode)) {
+			tooldir = concat(tmp, "/", NULL);
+		}
 	} else {
-		tmp = concat(argv0_dir, "../../bin/", NULL);
-		if (stat(tmp, &buf) == 0 && S_ISDIR(buf.st_mode))
-			bindir = tmp;
+		tmp = concat(argv0_dir, "../../bin", NULL);
+		if (stat(tmp, &buf) == 0 && S_ISDIR(buf.st_mode)) {
+			bindir = concat(tmp, "/", NULL);
+		}
 	}
 
 	/* Typically ld-elf2flt is invoked as `ld` which means error
