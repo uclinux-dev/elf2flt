@@ -453,7 +453,7 @@ static void parse_args(int argc, char **argv)
 		} else if (streq(arg, "-r") || streq(arg, "-Ur")) {
 			flag_final = 0;
 			append_option(&other_options, arg);
-		} else if (streq(arg, "-v") || streq(arg, "--verbose")) {
+		} else if (streq(arg, "--verbose")) {
 			flag_verbose = 1;
 			append_option(&other_options, arg);
 		} else if (streqn(arg, "-m")) {
