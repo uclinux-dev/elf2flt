@@ -170,7 +170,7 @@ TOR:		@SYMBOL_PREFIX@__DTOR_END__ = .;
 	.stack : {
 		. = ALIGN(0x4);
 		@SYMBOL_PREFIX@_stack_start = .;
-	}
+	} > flatmem
 
 	.junk 0 : { *(.rel*) *(.rela*) }
 	/DISCARD/ : { *(.note.GNU-stack) }
