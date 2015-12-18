@@ -58,6 +58,8 @@ const char *elf2flt_progname;
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
 #elif defined(TARGET_microblaze)
 #include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
+#elif defined(TARGET_v850)
+#include <elf/v850.h>
 #else
 #include <elf.h>      /* TARGET_* ELF support for the BFD library            */
 #endif
@@ -816,7 +818,11 @@ dump_symbols(symbols, number_of_symbols);
 #endif
 
 #ifdef TARGET_v850
+# ifdef R_V850_32
 				case R_V850_32:
+# else
+				case R_V850_ABS32:
+# endif
 					relocation_needed = 1;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
