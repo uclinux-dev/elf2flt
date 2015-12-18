@@ -705,6 +705,7 @@ with_binutils_include_dir
 with_binutils_ldscript_dir
 with_binutils_build_dir
 enable_ld_elf2flt_binary
+enable_werror
 enable_got_check
 enable_emit_relocs
 enable_emit_ctor_dtor
@@ -1333,6 +1334,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-ld-elf2flt-binary
                           use ld-elf2flt shell script
+  --disable-werror        do not build with -Werror
   --disable-got-check     disable check for GOT (needed on H8)
   --disable-emit-relocs   don't use the --emit-relocs (-q) linker option
   --enable-emit-ctor-dtor manually create ctor/dtor list
@@ -2232,6 +2234,16 @@ var_yn_to_10() {
 		eval $1=0
 	fi
 }
+
+# Check whether --enable-werror was given.
+if test "${enable_werror+set}" = set; then :
+  enableval=$enable_werror;  werror=$enableval
+else
+   werror=yes
+
+fi
+
+var_yn_to_10 werror
 
 # Check whether --enable-got-check was given.
 if test "${enable_got_check+set}" = set; then :
@@ -4258,7 +4270,12 @@ fi
 done
 
 
-test "$GCC" = yes && CFLAGS="-Wall $CFLAGS"
+if test "$GCC" = yes ; then
+	CFLAGS="-Wall $CFLAGS"
+	if test "$werror" = 1 ; then
+		CFLAGS="-Werror -Wno-error=unused-label $CFLAGS"
+	fi
+fi
 
 
 

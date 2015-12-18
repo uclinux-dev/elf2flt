@@ -58,6 +58,13 @@ var_yn_to_10() {
 	fi
 }
 
+AC_ARG_ENABLE(werror,
+	AS_HELP_STRING([--disable-werror], [do not build with -Werror]),
+	[ werror=$enableval ],
+	[ werror=yes ]
+)
+var_yn_to_10 werror
+
 AC_ARG_ENABLE(got-check,
 	AS_HELP_STRING([--disable-got-check], [disable check for GOT (needed on H8)]),
 	[ got_check=$enableval ],
@@ -203,7 +210,12 @@ AC_CHECK_FUNCS([ \
 	strsignal \
 ])
 
-test "$GCC" = yes && CFLAGS="-Wall $CFLAGS"
+if test "$GCC" = yes ; then
+	CFLAGS="-Wall $CFLAGS"
+	if test "$werror" = 1 ; then
+		CFLAGS="-Werror -Wno-error=unused-label $CFLAGS"
+	fi
+fi
 
 dnl Subsitute values
 AC_SUBST(target)
