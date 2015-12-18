@@ -272,7 +272,8 @@ static int do_final_link(void)
 				if (!ptr)
 					break;
 				if (streqn(ptr, ".rodata")) {
-					getline(&line, &alloc, in);
+					if (getline(&line, &alloc, in) == -1)
+						break;
 					ptr = line;
 					while (1) {
 						ptr = strchr(ptr, 'R');
@@ -474,8 +475,8 @@ int main(int argc, char *argv[])
 {
 	const char *argv0 = argv[0];
 	const char *argv0_dir = make_relative_prefix(argv0, "/", "/");
-	char *tooldir = argv0_dir;
-	char *bindir = argv0_dir;
+	const char *tooldir = argv0_dir;
+	const char *bindir = argv0_dir;
 	char *tmp;
 	struct stat buf;
 	const char *have_exe = NULL;

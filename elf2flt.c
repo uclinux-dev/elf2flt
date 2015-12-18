@@ -36,6 +36,7 @@
  * krab@california.daimi.aau.dk
  */
  
+#include <inttypes.h> /* All the standard PRI define times for printf        */
 #include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
 #include <stdlib.h>   /* Userland prototypes of the ANSI C std lib functions */
 #include <stdarg.h>   /* Allows va_list to exist in the these namespaces     */
@@ -186,8 +187,8 @@ dump_symbols(asymbol **symbol_table, long number_of_symbols)
   long i;
   printf("SYMBOL TABLE:\n");
   for (i=0; i<number_of_symbols; i++) {
-	printf("  NAME=%s  VALUE=0x%x\n", symbol_table[i]->name,
-		symbol_table[i]->value);
+	printf("  NAME=%s  VALUE=0x%"BFD_VMA_FMT"x\n",
+		symbol_table[i]->name, symbol_table[i]->value);
   }
   printf("\n");
   return(0);
@@ -276,12 +277,12 @@ bfin_set_reloc (uint32_t *reloc,
 
     if (strstr (reloc_section_name, "stack")) {
 	    if (verbose)
-		    printf ("Stack-relative reloc, offset %08lx\n", offset);
+		    printf("Stack-relative reloc, offset %08"PRIx32"\n", offset);
 	    /* This must be a stack_start reloc for stack checking.  */
 	    type = 1;
     }
     val = (offset & ((1 << 26) - 1));
-    val |= (sp & (1 << 3) - 1) << 26;
+    val |= (sp & ((1 << 3) - 1)) << 26;
     val |= type << 29;
     *reloc = val;
     return 0;
@@ -357,6 +358,9 @@ dump_symbols(symbols, number_of_symbols);
   flat_reloc_count = 0;
   rc = 0;
   pflags = 0;
+  /* Silence gcc warnings */
+  (void) pflags;
+  (void) sym_vma;
 
   /* Determine how big our offset table is in bytes.
    * This isn't too difficult as we've terminated the table with -1.
@@ -369,7 +373,7 @@ dump_symbols(symbols, number_of_symbols);
     while (*lp != 0xffffffff) lp++;
     got_size = ((unsigned char *)lp) - data;
     if (verbose)
-	    printf("GOT table contains %d entries (%d bytes)\n",
+	    printf("GOT table contains %zu entries (%d bytes)\n",
 			    got_size/sizeof(uint32_t), got_size);
 #ifdef TARGET_m68k
     if (got_size > GOT_LIMIT)
@@ -382,8 +386,8 @@ dump_symbols(symbols, number_of_symbols);
   	section_vma = bfd_section_vma(abs_bfd, a);
 
 	if (verbose)
-		printf("SECTION: %s [0x%x]: flags=0x%x vma=0x%x\n", a->name, a,
-			a->flags, section_vma);
+		printf("SECTION: %s [%p]: flags=0x%x vma=0x%"PRIx32"\n",
+			a->name, a, a->flags, section_vma);
 
 //	if (bfd_is_abs_section(a))
 //		continue;
@@ -415,14 +419,14 @@ dump_symbols(symbols, number_of_symbols);
 	if (r == NULL)
 	  continue;
 	if (verbose)
-	  printf(" RELOCS: %s [0x%x]: flags=0x%x vma=0x%x\n", r->name, r,
-			r->flags, bfd_section_vma(abs_bfd, r));
+	  printf(" RELOCS: %s [%p]: flags=0x%x vma=0x%"BFD_VMA_FMT"x\n",
+			r->name, r, r->flags, bfd_section_vma(abs_bfd, r));
   	if ((r->flags & SEC_RELOC) == 0)
   	  continue;
 	relsize = bfd_get_reloc_upper_bound(rel_bfd, r);
 	if (relsize <= 0) {
 		if (verbose)
-			printf("%s(%d): no relocation entries section=0x%x\n",
+			printf("%s(%d): no relocation entries section=%s\n",
 				__FILE__, __LINE__, r->name);
 		continue;
 	}
@@ -554,8 +558,8 @@ dump_symbols(symbols, number_of_symbols);
 				   still depend on the particular relocation
 				   though.  */
 				switch (q->howto->type) {
-					int r2_type;
 #ifdef TARGET_v850
+					int r2_type;
 				case R_V850_HI16_S:
 					/* We specially handle adjacent
 					   HI16_S/ZDA_15_16_OFFSET and
@@ -681,7 +685,7 @@ dump_symbols(symbols, number_of_symbols);
 				    flat_relocs = (uint32_t *)
 					(realloc (flat_relocs, (flat_reloc_count + 1) * sizeof (uint32_t)));
 					    if (verbose)
-						    printf ("New persistent data for %08lx\n", sym_addr);
+						    printf("New persistent data for %08"PRIx32"\n", sym_addr);
 					    persistent_data = 0xFFFF0000 & sym_addr;
 					    flat_relocs[flat_reloc_count++]
 						    = (sym_addr >> 16) | (3 << 26);
@@ -787,7 +791,9 @@ dump_symbols(symbols, number_of_symbols);
 					relocation_needed = 1;
 					if (verbose)
 						fprintf(stderr,
-							"%s vma=0x%x, value=0x%x, address=0x%x "
+							"%s vma=0x%x, "
+							"value=0x%"BFD_VMA_FMT"x, "
+							"address=0x%"BFD_VMA_FMT"x "
 							"sym_addr=0x%x rs=0x%x, opcode=0x%x\n",
 							"ABS32",
 							sym_vma, (*(q->sym_ptr_ptr))->value,
@@ -804,7 +810,9 @@ dump_symbols(symbols, number_of_symbols);
 				case R_ARM_PLT32:
 					if (verbose)
 						fprintf(stderr,
-							"%s vma=0x%x, value=0x%x, address=0x%x "
+							"%s vma=0x%x, "
+							"value=0x%"BFD_VMA_FMT"x, "
+							"address=0x%"BFD_VMA_FMT"x "
 							"sym_addr=0x%x rs=0x%x, opcode=0x%x\n",
 							"PLT32",
 							sym_vma, (*(q->sym_ptr_ptr))->value,
@@ -923,30 +931,27 @@ dump_symbols(symbols, number_of_symbols);
 					flat_reloc_count++;
 					relocation_needed = 0;
 					pflags = 0;
-			sprintf(&addstr[0], "+0x%x", sym_addr - (*(q->sym_ptr_ptr))->value -
+			sprintf(&addstr[0], "+0x%ld", sym_addr - (*(q->sym_ptr_ptr))->value -
 					 bfd_section_vma(abs_bfd, sym_section));
 			if (verbose)
-				printf("  RELOC[%d]: offset=0x%x symbol=%s%s "
+				printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
 					"section=%s size=%d "
-					"fixup=0x%x (reloc=0x%x)\n", flat_reloc_count,
+					"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
+					flat_reloc_count,
 					q->address, sym_name, addstr,
 					section_name, sym_reloc_size,
 					sym_addr, section_vma + q->address);
 			if (verbose)
-				printf("reloc[%d] = 0x%x\n", flat_reloc_count,
-					 section_vma + q->address);
+				printf("reloc[%d] = 0x%"BFD_VMA_FMT"x\n",
+					 flat_reloc_count, section_vma + q->address);
 
 					continue;
 				}
 				case R_MICROBLAZE_32:
-				{	
-					unsigned char *p = r_mem;
-
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					relocation_needed = 1;
 					break;
-				}
 				case R_MICROBLAZE_64_PCREL:
 					sym_vma = 0;
 					sym_addr += sym_vma + q->addend;
@@ -1003,7 +1008,7 @@ dump_symbols(symbols, number_of_symbols);
 					    {
 							unsigned char * r2_mem = sectionp + p[1]->address;
 							if (p[1]->address - q->address!=4)
-								printf("Err: HI/LO not adjacent %d\n", p[1]->address - q->address);
+								printf("Err: HI/LO not adjacent %ld\n", p[1]->address - q->address);
 							relocation_needed = 1;
 							pflags = (q->howto->type == R_NIOS2_HIADJ16) 
 								? FLAT_NIOS2_R_HIADJ_LO : FLAT_NIOS2_R_HI_LO;
@@ -1054,9 +1059,9 @@ dump_symbols(symbols, number_of_symbols);
 					temp |= (exist_val & 0x3f);
 					*(unsigned long *)r_mem = htoniosl(temp);
 					if (verbose)
-						printf("omit: offset=0x%x symbol=%s%s "
+						printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
 								"section=%s size=%d "
-								"fixup=0x%x (reloc=0x%x) GPREL\n", 
+								"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x) GPREL\n",
 								q->address, sym_name, addstr,
 								section_name, sym_reloc_size,
 								sym_addr, section_vma + q->address);
@@ -1074,9 +1079,9 @@ dump_symbols(symbols, number_of_symbols);
 					exist_val |= ((sym_addr & 0xFFFF) << 6);
 					*(unsigned long *)r_mem = htoniosl(exist_val);
 					if (verbose)
-						printf("omit: offset=0x%x symbol=%s%s "
+						printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
 								"section=%s size=%d "
-								"fixup=0x%x (reloc=0x%x) PCREL\n", 
+								"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x) PCREL\n",
 								q->address, sym_name, addstr,
 								section_name, sym_reloc_size,
 								sym_addr, section_vma + q->address);
@@ -1091,7 +1096,7 @@ dump_symbols(symbols, number_of_symbols);
 					    && (p[-1]->sym_ptr_ptr == p[0]->sym_ptr_ptr)
 					    && (p[-1]->addend == p[0]->addend)) {
 						if (verbose)
-							printf("omit: offset=0x%x symbol=%s%s "
+							printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
 								"section=%s size=%d LO16\n", 
 								q->address, sym_name, addstr,
 								section_name, sym_reloc_size);
@@ -1358,7 +1363,7 @@ DIS29_RELOCATION:
 				}
 			}
 
-			sprintf(&addstr[0], "+0x%x", sym_addr - (*(q->sym_ptr_ptr))->value -
+			sprintf(&addstr[0], "+0x%lx", sym_addr - (*(q->sym_ptr_ptr))->value -
 					 bfd_section_vma(abs_bfd, sym_section));
 
 
@@ -1501,9 +1506,10 @@ DIS29_RELOCATION:
 			}
 
 			if (verbose)
-				printf("  RELOC[%d]: offset=0x%x symbol=%s%s "
+				printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
 					"section=%s size=%d "
-					"fixup=0x%x (reloc=0x%x)\n", flat_reloc_count,
+					"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
+					flat_reloc_count,
 					q->address, sym_name, addstr,
 					section_name, sym_reloc_size,
 					sym_addr, section_vma + q->address);
@@ -1520,8 +1526,8 @@ DIS29_RELOCATION:
 					(section_vma + q->address);
 
 				if (verbose)
-					printf("reloc[%d] = 0x%x\n", flat_reloc_count,
-							section_vma + q->address);
+					printf("reloc[%d] = 0x%"BFD_VMA_FMT"x\n",
+							flat_reloc_count, section_vma + q->address);
 #else
 				switch ((*p)->howto->type) {
 				case R_E1_CONST31:
@@ -1898,7 +1904,8 @@ int main(int argc, char *argv[])
   if ((fd = open (ofile, O_WRONLY|O_BINARY|O_CREAT|O_TRUNC, 0744)) < 0)
     fatal_perror("Can't open output file %s", ofile);
 
-  write(fd, &hdr, sizeof(hdr));
+  if (write(fd, &hdr, sizeof(hdr)) != sizeof(hdr))
+    fatal_perror("Couldn't write file %s", ofile);
   close(fd);
 
   if (fopen_stream_u(&gf, ofile, "a" BINARY_FILE_OPTS))
