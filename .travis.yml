@@ -1,0 +1,17 @@
+# Travis build integration.
+# https://docs.travis-ci.com/
+
+language: c
+compiler:
+# TODO: Enable clang support.
+#  - clang
+  - gcc
+
+sudo: false
+
+os:
+  - linux
+# TODO: Enable OS X support.
+#  - osx
+
+script: ./travis/main.sh
