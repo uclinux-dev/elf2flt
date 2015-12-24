@@ -48,7 +48,7 @@ static int print = 0, print_relocs = 0, docompress = 0, ramload = 0,
 /****************************************************************************/
 
 void
-process_file(char *ifile, char *ofile)
+process_file(const char *ifile, const char *ofile)
 {
 	int old_flags, old_stack, new_flags, new_stack;
 	stream ifp, ofp;
@@ -298,7 +298,7 @@ process_file(char *ifile, char *ofile)
 /****************************************************************************/
 
 void
-usage(char *s)
+usage(const char *s)
 {
 	if (s)
 		fprintf(stderr, "%s\n", s);
@@ -327,7 +327,7 @@ int
 main(int argc, char *argv[])
 {
 	int c, noargs;
-	char *ofile = NULL, *ifile;
+	const char *ofile = NULL, *ifile;
 
 	elf2flt_progname = argv[0];
 
