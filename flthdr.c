@@ -138,8 +138,8 @@ process_file(char *ifile, char *ofile)
 				printf("Kernel-Traced-Load ");
 			if (old_flags & FLAT_FLAG_L1STK)
 				printf("L1-Scratch-Stack ");
-			printf(")\n");
 		}
+		printf(")\n");
 
 		if (print_relocs) {
 			uint32_t *relocs = xcalloc(reloc_count, sizeof(uint32_t));
