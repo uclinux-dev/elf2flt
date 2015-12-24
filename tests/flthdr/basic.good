@@ -1,0 +1,12 @@
+basic.bin
+    Magic:        bFLT
+    Rev:          4
+    Build Date:   not specified
+    Entry:        0x1234
+    Data Start:   0x5678
+    Data End:     0xabcd
+    BSS End:      0xdef14565
+    Stack Size:   0x10aa
+    Reloc Start:  0x3456
+    Reloc Count:  0x0
+    Flags:        0xff ( Load-to-Ram Has-PIC-GOT Gzip-Compressed Gzip-Data-Compressed Kernel-Traced-Load L1-Scratch-Stack )

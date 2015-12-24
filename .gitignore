@@ -11,6 +11,10 @@ a.out
 *.gdb
 *.exe
 
+# test files
+*.bin
+*.out
+
 # autotool files
 autom4te.cache
 config.cache

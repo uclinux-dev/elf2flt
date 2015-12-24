@@ -1,4 +1,6 @@
 srcdir = @srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+abs_top_builddir = @abs_top_builddir@
 VPATH = @srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -86,6 +88,17 @@ ld-elf2flt.sh: $(srcdir)/ld-elf2flt.in
 
 Makefile: $(srcdir)/Makefile.in
 	./config.status $@
+
+tests/flthdr/generate: tests/flthdr/generate.o
+	$(link)
+
+check-flthdr:
+	mkdir -p tests/flthdr
+	$(MAKE) tests/flthdr/generate
+	abs_top_srcdir="$(abs_top_srcdir)" abs_top_builddir="$(abs_top_builddir)" \
+	$(srcdir)/tests/flthdr/test.sh
+
+check: check-flthdr
 
 clean:
 	-rm -f $(PROGS) *.$(OBJEXT) .deps
