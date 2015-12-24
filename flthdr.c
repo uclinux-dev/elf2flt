@@ -300,25 +300,28 @@ process_file(const char *ifile, const char *ofile)
 void
 usage(const char *s)
 {
+	FILE *out = s ? stderr : stdout;
 	if (s)
-		fprintf(stderr, "%s\n", s);
-	fprintf(stderr, "usage: %s [options] flat-file\n", elf2flt_progname);
-	fprintf(stderr, "       Allows you to change an existing flat file\n\n");
-	fprintf(stderr, "       -p      : print current settings\n");
-	fprintf(stderr, "       -P      : print relocations\n");
-	fprintf(stderr, "       -z      : compressed flat file\n");
-	fprintf(stderr, "       -d      : compressed data-only flat file\n");
-	fprintf(stderr, "       -Z      : un-compressed flat file\n");
-	fprintf(stderr, "       -r      : ram load\n");
-	fprintf(stderr, "       -R      : do not RAM load\n");
-	fprintf(stderr, "       -k      : kernel traced load (for debug)\n");
-	fprintf(stderr, "       -K      : normal non-kernel traced load\n");
-	fprintf(stderr, "       -u      : place stack in L1 scratchpad memory\n");
-	fprintf(stderr, "       -U      : place stack in normal SDRAM memory\n");
-	fprintf(stderr, "       -s size : stack size\n");
-	fprintf(stderr, "       -o file : output-file\n"
-	                "                 (default is to modify input file)\n");
-	exit(1);
+		fprintf(out, "%s\n", s);
+	fprintf(out,
+		"Usage: %s [options] flat-file\n"
+		"       Allows you to change an existing flat file\n\n"
+		"       -p      : print current settings\n"
+		"       -P      : print relocations\n"
+		"       -z      : compressed flat file\n"
+		"       -d      : compressed data-only flat file\n"
+		"       -Z      : un-compressed flat file\n"
+		"       -r      : ram load\n"
+		"       -R      : do not RAM load\n"
+		"       -k      : kernel traced load (for debug)\n"
+		"       -K      : normal non-kernel traced load\n"
+		"       -u      : place stack in L1 scratchpad memory\n"
+		"       -U      : place stack in normal SDRAM memory\n"
+		"       -s size : stack size\n"
+		"       -o file : output-file\n"
+		"                 (default is to modify input file)\n",
+		elf2flt_progname);
+	exit(s ? 1 : 0);
 }
 
 /****************************************************************************/
@@ -332,7 +335,7 @@ main(int argc, char *argv[])
 	elf2flt_progname = argv[0];
 
 	noargs = 1;
-	while ((c = getopt(argc, argv, "pPdzZrRuUkKs:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "hpPdzZrRuUkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
 		case 'P': print_relocs = 1;         break;
@@ -349,6 +352,9 @@ main(int argc, char *argv[])
 		case 's':
 			if (sscanf(optarg, "%i", &stacksize) != 1)
 				usage("invalid stack size");
+			break;
+		case 'h':
+			usage(NULL);
 			break;
 		default:
 			usage("invalid option");

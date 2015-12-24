@@ -1582,25 +1582,26 @@ printf("%s(%d): symbol name=%s address=0x%x section=%s -> RELOC=0x%x\n",
 
 
 
-static void usage(void)
+static void usage(int status)
 {
-    fprintf(stderr, "Usage: %s [vrzd] [-p <abs-pic-file>] [-s stack-size] "
-	"[-o <output-file>] <elf-file>\n\n"
-	"       -v              : verbose operation\n"
-	"       -r              : force load to RAM\n"
-	"       -k              : enable kernel trace on load (for debug)\n"
-	"       -z              : compress code/data/relocs\n"
-	"       -d              : compress data/relocs\n"
-	"       -a              : use existing symbol references\n"
-	"                         instead of recalculating from\n"
-	"                         relocation info\n"
-        "       -R reloc-file   : read relocations from a separate file\n"
-	"       -p abs-pic-file : GOT/PIC processing with files\n"
-	"       -s stacksize    : set application stack size\n"
-	"       -o output-file  : output file name\n\n",
-	elf2flt_progname);
-	fprintf(stderr, "Compiled for " ARCH " architecture\n\n");
-    exit(2);
+	fprintf(status ? stderr : stdout,
+		"Usage: %s [vrzd] [-p <abs-pic-file>] [-s stack-size] "
+		"[-o <output-file>] <elf-file>\n\n"
+		"       -v              : verbose operation\n"
+		"       -r              : force load to RAM\n"
+		"       -k              : enable kernel trace on load (for debug)\n"
+		"       -z              : compress code/data/relocs\n"
+		"       -d              : compress data/relocs\n"
+		"       -a              : use existing symbol references\n"
+		"                         instead of recalculating from\n"
+		"                         relocation info\n"
+		"       -R reloc-file   : read relocations from a separate file\n"
+		"       -p abs-pic-file : GOT/PIC processing with files\n"
+		"       -s stacksize    : set application stack size\n"
+		"       -o output-file  : output file name\n\n"
+		"Compiled for " ARCH " architecture\n\n",
+		elf2flt_progname);
+	exit(status);
 }
 
 
@@ -1658,7 +1659,7 @@ int main(int argc, char *argv[])
   xmalloc_set_program_name(elf2flt_progname);
 
   if (argc < 2)
-  	usage();
+    usage(1);
 
   if (sizeof(hdr) != 64)
     fatal(
@@ -1672,7 +1673,7 @@ int main(int argc, char *argv[])
   stack = 0x2020;
 #endif
 
-  while ((opt = getopt(argc, argv, "avzdrkp:s:o:R:")) != -1) {
+  while ((opt = getopt(argc, argv, "havzdrkp:s:o:R:")) != -1) {
     switch (opt) {
     case 'v':
       verbose++;
@@ -1701,15 +1702,18 @@ int main(int argc, char *argv[])
     case 's':
       if (sscanf(optarg, "%i", &stack) != 1) {
         fprintf(stderr, "%s invalid stack size %s\n", argv[0], optarg);
-        usage();
+        usage(1);
       }
       break;
     case 'R':
       rel_file = optarg;
       break;
+    case 'h':
+      usage(0);
+      break;
     default:
       fprintf(stderr, "%s Unknown option\n", argv[0]);
-      usage();
+      usage(1);
       break;
     }
   }
