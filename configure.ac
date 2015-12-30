@@ -181,7 +181,7 @@ fi
 
 SYMBOL_PREFIX=
 case $target in
-	h8300|bfin*)
+	bfin*)
 		SYMBOL_PREFIX=_
 		;;
 esac
