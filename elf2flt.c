@@ -723,6 +723,17 @@ dump_symbols(symbols, number_of_symbols);
 
 				    flat_reloc_count++;
 				    break;
+#elif defined (TARGET_h8300)
+				case R_H8_DIR32:
+				case R_H8_DIR24A8:
+				case R_H8_DIR24R8:
+				case R_H8_DIR32A16:
+				case R_H8_DISP32A16:
+				    r_mem[0] = 0;
+				    goto good_32bit_resolved_reloc;
+				case R_H8_PCREL8:
+				case R_H8_PCREL16:
+				    continue;
 #else
 				default:
 					/* The default is to assume that the
@@ -878,6 +889,7 @@ dump_symbols(symbols, number_of_symbols);
 					break;
 				case R_H8_DIR32:
 				case R_H8_DIR32A16: /* currently 32,  could be made 16 */
+				case R_H8_DISP32A16:
 					if (sym_reloc_size != 4) {
 						printf("R_H8_DIR32 size %d\n", sym_reloc_size);
 						bad_relocs++;
@@ -889,6 +901,7 @@ dump_symbols(symbols, number_of_symbols);
 					sym_addr += sym_vma + q->addend;
 					break;
 				case R_H8_PCREL16:
+					relocation_needed = 0;
 					sym_vma = 0;
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_addr += sym_vma + q->addend;
@@ -898,6 +911,7 @@ dump_symbols(symbols, number_of_symbols);
 						bfd_big_endian(abs_bfd) ? htons(sym_addr) : sym_addr;
 					continue;
 				case R_H8_PCREL8:
+					relocation_needed = 0;
 					sym_vma = 0;
 					sym_addr = (*(q->sym_ptr_ptr))->value;
 					sym_addr += sym_vma + q->addend;
