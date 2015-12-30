@@ -725,11 +725,11 @@ dump_symbols(symbols, number_of_symbols);
 				    break;
 #elif defined (TARGET_h8300)
 				case R_H8_DIR32:
-				case R_H8_DIR24A8:
-				case R_H8_DIR24R8:
 				case R_H8_DIR32A16:
 				case R_H8_DISP32A16:
 				    r_mem[0] = 0;
+				case R_H8_DIR24A8:
+				case R_H8_DIR24R8:
 				    goto good_32bit_resolved_reloc;
 				case R_H8_PCREL8:
 				case R_H8_PCREL16:
