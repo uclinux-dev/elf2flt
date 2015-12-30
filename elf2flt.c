@@ -6,6 +6,7 @@
  * ELF format file handling. Extended relocation support for all of
  * text and data.
  *
+ * (c) 2008-2009, Xtensa support, Oskar Schirmer <os@emlix.com>
  * (c) 2006  Support the -a (use_resolved) option for TARGET_arm.
  *           Shaun Jackman <sjackman@gmail.com>
  * (c) 2004, Nios II support, Wentao Xu <wentao@microtronix.com>
@@ -57,6 +58,8 @@ const char *elf2flt_progname;
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
 #elif defined(__CYGWIN__) || defined(__MINGW32__) || defined(TARGET_nios) || defined(TARGET_nios2)
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
+#elif defined(TARGET_xtensa)
+#include <elf/xtensa.h>	/* TARGET_* ELF support for the BFD library */
 #elif defined(TARGET_microblaze)
 #include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
 #elif defined(TARGET_v850)
@@ -110,6 +113,8 @@ const char *elf2flt_progname;
 #define ARCH	"nios"
 #elif defined(TARGET_nios2)
 #define ARCH	"nios2"
+#elif defined(TARGET_xtensa)
+#define ARCH	"xtensa"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -734,6 +739,53 @@ dump_symbols(symbols, number_of_symbols);
 				case R_H8_PCREL8:
 				case R_H8_PCREL16:
 				    continue;
+#elif defined(TARGET_xtensa)
+				case R_XTENSA_NONE:
+				case R_XTENSA_OP0:
+				case R_XTENSA_OP1:
+				case R_XTENSA_OP2:
+				case R_XTENSA_SLOT0_OP:
+				case R_XTENSA_SLOT1_OP:
+				case R_XTENSA_SLOT2_OP:
+				case R_XTENSA_SLOT3_OP:
+				case R_XTENSA_SLOT4_OP:
+				case R_XTENSA_SLOT5_OP:
+				case R_XTENSA_SLOT6_OP:
+				case R_XTENSA_SLOT7_OP:
+				case R_XTENSA_SLOT8_OP:
+				case R_XTENSA_SLOT9_OP:
+				case R_XTENSA_SLOT10_OP:
+				case R_XTENSA_SLOT11_OP:
+				case R_XTENSA_SLOT12_OP:
+				case R_XTENSA_SLOT13_OP:
+				case R_XTENSA_SLOT14_OP:
+				case R_XTENSA_SLOT0_ALT:
+				case R_XTENSA_SLOT1_ALT:
+				case R_XTENSA_SLOT2_ALT:
+				case R_XTENSA_SLOT3_ALT:
+				case R_XTENSA_SLOT4_ALT:
+				case R_XTENSA_SLOT5_ALT:
+				case R_XTENSA_SLOT6_ALT:
+				case R_XTENSA_SLOT7_ALT:
+				case R_XTENSA_SLOT8_ALT:
+				case R_XTENSA_SLOT9_ALT:
+				case R_XTENSA_SLOT10_ALT:
+				case R_XTENSA_SLOT11_ALT:
+				case R_XTENSA_SLOT12_ALT:
+				case R_XTENSA_SLOT13_ALT:
+				case R_XTENSA_SLOT14_ALT:
+				case R_XTENSA_ASM_EXPAND:
+				case R_XTENSA_ASM_SIMPLIFY:
+				case R_XTENSA_DIFF8:
+				case R_XTENSA_DIFF16:
+				case R_XTENSA_DIFF32:
+				case R_XTENSA_32_PCREL:
+					continue;
+				case R_XTENSA_32:
+				case R_XTENSA_PLT:
+					goto good_32bit_resolved_reloc;
+				default:
+					goto bad_resolved_reloc;
 #else
 				default:
 					/* The default is to assume that the
@@ -769,6 +821,23 @@ dump_symbols(symbols, number_of_symbols);
 				}
 			} else {
 				/* Calculate the sym address ourselves.  */
+#if defined(TARGET_xtensa)
+				/* For xtensa, calculation of addresses won't
+				   work this way. binutils "ld -r" generate
+				   different relocation types, among others
+				   type 20, R_XTENSA_SLOT0_OP. The latter is
+				   produced for various opcodes that differ
+				   in size and format, some will have the
+				   addend filled in when linking, others won't.
+				   For elf2flt to handle these relocations
+				   would involve analysing the opcodes in
+				   detail. Therefore, elf2flt for xtensa is
+				   patched to work with "-a" option solely,
+				   which will take output of "ld -q".
+				*/
+				printf("ERROR: cannot run without '-a'\n");
+				exit(1);
+#endif
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
 
 #if !defined(TARGET_h8300) && !defined(TARGET_e1) && !defined(TARGET_bfin) && !defined(TARGET_m68k)

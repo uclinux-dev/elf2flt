@@ -16,15 +16,18 @@ SECTIONS {
 		. = . + 4;
 		. = ALIGN(0x4) ;
 		@SYMBOL_PREFIX@_stext = . ;
-		*(.text)
-		*(.text.*)
+		*(.literal .text)
+		*(.literal.* .text.*)
 		*(.gnu.warning)
 		*(.stub)
+		*(.gnu.linkonce.literal.*)
 		*(.gnu.linkonce.t*)
 		*(.glue_7t)
 		*(.glue_7)
 		*(.jcr)
+		*(.init.literal)
 		KEEP (*(.init))
+		*(.fini.literal)
 		KEEP (*(.fini))
 
 W_RODAT		*(.rodata)
