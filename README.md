@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/uclinux-dev/elf2flt.svg?branch=master)](https://travis-ci.org/uclinux-dev/elf2flt)
 
 Copyright (C) 2001-2003, SnapGear (www.snapgear.com)
-davidm@snapgear.com
-gerg@snapgear.com
+David McCullough <ucdevel@gmail.com>
+Greg Ungerer <gerg@uclinux.org>
 
 This is Free Software, under the GNU Public License v2 or greater.  See
 [LICENSE.TXT](LICENSE.TXT) for more details.
