@@ -16,6 +16,7 @@ ARCHES=(
 	sh
 	sparc
 	v850
+	xtensa
 )
 
 # Expanded list of targets that we can use with configure.
