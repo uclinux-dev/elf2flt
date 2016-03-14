@@ -56,6 +56,8 @@ const char *elf2flt_progname;
 
 #if defined(TARGET_h8300)
 #include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
+#elif defined(TARGET_arm)
+#include <elf/arm.h>
 #elif defined(__CYGWIN__) || defined(__MINGW32__) || defined(TARGET_nios) || defined(TARGET_nios2)
 #include "cygwin-elf.h"	/* Cygwin uses a local copy */
 #elif defined(TARGET_xtensa)
@@ -451,7 +453,7 @@ dump_symbols(symbols, number_of_symbols);
 		qsort (relpp, relcount, sizeof *relpp, compare_relocs);
 #endif
 		for (p = relpp; (relcount && (*p != NULL)); p++, relcount--) {
-			unsigned char *r_mem;
+			unsigned char *r_mem = NULL;
 			int relocation_needed = 0;
 
 #ifdef TARGET_microblaze
@@ -646,16 +648,23 @@ dump_symbols(symbols, number_of_symbols);
 				default:
 					goto good_32bit_resolved_reloc;
 #elif defined(TARGET_arm)
+				case R_ARM_TARGET1:
+				case R_ARM_TARGET2:
 				case R_ARM_ABS32:
 					relocation_needed = 1;
 					break;
 				case R_ARM_REL32:
+				case R_ARM_JUMP24:
+				case R_ARM_CALL:
 				case R_ARM_THM_PC11:
 				case R_ARM_THM_PC22:
+				case R_ARM_THM_JUMP24:
 				case R_ARM_PC24:
 				case R_ARM_PLT32:
 				case R_ARM_GOTPC:
 				case R_ARM_GOT32:
+				case R_ARM_PREL31:
+				case R_ARM_NONE:
 					relocation_needed = 0;
 					break;
 				default:

@@ -35,6 +35,8 @@ W_RODAT		*(.rodata1)
 W_RODAT		*(.rodata.*)
 W_RODAT		*(.gnu.linkonce.r*)
 
+		/* .ARM.extab name sections containing exception unwinding information */
+		*(.ARM.extab* .gnu.linkonce.armextab.*)
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
 		   the start followed by the code pointed to by entries
@@ -43,10 +45,19 @@ W_RODAT		*(.gnu.linkonce.r*)
 		PROVIDE(@SYMBOL_PREFIX@__ctbp = .);
 		*(.call_table_data)
 		*(.call_table_text)
-
-		. = ALIGN(0x20) ;
-		@SYMBOL_PREFIX@_etext = . ;
 	} > flatmem :text
+
+	/* .ARM.exidx name sections containing index entries for section unwinding */
+	/* .ARM.exidx is sorted, so has to go in its own output section.  */
+	@SYMBOL_PREFIX@__exidx_start = .;
+	.ARM.exidx :
+	{
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+	} > flatmem
+	@SYMBOL_PREFIX@__exidx_end = .;
+
+	. = ALIGN(0x20) ;
+	@SYMBOL_PREFIX@_etext = . ;
 
 	.data : {
 		. = ALIGN(0x4) ;
