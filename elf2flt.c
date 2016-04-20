@@ -336,7 +336,7 @@ output_relocs (
   const char		*sym_name, *section_name;
   unsigned char		*sectionp;
   unsigned long		pflags;
-  char			addstr[16];
+  char			addstr[20];
   uint32_t		sym_addr, sym_vma, section_vma;
   int			relsize, relcount;
   int			flat_reloc_count;
