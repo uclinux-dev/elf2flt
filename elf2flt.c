@@ -664,6 +664,7 @@ dump_symbols(symbols, number_of_symbols);
 				case R_ARM_GOTPC:
 				case R_ARM_GOT32:
 				case R_ARM_PREL31:
+				case R_ARM_V4BX:
 				case R_ARM_NONE:
 					relocation_needed = 0;
 					break;
