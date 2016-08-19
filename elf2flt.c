@@ -1505,7 +1505,9 @@ DIS29_RELOCATION:
 					(((*p)->howto->type != R_ARM_PC24) &&
 					((*p)->howto->type != R_ARM_PLT32)))
 					tmp.c[i3] = (hl >> 24) & 0xff;
-				if ((*p)->howto->type == R_ARM_ABS32)
+				if (((*p)->howto->type == R_ARM_ABS32) ||
+				    ((*p)->howto->type == R_ARM_TARGET1) ||
+				    ((*p)->howto->type == R_ARM_TARGET2))
 					*(uint32_t *)r_mem = htonl(hl);
 				else
 					*(uint32_t *)r_mem = tmp.l;
