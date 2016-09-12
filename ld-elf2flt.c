@@ -473,7 +473,7 @@ static void parse_args(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-	const char *argv0 = argv[0];
+	const char *argv0 = lrealpath(argv[0]);
 	const char *argv0_dir = make_relative_prefix(argv0, "/", "/");
 	const char *tooldir = argv0_dir;
 	const char *bindir = argv0_dir;
