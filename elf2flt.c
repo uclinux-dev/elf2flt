@@ -363,6 +363,7 @@ dump_symbols(symbols, number_of_symbols);
   *n_relocs = 0;
   flat_relocs = NULL;
   flat_reloc_count = 0;
+  sym_reloc_size = 0;
   rc = 0;
   pflags = 0;
   /* Silence gcc warnings */
