@@ -29,9 +29,6 @@ const char *elf2flt_progname;
 
 #if defined(__MINGW32__)
 #include <getopt.h>
-
-#define mkstemp(p) mktemp(p)
-
 #endif
 
 #if defined TARGET_bfin
