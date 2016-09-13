@@ -144,23 +144,28 @@ const char *elf2flt_progname;
 #endif
 
 
-int verbose = 0;      /* extra output when running */
-int pic_with_got = 0; /* do elf/got processing with PIC code */
-int load_to_ram = 0;  /* instruct loader to allocate everything into RAM */
-int ktrace = 0;       /* instruct loader output kernel trace on load */
-int docompress = 0;   /* 1 = compress everything, 2 = compress data only */
-int use_resolved = 0; /* If true, get the value of symbol references from */
-		      /* the program contents, not from the relocation table. */
-		      /* In this case, the input ELF file must be already */
-		      /* fully resolved (using the `-q' flag with recent */
-		      /* versions of GNU ld will give you a fully resolved */
-		      /* output file with relocation entries).  */
+/* Extra output when running.  */
+static int verbose = 0;
+/* Do ELF/GOT processing with PIC code.  */
+static int pic_with_got = 0;
+/* Instruct loader to allocate everything into RAM.  */
+static int load_to_ram = 0;
+/* Instruct kernel loader to output debug/trace info when loading.  */
+static int ktrace = 0;
+/* 1 = compress everything, 2 = compress data only.  */
+static int docompress = 0;
+/* If true, get the value of symbol references from the program contents,
+   not from the relocation table.  In this case, the input ELF file must
+   be already fully resolved (using the `-q' flag with recent versions of
+   GNU ld will give you a fully resolved output file with relocation
+   entries).  */
+static int use_resolved = 0;
 
 /* Set if the text section contains any relocations.  If it does, we must
    set the load_to_ram flag.  */
-int text_has_relocs = 0;
+static int text_has_relocs = 0;
 
-asymbol**
+static asymbol **
 get_symbols (bfd *abfd, long *num)
 {
   int32_t storage_needed;
@@ -188,7 +193,7 @@ get_symbols (bfd *abfd, long *num)
 
 
 
-int
+static int
 dump_symbols(asymbol **symbol_table, long number_of_symbols)
 {
   long i;
@@ -203,7 +208,7 @@ dump_symbols(asymbol **symbol_table, long number_of_symbols)
 
 
 
-long
+static long
 get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number_of_symbols)
 {
   long i;
@@ -220,7 +225,7 @@ get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number
 
 
 #ifdef TARGET_nios2
-long
+static long
 get_gp_value(asymbol **symbol_table, long number_of_symbols)
 {
   long i;
@@ -234,7 +239,7 @@ get_gp_value(asymbol **symbol_table, long number_of_symbols)
 
 
 
-int32_t
+static int32_t
 add_com_to_bss(asymbol **symbol_table, int32_t number_of_symbols, int32_t bss_len)
 {
   int32_t i, comsize;
@@ -320,7 +325,7 @@ compare_relocs (const void *pa, const void *pb)
 }
 #endif
 
-uint32_t *
+static uint32_t *
 output_relocs (
   bfd *abs_bfd,
   asymbol **symbols,
@@ -356,9 +361,8 @@ output_relocs (
 	text, text_len, data, data_len);
 #endif
 
-#if 0
-dump_symbols(symbols, number_of_symbols);
-#endif
+  if (0)
+    dump_symbols(symbols, number_of_symbols);
 
   *n_relocs = 0;
   flat_relocs = NULL;
