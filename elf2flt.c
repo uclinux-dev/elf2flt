@@ -850,8 +850,7 @@ output_relocs (
 				   patched to work with "-a" option solely,
 				   which will take output of "ld -q".
 				*/
-				printf("ERROR: cannot run without '-a'\n");
-				exit(1);
+				fatal("ERROR: cannot run without '-a'");
 #endif
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
 
@@ -1538,9 +1537,7 @@ DIS29_RELOCATION:
 						*((unsigned long *) (sectionp + q->address )) = htonl(sym_addr);
 				break;
 				default:
-						printf("ERROR:Unhandled Relocation. Exiting...\n");
-						exit(0);
-				break;
+						fatal("ERROR: Unhandled Relocation: 0x%x", (*p)->howto->type);
 				}
 #elif defined TARGET_bfin
 				if ((*p)->howto->type == R_BFIN_RIMM16
@@ -1668,10 +1665,8 @@ printf("%s(%d): symbol name=%s address=0x%x section=%s -> RELOC=0x%x\n",
 	}
   }
 
-  if (bad_relocs) {
-	  printf("%d bad relocs\n", bad_relocs);
-	  exit(1);
-  }
+  if (bad_relocs)
+	fatal("%d bad relocs", bad_relocs);
 
   if (rc < 0)
 	return(0);
@@ -1920,10 +1915,8 @@ int main(int argc, char *argv[])
     printf("DATA -> vma=0x%x len=0x%x\n", data_vma, data_len);
 
   if ((text_vma + text_len) != data_vma) {
-    if ((text_vma + text_len) > data_vma) {
-      printf("ERROR: text=0x%x overlaps data=0x%x ?\n", text_len, data_vma);
-      exit(1);
-    }
+    if ((text_vma + text_len) > data_vma)
+      fatal("ERROR: text=0x%x overlaps data=0x%x ?", text_len, data_vma);
     if (verbose)
       printf("WARNING: data=0x%x does not directly follow text=0x%x\n",
 	  		data_vma, text_len);
@@ -1950,11 +1943,9 @@ int main(int argc, char *argv[])
     printf("BSS  -> vma=0x%x len=0x%x\n", bss_vma, bss_len);
 
   if ((data_vma + data_len) != bss_vma) {
-    if ((data_vma + data_len) > bss_vma) {
-      printf("ERROR: text=0x%x + data=0x%x overlaps bss=0x%x ?\n", text_len,
+    if ((data_vma + data_len) > bss_vma)
+      fatal("ERROR: text=0x%x + data=0x%x overlaps bss=0x%x ?", text_len,
 	  		data_len, bss_vma);
-      exit(1);
-    }
     if (verbose)
       printf("WARNING: bss=0x%x does not directly follow text=0x%x + data=0x%x(0x%x)\n",
       		bss_vma, text_len, data_len, text_len + data_len);
