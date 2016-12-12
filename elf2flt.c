@@ -208,6 +208,7 @@ dump_symbols(asymbol **symbol_table, long number_of_symbols)
 
 
 
+#if !defined TARGET_e1 && !defined TARGET_bfin
 static long
 get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number_of_symbols)
 {
@@ -220,7 +221,8 @@ get_symbol_offset(char *name, asection *sec, asymbol **symbol_table, long number
     }
   }
   return -1;
-}  
+}
+#endif
 
 
 
