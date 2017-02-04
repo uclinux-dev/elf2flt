@@ -114,6 +114,11 @@ if test "$ac_binutils_build_dir" != "NONE"; then
 fi
 
 dnl Checks for libraries.
+if test "$ac_zlib_prefix" = "NONE"; then
+  AC_CHECK_LIB(z, deflate)
+else
+  LIBS="-L$ac_zlib_prefix/lib -lz $LIBS"
+fi
 if test "$ac_libiberty" = "NONE"; then
   AC_CHECK_LIB(iberty, objalloc_create)
   ac_libiberty=auto
@@ -125,11 +130,6 @@ if test "$ac_libbfd" = "NONE"; then
   ac_libbfd=auto
 else
   LIBS="$ac_libbfd $LIBS"
-fi
-if test "$ac_zlib_prefix" = "NONE"; then
-  AC_CHECK_LIB(z, deflate)
-else
-  LIBS="-L$ac_zlib_prefix/lib -lz $LIBS"
 fi
 
 bfd_include_dir=
