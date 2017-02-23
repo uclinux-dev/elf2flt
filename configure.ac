@@ -187,12 +187,6 @@ case $target in
 		;;
 esac
 
-dnl Make sure we resolve system symbols before libiberty/libbfd ones.
-dnl Otherwise, things like getopt get screwed up because the system headers
-dnl redirect some functions to the system symbols, but other local symbols
-dnl come from libiberty/libbfd.
-dnl int getopt(int, char * const [], const char *) __asm("_" "getopt" "$UNIX2003");
-AC_CHECK_LIB(c, malloc, LIBS="-lc $LIBS")
 AC_CHECK_LIB(dl, dlopen, LIBS="$LIBS -ldl")
 
 dnl Checks for header files.

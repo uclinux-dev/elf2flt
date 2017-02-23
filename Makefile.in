@@ -38,11 +38,6 @@ ifneq (,$(findstring mingw32,$(HOST)))
    LDLIBS += -lws2_32
 endif
 
-# force link order under cygwin to avoid getopts / libiberty clash
-ifneq ($(strip $(shell gcc -v 2>&1 | grep "cygwin")),)
-   LDLIBS := -lcygwin $(LDLIBS)
-endif
-
 LDFILE= elf2flt.ld
 ifeq ($(strip $(CPU)),e1)
 SRC_LDFILE= $(srcdir)/$(CPU)-elf2flt.ld
