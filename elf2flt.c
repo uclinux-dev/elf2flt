@@ -54,27 +54,32 @@
 #include "stubs.h"
 const char *elf2flt_progname;
 
-#if defined(TARGET_h8300)
-#include <elf/h8.h>      /* TARGET_* ELF support for the BFD library            */
-#elif defined(TARGET_arm)
+/* Include the right header file for the R_xxx defines.  */
+#if defined(TARGET_arm)
 #include <elf/arm.h>
-#elif defined(__CYGWIN__) || defined(__MINGW32__) || defined(TARGET_nios) || defined(TARGET_nios2)
-#include "cygwin-elf.h"	/* Cygwin uses a local copy */
-#elif defined(TARGET_xtensa)
-#include <elf/xtensa.h>	/* TARGET_* ELF support for the BFD library */
+#elif defined(TARGET_bfin)
+#include <elf/bfin.h>
+#elif defined(TARGET_h8300)
+#include <elf/h8.h>
+#elif defined(TARGET_m68k)
+#include <elf/m68k.h>
 #elif defined(TARGET_microblaze)
-#include <elf/microblaze.h>	/* TARGET_* ELF support for the BFD library */
+#include <elf/microblaze.h>
+#elif defined(TARGET_nios) || defined(TARGET_nios2)
+/* Altera NIOS specific definitions.  */
+#define FLAT_NIOS2_R_32			0 /* Normal 32-bit reloc */
+#define FLAT_NIOS2_R_HI_LO		1
+#define FLAT_NIOS2_R_HIADJ_LO	2
+#define FLAT_NIOS2_R_CALL26		4
+#include <elf/nios2.h>
+#elif defined(TARGET_sh)
+#include <elf/sh.h>
+#elif defined(TARGET_sparc)
+#include <elf/sparc.h>
 #elif defined(TARGET_v850)
 #include <elf/v850.h>
-#else
-#include <elf.h>      /* TARGET_* ELF support for the BFD library            */
-#endif
-
-/* Always include Blackfin-specific defines in addition to common ELF stuff
- * above as the common elf headers often do not have our relocs.
- */
-#if defined(TARGET_bfin) && !defined(R_BFIN_RIMM16)
-#include "elf/bfin.h"
+#elif defined(TARGET_xtensa)
+#include <elf/xtensa.h>
 #endif
 
 #if defined(__MINGW32__)
