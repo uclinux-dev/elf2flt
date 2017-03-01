@@ -18,6 +18,3 @@ ARCHES=(
 	v850
 	xtensa
 )
-
-# Expanded list of targets that we can use with configure.
-TARGETS=${ARCHES[@]/%/-elf}
