@@ -6,7 +6,7 @@
 . "${0%/*}"/lib.sh
 . "${0%/*}"/arches.sh
 
-BINUTILS_VER="2.25.1"
+BINUTILS_VER="2.26.1"
 
 build_one() {
 	local arch=$1
