@@ -14,7 +14,9 @@ CPU = @target_cpu@
 TARGET = @target_alias@
 SYMBOL_PREFIX = @SYMBOL_PREFIX@
 CFLAGS = @CFLAGS@
-INCLUDES = -I$(srcdir) @bfd_include_dir@ @binutils_include_dir@ @zlib_include_dir@
+INCLUDES = -I$(srcdir) -Ibfd-headers @zlib_include_dir@
+BFD_INCLUDE_DIR = @bfd_include_dir@
+BINUTILS_INCLUDE_DIR = @binutils_include_dir@
 CPPFLAGS = @CPPFLAGS@ $(DEFS) $(INCLUDES)
 LDFLAGS = @LDFLAGS@
 LDLIBS = @LIBS@
@@ -36,11 +38,6 @@ HOST = @host_alias@
 
 ifneq (,$(findstring mingw32,$(HOST)))
    LDLIBS += -lws2_32
-endif
-
-# force link order under cygwin to avoid getopts / libiberty clash
-ifneq ($(strip $(shell gcc -v 2>&1 | grep "cygwin")),)
-   LDLIBS := -lcygwin $(LDLIBS)
 endif
 
 LDFILE= elf2flt.ld
@@ -102,6 +99,7 @@ check: check-flthdr
 
 clean:
 	-rm -f $(PROGS) *.$(OBJEXT) .deps
+	-rm -rf bfd-headers
 
 distclean: clean
 	-rm -f Makefile config.log config.status config.cache ld-elf2flt
@@ -121,5 +119,16 @@ install:
 	$(INSTALL) -m 644 $(SRC_LDFILE) $(DESTDIR)$(target_libdir)/$(LDFILE)
 
 sinclude .deps
-.deps:
+.deps: bfd-headers/.stamp
 	$(CC) -MM $(CPPFLAGS) $(srcdir)/*.c > .deps
+
+
+bfd-headers/.stamp:
+	rm -rf bfd-headers
+	mkdir bfd-headers
+	ln -sf $(BFD_INCLUDE_DIR)/bfd.h bfd-headers/bfd.h
+	for f in ansidecl filenames hashtab libiberty symcat; do \
+		ln -sf $(BINUTILS_INCLUDE_DIR)/$$f.h bfd-headers/$$f.h || exit 1; \
+	done
+	ln -sf $(BINUTILS_INCLUDE_DIR)/elf bfd-headers/elf
+	touch $@

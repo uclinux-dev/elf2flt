@@ -135,12 +135,12 @@ fi
 
 bfd_include_dir=
 if test "$ac_bfd_include_dir" != "NONE"; then
-  bfd_include_dir="-I$ac_bfd_include_dir"
+  bfd_include_dir=$(cd "$ac_bfd_include_dir" && pwd)
 fi
 
 binutils_include_dir=
 if test "$ac_binutils_include_dir" != "NONE"; then
-  binutils_include_dir="-I$ac_binutils_include_dir"
+  binutils_include_dir=$(cd "$ac_binutils_include_dir" && pwd)
 fi
 
 zlib_include_dir=
