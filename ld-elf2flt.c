@@ -568,7 +568,9 @@ int main(int argc, char *argv[])
 	if (!flag_verbose) {
 		unlink(tmp_file);
 		unlink(output_flt);
-		unlink(output_elf);
+		if (output_elf) {
+			unlink(output_elf);
+		}
 	} else {
 		fprintf(stderr,
 			"leaving elf2flt temp files behind:\n"
