@@ -487,48 +487,20 @@ output_relocs (
 			   do this early, before doing any other
 			   processing on it).  */
 			switch ((*p)->howto->type) {
-#ifdef R_V850_9_PCREL
 			case R_V850_9_PCREL:
-#endif
-#ifdef R_V850_22_PCREL
 			case R_V850_22_PCREL:
-#endif
-#ifdef R_V850_SDA_16_16_OFFSET
 			case R_V850_SDA_16_16_OFFSET:
-#endif
-#ifdef R_V850_SDA_15_16_OFFSET
 			case R_V850_SDA_15_16_OFFSET:
-#endif
-#ifdef R_V850_ZDA_15_16_OFFSET
 			case R_V850_ZDA_15_16_OFFSET:
-#endif
-#ifdef R_V850_TDA_6_8_OFFSET
 			case R_V850_TDA_6_8_OFFSET:
-#endif
-#ifdef R_V850_TDA_7_8_OFFSET
 			case R_V850_TDA_7_8_OFFSET:
-#endif
-#ifdef R_V850_TDA_7_7_OFFSET
 			case R_V850_TDA_7_7_OFFSET:
-#endif
-#ifdef R_V850_TDA_16_16_OFFSET
 			case R_V850_TDA_16_16_OFFSET:
-#endif
-#ifdef R_V850_TDA_4_5_OFFSET
 			case R_V850_TDA_4_5_OFFSET:
-#endif
-#ifdef R_V850_TDA_4_4_OFFSET
 			case R_V850_TDA_4_4_OFFSET:
-#endif
-#ifdef R_V850_SDA_16_16_SPLIT_OFFSET
 			case R_V850_SDA_16_16_SPLIT_OFFSET:
-#endif
-#ifdef R_V850_CALLT_6_7_OFFSET
 			case R_V850_CALLT_6_7_OFFSET:
-#endif
-#ifdef R_V850_CALLT_16_16_OFFSET
 			case R_V850_CALLT_16_16_OFFSET:
-#endif
 				/* These are relative relocations, which
 				   have already been fixed up by the
 				   linker at this point, so just ignore
@@ -927,27 +899,17 @@ output_relocs (
 #endif
 
 #ifdef TARGET_v850
-# ifdef R_V850_32
-				case R_V850_32:
-# else
 				case R_V850_ABS32:
-# endif
 					relocation_needed = 1;
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					break;
-#if defined(R_V850_ZDA_16_16_OFFSET) || defined(R_V850_ZDA_16_16_SPLIT_OFFSET)
-#ifdef R_V850_ZDA_16_16_OFFSET
 				case R_V850_ZDA_16_16_OFFSET:
-#endif
-#ifdef R_V850_ZDA_16_16_SPLIT_OFFSET
 				case R_V850_ZDA_16_16_SPLIT_OFFSET:
-#endif
 					/* Can't support zero-relocations.  */
-					printf ("ERROR: %s+0x%x: zero relocations not supported\n",
+					printf ("ERROR: %s+0x%"BFD_VMA_FMT"x: zero relocations not supported\n",
 							sym_name, q->addend);
 					continue;
-#endif /* R_V850_ZDA_16_16_OFFSET || R_V850_ZDA_16_16_SPLIT_OFFSET */
 #endif /* TARGET_v850 */
 
 #ifdef TARGET_h8300
