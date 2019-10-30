@@ -418,10 +418,12 @@ output_relocs (
 //		continue;
 
 	/*
-	 *	Only relocate things in the data sections if we are PIC/GOT.
-	 *	otherwise do text as well
+	 * Only relocate things in the writable data sections if we are PIC/GOT.
+	 * Otherwise do text (and read only data) as well.
 	 */
-	if ((!pic_with_got || ALWAYS_RELOC_TEXT) && (a->flags & SEC_CODE))
+	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
+	    ((a->flags & SEC_CODE) ||
+	    ((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY))))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
