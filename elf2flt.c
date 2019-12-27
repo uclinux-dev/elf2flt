@@ -46,6 +46,7 @@
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
 #include <fcntl.h>    /* Flag value for file handling functions              */
 #include <time.h>
+#include <errno.h>
 
 /* from $(INSTALLDIR)/include       */
 #include <bfd.h>      /* Main header file for the BFD library                */
@@ -1689,6 +1690,31 @@ static void write_zeroes (unsigned long num, stream *stream)
 }
 
 
+static time_t get_build_date(void)
+{
+  const char *sde;
+  unsigned long long epoch;
+  char *endptr;
+
+  sde = getenv("SOURCE_DATE_EPOCH");
+  if (!sde)
+    return time(NULL);
+
+  /* Largely inspired from
+     https://reproducible-builds.org/docs/source-date-epoch/ */
+  errno = 0;
+  epoch = strtoull(sde, &endptr, 10);
+  if ((errno == ERANGE && (epoch == ULLONG_MAX || epoch == 0))
+      || (errno != 0 && epoch == 0)
+      || (endptr == sde)
+      || (*endptr != '\0')
+      || (epoch > ULONG_MAX))
+    fatal("Invalid SOURCE_DATE_EPOCH value");
+
+  return (time_t)epoch;
+}
+
+
 int main(int argc, char *argv[])
 {
   int fd;
@@ -1948,7 +1974,7 @@ int main(int argc, char *argv[])
 	  | (pic_with_got ? FLAT_FLAG_GOTPIC : 0)
 	  | (docompress ? (docompress == 2 ? FLAT_FLAG_GZDATA : FLAT_FLAG_GZIP) : 0)
 	  );
-  hdr.build_date = htonl((uint32_t)time(NULL));
+  hdr.build_date = htonl((uint32_t)get_build_date());
   memset(hdr.filler, 0x00, sizeof(hdr.filler));
 
   for (i=0; i<reloc_len; i++) reloc[i] = htonl(reloc[i]);
