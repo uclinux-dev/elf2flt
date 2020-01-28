@@ -471,20 +471,6 @@ output_relocs (
 			unsigned char *r_mem = NULL;
 			int relocation_needed = 0;
 
-#ifdef TARGET_microblaze
-			/* The MICROBLAZE_XX_NONE relocs can be skipped.
-			   They represent PC relative branches that the
-			   linker has already resolved */
-				
-			switch ((*p)->howto->type) 
-			{
-			case R_MICROBLAZE_NONE:
-			case R_MICROBLAZE_64_NONE:
-			case R_MICROBLAZE_32_PCREL_LO:
-				continue;
-			}
-#endif /* TARGET_microblaze */
-
 #ifdef TARGET_v850
 			/* Skip this relocation entirely if possible (we
 			   do this early, before doing any other
@@ -634,6 +620,37 @@ output_relocs (
 					goto bad_resolved_reloc;
 				default:
 					goto good_32bit_resolved_reloc;
+#elif defined(TARGET_microblaze)
+				case R_MICROBLAZE_64:
+					sym_addr =
+						(r_mem[2] << 24)
+						+ (r_mem[3] << 16)
+						+ (r_mem[6] << 8)
+						+ r_mem[7];
+					relocation_needed = 1;
+					pflags = 0x80000000;
+					break;
+				case R_MICROBLAZE_GOTPC_64:
+					/* This is data-relative. We can't support this with bflt */
+					goto bad_resolved_reloc;
+				case R_MICROBLAZE_GOT_64:
+					/* This is a GOT relocation. But it is accessed via the GOT register (r20)
+					 * so doesn't need relocation
+					 */
+					relocation_needed = 0;
+					break;
+				case R_MICROBLAZE_32:
+					goto good_32bit_resolved_reloc;
+				/* These are already relocated for us as text-relative, or are dummy entries */
+				case R_MICROBLAZE_64_PCREL:
+				case R_MICROBLAZE_PLT_64:
+				case R_MICROBLAZE_NONE:
+				case R_MICROBLAZE_64_NONE:
+				case R_MICROBLAZE_32_PCREL_LO:
+					relocation_needed = 0;
+					continue;
+				default:
+					goto bad_resolved_reloc;
 #elif defined(TARGET_arm)
 				case R_ARM_TARGET1:
 				case R_ARM_TARGET2:
@@ -836,6 +853,11 @@ output_relocs (
 #endif
 				sym_reloc_size = bfd_get_reloc_size(q->howto);
 
+				if (sym_reloc_size == 0) {
+					/* These are dummy relocs that can be ignored */
+					continue;
+				}
+
 #if !defined(TARGET_h8300) && !defined(TARGET_e1) && !defined(TARGET_bfin) && !defined(TARGET_m68k)
 				if (sym_reloc_size != 4) {
 					printf("ERROR: bad reloc type %d size=%d for symbol=%s\n",
@@ -977,45 +999,20 @@ output_relocs (
 
 #ifdef TARGET_microblaze
 				case R_MICROBLAZE_64:
-		/* The symbol is split over two consecutive instructions.  
-		   Flag this to the flat loader by setting the high bit of 
-		   the relocation symbol. */
-				{
-					unsigned char *p = r_mem;
-					pflags=0x80000000;
-
 					/* work out the relocation */
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
 					/* Write relocated pointer back */
-					p[2] = (sym_addr >> 24) & 0xff;
-					p[3] = (sym_addr >> 16) & 0xff;
-					p[6] = (sym_addr >>  8) & 0xff;
-					p[7] =  sym_addr        & 0xff;
-
-					/* create a new reloc entry */
-					flat_relocs = realloc(flat_relocs,
-						(flat_reloc_count + 1) * sizeof(uint32_t));
-					flat_relocs[flat_reloc_count] = pflags | (section_vma + q->address);
-					flat_reloc_count++;
-					relocation_needed = 0;
-					pflags = 0;
-			sprintf(&addstr[0], "+0x%ld", sym_addr - (*(q->sym_ptr_ptr))->value -
-					 bfd_section_vma(abs_bfd, sym_section));
-			if (verbose)
-				printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
-					"section=%s size=%d "
-					"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
-					flat_reloc_count,
-					q->address, sym_name, addstr,
-					section_name, sym_reloc_size,
-					sym_addr, section_vma + q->address);
-			if (verbose)
-				printf("reloc[%d] = 0x%"BFD_VMA_FMT"x\n",
-					 flat_reloc_count, section_vma + q->address);
-
-					continue;
-				}
+					r_mem[2] = (sym_addr >> 24) & 0xff;
+					r_mem[3] = (sym_addr >> 16) & 0xff;
+					r_mem[6] = (sym_addr >>  8) & 0xff;
+					r_mem[7] =  sym_addr        & 0xff;
+					relocation_needed = 1;
+					/* The symbol is split over two consecutive instructions.  
+					   Flag this to the flat loader by setting the high bit of 
+					   the relocation symbol. */
+					pflags = 0x80000000;
+					break;
 				case R_MICROBLAZE_32:
 					sym_vma = bfd_section_vma(abs_bfd, sym_section);
 					sym_addr += sym_vma + q->addend;
@@ -1032,6 +1029,13 @@ output_relocs (
 					* ((unsigned short *) (r_mem+6)) = (sym_addr >> 16) & 0xFFFF;
 					/* We've done all the work, so continue
 					   to next reloc instead of break */
+					continue;
+				/* These are already relocated for us as text-relative, or are dummy entries */
+				case R_MICROBLAZE_PLT_64:
+				case R_MICROBLAZE_NONE:
+				case R_MICROBLAZE_64_NONE:
+				case R_MICROBLAZE_32_PCREL_LO:
+					relocation_needed = 0;
 					continue;
 
 #endif /* TARGET_microblaze */
@@ -1426,7 +1430,7 @@ DIS29_RELOCATION:
 #endif
 				default:
 					/* missing support for other types of relocs */
-					printf("ERROR: bad reloc type %d\n", (*p)->howto->type);
+					printf("ERROR: bad reloc type (%s)%d\n", q->howto->name, (*p)->howto->type);
 					bad_relocs++;
 					continue;
 				}
@@ -1574,19 +1578,19 @@ DIS29_RELOCATION:
 #endif /* !TARGET_arm */
 			}
 
-			if (verbose)
-				printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
-					"section=%s size=%d "
-					"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
-					flat_reloc_count,
-					q->address, sym_name, addstr,
-					section_name, sym_reloc_size,
-					sym_addr, section_vma + q->address);
-
 			/*
 			 *	Create relocation entry (PC relative doesn't need this).
 			 */
 			if (relocation_needed) {
+				if (verbose)
+					printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
+						"section=%s size=%d "
+						"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
+						flat_reloc_count,
+						q->address, sym_name, addstr,
+						section_name, sym_reloc_size,
+						sym_addr, section_vma + q->address);
+
 #ifndef TARGET_bfin
 				flat_relocs = realloc(flat_relocs,
 					(flat_reloc_count + 1) * sizeof(uint32_t));
@@ -1594,9 +1598,6 @@ DIS29_RELOCATION:
 				flat_relocs[flat_reloc_count] = pflags |
 					(section_vma + q->address);
 
-				if (verbose)
-					printf("reloc[%d] = 0x%"BFD_VMA_FMT"x\n",
-							flat_reloc_count, section_vma + q->address);
 #else
 				switch ((*p)->howto->type) {
 				case R_E1_CONST31:
