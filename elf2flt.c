@@ -470,6 +470,8 @@ output_relocs (
 		for (p = relpp; (relcount && (*p != NULL)); p++, relcount--) {
 			unsigned char *r_mem = NULL;
 			int relocation_needed = 0;
+			/* Do we need to update the text segment? By default yes if not pic_with_got */
+			int update_text = !pic_with_got;
 
 #ifdef TARGET_v850
 			/* Skip this relocation entirely if possible (we
@@ -628,6 +630,7 @@ output_relocs (
 						+ (r_mem[6] << 8)
 						+ r_mem[7];
 					relocation_needed = 1;
+					update_text = 0;
 					pflags = 0x80000000;
 					break;
 				case R_MICROBLAZE_GOTPC_64:
@@ -825,6 +828,7 @@ output_relocs (
 							+ (r_mem[2] << 16)
 							+ (r_mem[3] << 24);
 					relocation_needed = 1;
+					update_text = 0;
 					break;
 
 				bad_resolved_reloc:
@@ -1442,9 +1446,10 @@ DIS29_RELOCATION:
 
 			/*
 			 * for full elf relocation we have to write back the
-			 * start_code relative value to use.
+			 * start_code relative value to use. Not needed with pic_with_got
+			 * or if the fixup has already been done above (in which case update_text was set to 0)
 			 */
-			if (!pic_with_got) {
+			if (update_text) {
 #if defined(TARGET_arm)
 				union {
 					unsigned char c[4];
