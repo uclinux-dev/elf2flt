@@ -229,6 +229,22 @@ AC_CHECK_FUNCS([ \
 	strsignal \
 ])
 
+dnl Various bfd section macros and functions like bfd_section_size() have been
+dnl modified starting with binutils >= 2.34.
+dnl Check if the prototypes take a bfd argument.
+if test "$binutils_build_dir" != "NONE"; then
+    CFLAGS="-I$binutils_include_dir -I$bfd_include_dir $CFLAGS"
+fi
+
+AC_TRY_COMPILE([#include <bfd.h>],
+ [const asection *sec; bfd_section_size(sec);],
+ bfd_section_api_takes_bfd=no,
+ bfd_section_api_takes_bfd=yes)
+if test "$bfd_section_api_takes_bfd" = "yes" ; then
+  AC_DEFINE(HAVE_BFD_SECTION_API_TAKES_BFD, 1,
+   [define to 1 for binutils < 2.34])
+fi
+
 if test "$GCC" = yes ; then
 	CFLAGS="-Wall $CFLAGS"
 	if test "$werror" = 1 ; then
