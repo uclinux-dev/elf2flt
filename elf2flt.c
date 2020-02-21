@@ -424,7 +424,8 @@ output_relocs (
 	 */
 	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
 	    ((a->flags & SEC_CODE) ||
-	    ((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY))))
+		((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY) &&
+			(strcmp(".eh_frame", a->name) != 0))))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
