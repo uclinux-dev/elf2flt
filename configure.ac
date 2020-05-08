@@ -202,6 +202,19 @@ AC_CHECK_HEADERS(fcntl.h unistd.h bfd.h)
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
+HAVE_BFD_XTENSA_PDIFF_RELOCS=0
+case $target in
+	xtensa*)
+		AS_VAR_COPY([OLD_CPPFLAGS], [CPPFLAGS])
+		AS_VAR_SET([CPPFLAGS], ["-I$bfd_include_dir -I$binutils_include_dir $CPPFLAGS"])
+		AC_CHECK_DECL([R_XTENSA_PDIFF8],
+			      [HAVE_BFD_XTENSA_PDIFF_RELOCS=1],,
+			      [#include "bfd.h"
+			       #include "elf/xtensa.h"])
+		AS_VAR_COPY([CPPFLAGS], [OLD_CPPFLAGS])
+		;;
+esac
+
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
@@ -235,6 +248,7 @@ AC_SUBST(emit_relocs)
 AC_SUBST(emit_ctor_dtor)
 AC_SUBST(always_reloc_text)
 AC_SUBST(SYMBOL_PREFIX)
+AC_SUBST(HAVE_BFD_XTENSA_PDIFF_RELOCS)
 
 AC_OUTPUT(ld-elf2flt.sh:ld-elf2flt.in Makefile elf2flt.ld)
 

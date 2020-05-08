@@ -776,6 +776,14 @@ output_relocs (
 				case R_XTENSA_DIFF8:
 				case R_XTENSA_DIFF16:
 				case R_XTENSA_DIFF32:
+#if HAVE_BFD_XTENSA_PDIFF_RELOCS
+				case R_XTENSA_PDIFF8:
+				case R_XTENSA_PDIFF16:
+				case R_XTENSA_PDIFF32:
+				case R_XTENSA_NDIFF8:
+				case R_XTENSA_NDIFF16:
+				case R_XTENSA_NDIFF32:
+#endif
 				case R_XTENSA_32_PCREL:
 					continue;
 				case R_XTENSA_32:
