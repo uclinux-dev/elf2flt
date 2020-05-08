@@ -30,7 +30,8 @@ DEFS = @DEFS@ \
 	-DNO_GOT_CHECK=@got_check@ \
 	-DUSE_EMIT_RELOCS=@emit_relocs@ \
 	-DEMIT_CTOR_DTOR=@emit_ctor_dtor@ \
-	-DALWAYS_RELOC_TEXT=@always_reloc_text@
+	-DALWAYS_RELOC_TEXT=@always_reloc_text@ \
+	-DHAVE_BFD_XTENSA_PDIFF_RELOCS=@HAVE_BFD_XTENSA_PDIFF_RELOCS@
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
 
