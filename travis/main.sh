@@ -41,6 +41,9 @@ main() {
 			git clone --depth=1 https://github.com/uclinux-dev/prebuilts-binutils-libs ../prebuilts-binutils-libs
 	fi
 
+	# Newer compilers default to PIE which the prebuilts aren't using.
+	export CFLAGS='-O2 -pipe -no-pie'
+
 	local a b
 	for a in "${ARCHES[@]}" ; do
 		for b in "${BINUTILS_VERS[@]}" ; do
