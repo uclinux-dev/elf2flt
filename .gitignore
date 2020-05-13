@@ -23,6 +23,7 @@ config.status
 Makefile
 
 # our generated files
+/build/
 /elf2flt
 /elf2flt.ld
 /flthdr

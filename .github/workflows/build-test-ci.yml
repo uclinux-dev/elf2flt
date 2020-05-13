@@ -1,0 +1,33 @@
+# GitHub actions workflow.
+# https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions
+
+name: Build+Test CI
+
+on:
+  push:
+    branches: [master]
+    tags: [v*]
+  pull_request:
+    types: [opened]
+    branches: [master]
+
+jobs:
+  build-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        cc: [gcc]
+    runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.cc }}
+    steps:
+    - name: Checkout elf2flt
+      uses: actions/checkout@v2
+      with:
+        path: elf2flt
+    - name: Checkout prebuilt binutils
+      uses: actions/checkout@v2
+      with:
+        repository: uclinux-dev/prebuilts-binutils-libs
+        path: prebuilts-binutils-libs
+    - run: cd elf2flt && ./travis/main.sh

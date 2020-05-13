@@ -36,8 +36,10 @@ build_one() {
 }
 
 main() {
-	v --fold="git_clone_binutils" \
-		git clone --depth=1 https://github.com/uclinux-dev/prebuilts-binutils-libs ../prebuilts-binutils-libs
+	if [[ ! -d ../prebuilts-binutils-libs ]] ; then
+		v --fold="git_clone_binutils" \
+			git clone --depth=1 https://github.com/uclinux-dev/prebuilts-binutils-libs ../prebuilts-binutils-libs
+	fi
 
 	local a b
 	for a in "${ARCHES[@]}" ; do
