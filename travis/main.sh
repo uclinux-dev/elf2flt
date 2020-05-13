@@ -25,10 +25,13 @@ build_one() {
 	travis_fold start ${arch} "binutils-${bver}"
 	v mkdir -p "${build}"
 	pushd "${build}" >/dev/null
-	v "${S}"/configure \
+	if ! v "${S}"/configure \
 		--enable-werror \
 		--with-binutils-build-dir="${S}"/../prebuilts-binutils-libs/output/${bver} \
-		--target=${arch}-elf
+		--target=${arch}-elf ; then
+		cat config.log
+		exit 1
+	fi
 	m
 	m check
 	popd >/dev/null
