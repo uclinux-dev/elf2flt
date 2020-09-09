@@ -106,6 +106,7 @@ W_RODAT:	*(.gnu.linkonce.r*)
 		. = ALIGN(0x20) ;
 		LONG(-1)
 		. = ALIGN(0x20) ;
+RISCV_GP:	__global_pointer$ = . + 0x800 ;
 R_RODAT:	*(.rodata)
 R_RODAT:	*(.rodata1)
 R_RODAT:	*(.rodata.*)
