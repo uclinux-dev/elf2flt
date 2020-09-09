@@ -81,6 +81,8 @@ const char *elf2flt_progname;
 #include <elf/v850.h>
 #elif defined(TARGET_xtensa)
 #include <elf/xtensa.h>
+#elif defined(TARGET_riscv64)
+#include <elf/riscv.h>
 #endif
 
 #if defined(__MINGW32__)
@@ -123,6 +125,8 @@ const char *elf2flt_progname;
 #define ARCH	"nios2"
 #elif defined(TARGET_xtensa)
 #define ARCH	"xtensa"
+#elif defined(TARGET_riscv64)
+#define ARCH	"riscv64"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -815,6 +819,28 @@ output_relocs (
 					continue;
 				case R_XTENSA_32:
 				case R_XTENSA_PLT:
+					goto good_32bit_resolved_reloc;
+				default:
+					goto bad_resolved_reloc;
+#elif defined(TARGET_riscv64)
+				case R_RISCV_NONE:
+				case R_RISCV_32_PCREL:
+				case R_RISCV_ADD8:
+				case R_RISCV_ADD16:
+				case R_RISCV_ADD32:
+				case R_RISCV_ADD64:
+				case R_RISCV_SUB6:
+				case R_RISCV_SUB8:
+				case R_RISCV_SUB16:
+				case R_RISCV_SUB32:
+				case R_RISCV_SUB64:
+				case R_RISCV_SET6:
+				case R_RISCV_SET8:
+				case R_RISCV_SET16:
+				case R_RISCV_SET32:
+					continue;
+				case R_RISCV_32:
+				case R_RISCV_64:
 					goto good_32bit_resolved_reloc;
 				default:
 					goto bad_resolved_reloc;
