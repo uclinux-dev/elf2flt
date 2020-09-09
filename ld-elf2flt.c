@@ -324,6 +324,14 @@ static int do_final_link(void)
 		append_option(&other_options, concat(got_offset, "=", buf, NULL));
 	}
 
+	/* riscv adds a global pointer symbol to the linker file with the
+	   "RISCV_GP:" prefix. Remove the prefix for riscv64 architecture and
+	   the entire line for other architectures. */
+	if (streq(TARGET_CPU, "riscv64"))
+		append_sed(&sed, "^RISCV_GP:", "");
+	else
+		append_sed(&sed, "^RISCV_GP:", NULL);
+
 	/* Locate the default linker script, if we don't have one provided. */
 	if (!linker_script)
 		linker_script = concat(ldscriptpath, "/elf2flt.ld", NULL);
