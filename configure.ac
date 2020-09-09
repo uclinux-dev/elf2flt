@@ -48,6 +48,10 @@ AC_ARG_ENABLE(ld-elf2flt-binary,
 	[ use_ld_elf2flt_binary=$enableval ],
 	[ use_ld_elf2flt_binary=yes ]
 )
+if test "$use_ld_elf2flt_binary" != "yes"; then
+	AC_MSG_WARN([--disable-ld-elf2flt-binary is deprecated.
+If you still need this, please let us know before we delete it.])
+fi
 
 dnl convert a yes/no variable to 1/0 for C code
 var_yn_to_10() {
