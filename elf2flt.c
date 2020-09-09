@@ -81,6 +81,8 @@ const char *elf2flt_progname;
 #include <elf/v850.h>
 #elif defined(TARGET_xtensa)
 #include <elf/xtensa.h>
+#elif defined(TARGET_riscv64)
+#include <elf/riscv.h>
 #endif
 
 #if defined(__MINGW32__)
@@ -123,6 +125,8 @@ const char *elf2flt_progname;
 #define ARCH	"nios2"
 #elif defined(TARGET_xtensa)
 #define ARCH	"xtensa"
+#elif defined(TARGET_riscv64)
+#define ARCH	"riscv64"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -808,6 +812,15 @@ output_relocs (
 					continue;
 				case R_XTENSA_32:
 				case R_XTENSA_PLT:
+					goto good_32bit_resolved_reloc;
+				default:
+					goto bad_resolved_reloc;
+#elif defined(TARGET_riscv64)
+				case R_RISCV_32_PCREL:
+				case R_RISCV_ADD32:
+				case R_RISCV_SUB32:
+					break;
+				case R_RISCV_64:
 					goto good_32bit_resolved_reloc;
 				default:
 					goto bad_resolved_reloc;
@@ -1830,6 +1843,15 @@ int main(int argc, char *argv[])
    */
   if (!load_to_ram && !pfile)
     load_to_ram = 1;
+
+#if defined(TARGET_riscv64)
+  /*
+   * riscv only supports loading text and data contiguously.
+   * So fail if load_to_ram is false.
+   */
+  if (!load_to_ram)
+    fatal("Loading to RAM ('-r' option) is required");
+#endif
 
   fname = argv[argc-1];
 
