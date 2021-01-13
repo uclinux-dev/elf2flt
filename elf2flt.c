@@ -363,7 +363,7 @@ output_relocs (
 #endif
   
 #if 0
-  printf("%s(%d): output_relocs(abs_bfd=%d,synbols=0x%x,number_of_symbols=%d"
+  printf("%s(%d): output_relocs(abs_bfd=%d,symbols=0x%x,number_of_symbols=%d,"
 	"n_relocs=0x%x,text=0x%x,text_len=%d,data=0x%x,data_len=%d)\n",
 	__FILE__, __LINE__, abs_bfd, symbols, number_of_symbols, n_relocs,
 	text, text_len, data, data_len);
@@ -424,7 +424,8 @@ output_relocs (
 	 */
 	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
 	    ((a->flags & SEC_CODE) ||
-	    ((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY))))
+	    ((a->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+		         (SEC_DATA | SEC_READONLY | SEC_RELOC))))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
@@ -1875,7 +1876,9 @@ int main(int argc, char *argv[])
     bfd_size_type sec_size;
     bfd_vma sec_vma;
 
-    if (s->flags & SEC_CODE) {
+    if ((s->flags & SEC_CODE) ||
+       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+                    (SEC_DATA | SEC_READONLY | SEC_RELOC))) {
       vma = &text_vma;
       len = &text_len;
     } else if (s->flags & SEC_DATA) {
@@ -1892,9 +1895,9 @@ int main(int argc, char *argv[])
 
     if (sec_vma < *vma) {
       if (*len > 0)
-	*len += sec_vma - *vma;
+        *len += sec_vma - *vma;
       else
-	*len = sec_size;
+        *len = sec_size;
       *vma = sec_vma;
     } else if (sec_vma + sec_size > *vma + *len)
       *len = sec_vma + sec_size - *vma;
@@ -1910,7 +1913,9 @@ int main(int argc, char *argv[])
 
   /* Read in all text sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if (s->flags & SEC_CODE) 
+    if ((s->flags & SEC_CODE) ||
+       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+                    (SEC_DATA | SEC_READONLY | SEC_RELOC)))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
@@ -1936,7 +1941,9 @@ int main(int argc, char *argv[])
 
   /* Read in all data sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if (s->flags & SEC_DATA) 
+    if ((s->flags & SEC_DATA) &&
+       ((s->flags & (SEC_READONLY | SEC_RELOC)) !=
+                    (SEC_READONLY | SEC_RELOC)))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
