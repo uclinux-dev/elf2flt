@@ -1,6 +1,6 @@
 # elf2flt
 
-[![Build Status](https://travis-ci.org/uclinux-dev/elf2flt.svg?branch=master)](https://travis-ci.org/uclinux-dev/elf2flt)
+[![Build Status](https://travis-ci.org/uclinux-dev/elf2flt.svg?branch=main)](https://travis-ci.org/uclinux-dev/elf2flt)
 
 Copyright (C) 2001-2003, SnapGear (www.snapgear.com)
 David McCullough <ucdevel@gmail.com>
