@@ -29,7 +29,7 @@ SECTIONS {
 	}
 	.G13 (DEFINED(G13Base) ? G13Base : 0) : {
 	  *(.G13)
-	} 
+	}
 	.text 0x0 : {
 		. = . + 4;
 		. = ALIGN(0x4) ;
@@ -69,9 +69,9 @@ W_RODAT		*(.rodata.*)
 		*(.got.plt)
 		*(.got)
 		FILL(0) ;
-		. = ALIGN(0x20) ; 
+		. = ALIGN(0x20) ;
 		LONG(-1)
-		. = ALIGN(0x20) ; 
+		. = ALIGN(0x20) ;
 R_RODAT		*(.rodata)
 R_RODAT		*(.rodata1)
 R_RODAT		*(.rodata.*)
@@ -86,8 +86,8 @@ R_RODAT		*(.rodata.*)
 
 		/* Microblaze has .sdata and .sbss (small bss).  They must
 		   be contiguous, so please don't move any of this. JW */
-		_ssrw = . ;			
-		*(.sdata) 
+		_ssrw = . ;
+		*(.sdata)
 		*(.sdata.*)
 		*(.sbss)			/* Don't move this! */
 		_essrw = . ;
@@ -121,7 +121,7 @@ R_RODAT		*(.rodata.*)
 		LONG(0)
 		__DTOR_END__ = .;
 
-		. = ALIGN(0x10) ; 
+		. = ALIGN(0x10) ;
 		_edata = . ;
 	} > flatmem
 	.bss : {

@@ -49,7 +49,7 @@ then
 		case "$1" in
 
 		-elf2flt) ;;                           # we already know this
-		-elf2flt*)FLTFLAGS="`expr \"$1\" : '-elf2flt=\(.*\)'` $FLTFLAGS";; 
+		-elf2flt*)FLTFLAGS="`expr \"$1\" : '-elf2flt=\(.*\)'` $FLTFLAGS";;
 
 		-move-rodata)
 		          MOVDAT="y";;                 # Put rodata in ROM if possible
@@ -89,7 +89,7 @@ then
 
 		-m)       shift; EMUL="-m $1";;        # ld emulations for h8300
 		-m*)      EMUL=$1;;
- 
+
 		*)        ARG1="$ARG1 $1"
 				  ;;
 		esac
@@ -128,10 +128,10 @@ then
 			# Massage the linker script into something useful.  These
 			# regexps are ugly due to some bizzare shell quoting rules.
 			#    SEDOP="$SEDOP -e \"s/ORIGIN = 0x0,/ORIGIN = 0x${SHARED_ID}000000,/\""
-			#    SEDOP="$SEDOP -e \"s/.text 0x0 :/.text 0x${SHARED_ID}000000 :/\""			
+			#    SEDOP="$SEDOP -e \"s/.text 0x0 :/.text 0x${SHARED_ID}000000 :/\""
 			SEDOP="$SEDOP -e s/\\(ORIGIN.=.0\\)x0,/\\1x${SHARED_ID}000000,/"
 			SEDOP="$SEDOP -e s/\\([.]text.0\\)x0[^0-9]:/\\1x${SHARED_ID}000000:/"
-			
+
 			if [ "$SHARED_ID" -gt 0 ]
 			then
 				# Non application modules enter via main not _start
@@ -161,7 +161,7 @@ then
 		else
 			SEDOP="$SEDOP -e /^TOR:/d"
 		fi
-		
+
 		# provide a default linker script, we usually need one
 		[ -z "$LDSCRIPT" ] && LDSCRIPT="${LDSCRIPTPATH}/elf2flt.ld"
 
@@ -196,7 +196,7 @@ then
 		 fi
 		 RFILE="$OFILE.elf"
 		fi
-		if $NM "$OFILE.gdb" | grep _GLOBAL_OFFSET_TABLE_ > /dev/null 
+		if $NM "$OFILE.gdb" | grep _GLOBAL_OFFSET_TABLE_ > /dev/null
 		then
 			$ELF2FLT $FLTFLAGS -o "$OFILE" -p "$OFILE.gdb" "$RFILE" || exit $?
 		else

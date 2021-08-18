@@ -44,7 +44,7 @@ endif
 LDFILE= elf2flt.ld
 ifeq ($(strip $(CPU)),e1)
 SRC_LDFILE= $(srcdir)/$(CPU)-elf2flt.ld
-else 
+else
 SRC_LDFILE= elf2flt.ld
 endif
 

@@ -163,9 +163,9 @@ if test "$ac_libbfd" = "NONE" -o "$ac_libiberty" = "NONE" ; then
 
 You need to specify the location of the libfd.a and libiberty.a
 host libraries from the binutils package.
-	
+
 Run configure again specifying these options:
-	
+
   ./configure --target=<ARCH> --with-bfd-include-dir=<dir> --with-libbfd=<libbfd.a> --with-libiberty=<libiberty.a>
 ])
 fi

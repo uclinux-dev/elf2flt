@@ -84,17 +84,17 @@ process_file(const char *ifile, const char *ofile)
 		new_flags &= ~FLAT_FLAG_GZIP;
 	} else if (docompress < 0)
 		new_flags &= ~(FLAT_FLAG_GZIP|FLAT_FLAG_GZDATA);
-	
+
 	if (ramload > 0)
 		new_flags |= FLAT_FLAG_RAM;
 	else if (ramload < 0)
 		new_flags &= ~FLAT_FLAG_RAM;
-	
+
 	if (ktrace > 0)
 		new_flags |= FLAT_FLAG_KTRACE;
 	else if (ktrace < 0)
 		new_flags &= ~FLAT_FLAG_KTRACE;
-	
+
 	if (l1stack > 0)
 		new_flags |= FLAT_FLAG_L1STK;
 	else if (l1stack < 0)
@@ -202,7 +202,7 @@ process_file(const char *ifile, const char *ofile)
 
 		if (old_flags & (FLAT_FLAG_RAM|FLAT_FLAG_GZIP))
 			tot += text + sizeof(struct flat_hdr);
-		
+
 		if (bss + stk > rel) /* which is bigger ? */
 			tot += bss + stk;
 		else
@@ -376,7 +376,7 @@ main(int argc, char *argv[])
 		process_file(ifile, ofile);
 		ofile = NULL;
 	}
-	
+
 	exit(0);
 }
 

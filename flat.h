@@ -50,7 +50,7 @@ struct flat_hdr {
     uint32_t reloc_start;  /* Offset of relocation records from beginning
                               of file */
     uint32_t reloc_count;  /* Number of relocation records */
-    uint32_t flags;       
+    uint32_t flags;
     uint32_t build_date;   /* When the program/library was built */
     uint32_t filler[5];    /* Reservered, set to zero */
 };
