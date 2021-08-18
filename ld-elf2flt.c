@@ -577,7 +577,7 @@ int main(int argc, char *argv[])
 			"tmp_file   = %s\n"
 			"output_flt = %s\n"
 			"output_elf = %s\n",
-			tmp_file, output_flt, output_elf);
+			tmp_file, output_flt, strNULL(output_elf));
 	}
 	return status;
 }

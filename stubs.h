@@ -35,6 +35,10 @@
 #define streq(str1, str2) (strcmp(str1, str2) == 0)
 #define streqn(str1, str2) (strncmp(str1, str2, strlen(str2)) == 0)
 
+/* Since printf(%s) is not guaranteed to print "(null)", handle it ourselves.
+   NB: The "strNULL" name is terrible, so feel free to suggest alternatives.  */
+#define strNULL(s) ((s) ? (s) : "(null)")
+
 #ifndef DEBUG
 # define DEBUG -1
 #endif
