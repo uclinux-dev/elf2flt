@@ -1,3 +1,42 @@
+/* This linker script is used to produce a tighter ELF program in preparation
+   for conversion to the flat format.  It takes inputs (e.g. ELF objects) and
+   arranges their sections in the order the runtime expects.  See the GNU linker
+   script documentation for more details on the file format.
+   https://sourceware.org/binutils/docs/ld/Scripts.html
+
+   It is dynamically processed by ld-elf2flt before being passed to GNU ld which
+   links the final ELF image (which is then passed to elf2flt to create the flat
+   program).
+
+   The "elf2flt.ld.in" file has @FOO@ symbols replaced when the elf2flt project
+   itself is built.  These should ideally be kept to a minimum to make it easier
+   to read & understand this script.
+
+   The lines below that start with "FOO:" tags are custom ld-elf2flt logic and
+   *not* part of the linker script language.  When ld-elf2flt runs, based on its
+   flags, it will either delete the entire line or the tag itself.
+
+   The tags currently defined are as follows (in no particular order).
+
+   R_RODAT:
+   W_RODAT:
+     By default, the read-only data (.rodata) input sections are placed into the
+     writable output data segment (via the output .data section) and before any
+     other input data sections.  The -move-rodata option moves the .rodata input
+     to the read-only output text segment (via the output .text section).
+
+     Thus, R_RODAT lines are kept by default, while W_RODAT lines are removed.
+
+   TOR:
+     The --enable-emit-ctor-dtor configure setting.
+
+     By default, all TOR lines are removed.
+
+   SINGLE_LINK:
+     The --disable-emit-relocs configure setting.
+
+     By default, all SINGLE_LINK are kept.
+ */
 
 ENTRY (@SYMBOL_PREFIX@_start)
 
