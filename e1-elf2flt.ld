@@ -45,9 +45,9 @@ SECTIONS {
 		*(.init)
 		*(.fini)
 
-W_RODAT		*(.rodata)
-W_RODAT		*(.rodata1)
-W_RODAT		*(.rodata.*)
+W_RODAT:	*(.rodata)
+W_RODAT:	*(.rodata1)
+W_RODAT:	*(.rodata.*)
 
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
@@ -72,9 +72,9 @@ W_RODAT		*(.rodata.*)
 		. = ALIGN(0x20) ;
 		LONG(-1)
 		. = ALIGN(0x20) ;
-R_RODAT		*(.rodata)
-R_RODAT		*(.rodata1)
-R_RODAT		*(.rodata.*)
+R_RODAT:	*(.rodata)
+R_RODAT:	*(.rodata1)
+R_RODAT:	*(.rodata.*)
 		*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)

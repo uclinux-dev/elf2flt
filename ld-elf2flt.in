@@ -110,7 +110,7 @@ then
 		ARG1="$ARG1 $FINAL_ONLY"
 		NEWLDSCRIPT=`mktemp /tmp/flt-XXXXXX`
 		trap 'rm -f "$NEWLDSCRIPT"' EXIT
-		SEDOP=" -e s/^R_RODAT// -e /^W_RODAT/d"
+		SEDOP=" -e s/^R_RODAT:// -e /^W_RODAT:/d"
 		OBJCOPYOP=""
 		if [ "$MOVDAT" ]
 		then
@@ -120,7 +120,7 @@ then
 			then
 				echo "warning: .rodata section contains relocations"
 			else
-				SEDOP="-e /^R_RODAT/d -e s/^W_RODAT//"
+				SEDOP="-e /^R_RODAT:/d -e s/^W_RODAT://"
 			fi
 		fi
 		if [ "$SHARED_ID" ]

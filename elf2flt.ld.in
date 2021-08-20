@@ -30,10 +30,10 @@ SECTIONS {
 		*(.fini.literal)
 		KEEP (*(.fini))
 
-W_RODAT		*(.rodata)
-W_RODAT		*(.rodata1)
-W_RODAT		*(.rodata.*)
-W_RODAT		*(.gnu.linkonce.r*)
+W_RODAT:	*(.rodata)
+W_RODAT:	*(.rodata1)
+W_RODAT:	*(.rodata.*)
+W_RODAT:	*(.gnu.linkonce.r*)
 
 		/* .ARM.extab name sections containing exception unwinding information */
 		*(.ARM.extab* .gnu.linkonce.armextab.*)
@@ -70,10 +70,10 @@ W_RODAT		*(.gnu.linkonce.r*)
 		. = ALIGN(0x20) ;
 		LONG(-1)
 		. = ALIGN(0x20) ;
-R_RODAT		*(.rodata)
-R_RODAT		*(.rodata1)
-R_RODAT		*(.rodata.*)
-R_RODAT		*(.gnu.linkonce.r*)
+R_RODAT:	*(.rodata)
+R_RODAT:	*(.rodata1)
+R_RODAT:	*(.rodata.*)
+R_RODAT:	*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)
 		*(.data.*)
