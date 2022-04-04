@@ -91,12 +91,10 @@ W_RODAT:	*(.gnu.linkonce.r*)
 		*(.call_table_data)
 		*(.call_table_text)
 
-		. = ALIGN(0x20) ;
 		@SYMBOL_PREFIX@_etext = . ;
 	} > flatmem :text
 
-	.data : {
-		. = ALIGN(0x4) ;
+	.data ALIGN(0x20): {
 		@SYMBOL_PREFIX@_sdata = . ;
 		@SYMBOL_PREFIX@__data_start = . ;
 		@SYMBOL_PREFIX@data_start = . ;
