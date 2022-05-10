@@ -1877,8 +1877,9 @@ int main(int argc, char *argv[])
     bfd_vma sec_vma;
 
     if ((s->flags & SEC_CODE) ||
-       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-                    (SEC_DATA | SEC_READONLY | SEC_RELOC))) {
+        (((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+                     (SEC_DATA | SEC_READONLY | SEC_RELOC)) &&
+          !data_len)) {
       vma = &text_vma;
       len = &text_len;
     } else if (s->flags & SEC_DATA) {
