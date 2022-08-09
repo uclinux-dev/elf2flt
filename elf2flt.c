@@ -341,8 +341,13 @@ compare_relocs (const void *pa, const void *pb)
 static bool
 ro_reloc_data_section_should_be_in_text(asection *s)
 {
-  return (s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-	  (SEC_DATA | SEC_READONLY | SEC_RELOC);
+  if ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+      (SEC_DATA | SEC_READONLY | SEC_RELOC)) {
+    if (!strcmp(".eh_frame", s->name) || !strcmp(".gcc_except_table", s->name))
+      return false;
+    return true;
+  }
+  return false;
 }
 
 static uint32_t *
