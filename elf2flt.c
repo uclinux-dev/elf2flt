@@ -41,6 +41,7 @@
 #include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
 #include <stdlib.h>   /* Userland prototypes of the ANSI C std lib functions */
 #include <stdarg.h>   /* Allows va_list to exist in the these namespaces     */
+#include <stdbool.h>
 #include <string.h>   /* Userland prototypes of the string handling funcs    */
 #include <strings.h>
 #include <unistd.h>   /* Userland prototypes of the Unix std system calls    */
@@ -337,6 +338,13 @@ compare_relocs (const void *pa, const void *pb)
 }
 #endif
 
+static bool
+ro_reloc_data_section_should_be_in_text(asection *s)
+{
+  return (s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+	  (SEC_DATA | SEC_READONLY | SEC_RELOC);
+}
+
 static uint32_t *
 output_relocs (
   bfd *abs_bfd,
@@ -428,8 +436,7 @@ output_relocs (
 	 */
 	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
 	    ((a->flags & SEC_CODE) ||
-	    ((a->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-		         (SEC_DATA | SEC_READONLY | SEC_RELOC))))
+	     ro_reloc_data_section_should_be_in_text(a)))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
@@ -1893,8 +1900,7 @@ int main(int argc, char *argv[])
     bfd_vma sec_vma;
 
     if ((s->flags & SEC_CODE) ||
-       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-                    (SEC_DATA | SEC_READONLY | SEC_RELOC))) {
+	ro_reloc_data_section_should_be_in_text(s)) {
       vma = &text_vma;
       len = &text_len;
     } else if (s->flags & SEC_DATA) {
@@ -1932,8 +1938,7 @@ int main(int argc, char *argv[])
    * data sections.*/
   for (s = abs_bfd->sections; s != NULL; s = s->next)
     if ((s->flags & SEC_CODE) ||
-       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-                    (SEC_DATA | SEC_READONLY | SEC_RELOC)))
+	ro_reloc_data_section_should_be_in_text(s))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
@@ -1962,8 +1967,7 @@ int main(int argc, char *argv[])
    * data sections already included in the text output section.*/
   for (s = abs_bfd->sections; s != NULL; s = s->next)
     if ((s->flags & SEC_DATA) &&
-       ((s->flags & (SEC_READONLY | SEC_RELOC)) !=
-                    (SEC_READONLY | SEC_RELOC)))
+	!ro_reloc_data_section_should_be_in_text(s))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
 				   bfd_section_size(abs_bfd, s)))
