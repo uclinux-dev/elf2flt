@@ -808,7 +808,20 @@ output_relocs (
 					continue;
 				case R_XTENSA_32:
 				case R_XTENSA_PLT:
-					goto good_32bit_resolved_reloc;
+					if (bfd_big_endian (abs_bfd))
+						sym_addr =
+							(r_mem[0] << 24)
+							+ (r_mem[1] << 16)
+							+ (r_mem[2] << 8)
+							+ r_mem[3];
+					else
+						sym_addr =
+							r_mem[0]
+							+ (r_mem[1] << 8)
+							+ (r_mem[2] << 16)
+							+ (r_mem[3] << 24);
+					relocation_needed = 1;
+					break;
 				default:
 					goto bad_resolved_reloc;
 #else
