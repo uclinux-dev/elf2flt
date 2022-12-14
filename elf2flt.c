@@ -81,7 +81,7 @@ const char *elf2flt_progname;
 #include <elf/v850.h>
 #elif defined(TARGET_xtensa)
 #include <elf/xtensa.h>
-#elif defined(TARGET_riscv64)
+#elif defined(TARGET_riscv64) || defined(TARGET_riscv32)
 #include <elf/riscv.h>
 #endif
 
@@ -127,6 +127,8 @@ const char *elf2flt_progname;
 #define ARCH	"xtensa"
 #elif defined(TARGET_riscv64)
 #define ARCH	"riscv64"
+#elif defined(TARGET_riscv32)
+#define ARCH	"riscv32"
 #else
 #error "Don't know how to support your CPU architecture??"
 #endif
@@ -822,7 +824,7 @@ output_relocs (
 					goto good_32bit_resolved_reloc_update_text;
 				default:
 					goto bad_resolved_reloc;
-#elif defined(TARGET_riscv64)
+#elif defined(TARGET_riscv64) || defined(TARGET_riscv32)
 				case R_RISCV_NONE:
 				case R_RISCV_32_PCREL:
 				case R_RISCV_ADD8:

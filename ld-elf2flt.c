@@ -327,7 +327,7 @@ static int do_final_link(void)
 	/* riscv adds a global pointer symbol to the linker file with the
 	   "RISCV_GP:" prefix. Remove the prefix for riscv64 architecture and
 	   the entire line for other architectures. */
-	if (streq(TARGET_CPU, "riscv64"))
+	if (streq(TARGET_CPU, "riscv64") || streq(TARGET_CPU, "riscv32"))
 		append_sed(&sed, "^RISCV_GP:", "");
 	else
 		append_sed(&sed, "^RISCV_GP:", NULL);
