@@ -335,7 +335,7 @@ main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "hpPdzZrRuUkKs:o:")) != EOF) {
 		switch (c) {
 		case 'p': print = 1;                break;
-		case 'P': print_relocs = 1;         break;
+		case 'P': print = print_relocs = 1; break;
 		case 'z': docompress = 1;           break;
 		case 'd': docompress = 2;           break;
 		case 'Z': docompress = -1;          break;
