@@ -293,8 +293,8 @@ static int do_final_link(void)
 		}
 		fclose(in);
 	}
-	append_sed(&sed, "^R_RODAT", flag_move_data ? NULL : "");
-	append_sed(&sed, "^W_RODAT", flag_move_data ? "" : NULL);
+	append_sed(&sed, "^R_RODAT:", flag_move_data ? NULL : "");
+	append_sed(&sed, "^W_RODAT:", flag_move_data ? "" : NULL);
 	append_sed(&sed, "^SINGLE_LINK:", USE_EMIT_RELOCS ? "" : NULL);
 	append_sed(&sed, "^TOR:", EMIT_CTOR_DTOR ? "" : NULL);
 
@@ -577,7 +577,7 @@ int main(int argc, char *argv[])
 			"tmp_file   = %s\n"
 			"output_flt = %s\n"
 			"output_elf = %s\n",
-			tmp_file, output_flt, output_elf);
+			tmp_file, output_flt, strNULL(output_elf));
 	}
 	return status;
 }

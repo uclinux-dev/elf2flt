@@ -1,6 +1,6 @@
 # elf2flt
 
-[![Build Status](https://travis-ci.org/uclinux-dev/elf2flt.svg?branch=master)](https://travis-ci.org/uclinux-dev/elf2flt)
+[![Build Status](https://travis-ci.org/uclinux-dev/elf2flt.svg?branch=main)](https://travis-ci.org/uclinux-dev/elf2flt)
 
 Copyright (C) 2001-2003, SnapGear (www.snapgear.com)
 David McCullough <ucdevel@gmail.com>
@@ -39,13 +39,19 @@ specify where the libbfd.a and libiberty.a library files are to use.
 * elf2flt.c    - the source
 * flthdr.c     - flat header manipulation program
 * flat.h       - header from uClinux kernel sources
-* elf2flt.ld   - an example linker script that works for C/C++ and uClinux
+* elf2flt.ld   - An example [linker script](https://sourceware.org/binutils/docs/ld/Scripts.html)
+                 that works for C/C++ and uClinux.  `ld-elf2flt` processes this
+                 on the fly before passing it to the real linker to use (in
+                 place of the default linker script provided by the normal
+                 toolchain).
 * ld-elf2flt   - A linker replacement that implements a `-elf2flt` option for
                  the linker and runs elf2flt automatically for you.  It auto
                  detects PIC/non-PIC code and adjusts its option accordingly.
                  It uses the environment variable `FLTFLAGS` when running
                  elf2flt.  It runs /.../<ARCH>-ld.real to do the actual linking.
-* stubs.c      - Support for various functions that your OS might be missing.
+* stubs.c      - Support for various functions that your OS might be missing
+                 (e.g. Windows-vs-Linux).  Only used by our programs above -- it
+                 is *not* included in the flat/ELF programs we produce.
 
 ## Tips
 

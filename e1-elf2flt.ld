@@ -29,7 +29,7 @@ SECTIONS {
 	}
 	.G13 (DEFINED(G13Base) ? G13Base : 0) : {
 	  *(.G13)
-	} 
+	}
 	.text 0x0 : {
 		. = . + 4;
 		. = ALIGN(0x4) ;
@@ -45,9 +45,9 @@ SECTIONS {
 		*(.init)
 		*(.fini)
 
-W_RODAT		*(.rodata)
-W_RODAT		*(.rodata1)
-W_RODAT		*(.rodata.*)
+W_RODAT:	*(.rodata)
+W_RODAT:	*(.rodata1)
+W_RODAT:	*(.rodata.*)
 
 		/* This is special code area at the end of the normal
 		   text section.  It contains a small lookup table at
@@ -69,12 +69,12 @@ W_RODAT		*(.rodata.*)
 		*(.got.plt)
 		*(.got)
 		FILL(0) ;
-		. = ALIGN(0x20) ; 
+		. = ALIGN(0x20) ;
 		LONG(-1)
-		. = ALIGN(0x20) ; 
-R_RODAT		*(.rodata)
-R_RODAT		*(.rodata1)
-R_RODAT		*(.rodata.*)
+		. = ALIGN(0x20) ;
+R_RODAT:	*(.rodata)
+R_RODAT:	*(.rodata1)
+R_RODAT:	*(.rodata.*)
 		*(.gnu.linkonce.r*)
 		*(.data)
 		*(.data1)
@@ -86,8 +86,8 @@ R_RODAT		*(.rodata.*)
 
 		/* Microblaze has .sdata and .sbss (small bss).  They must
 		   be contiguous, so please don't move any of this. JW */
-		_ssrw = . ;			
-		*(.sdata) 
+		_ssrw = . ;
+		*(.sdata)
 		*(.sdata.*)
 		*(.sbss)			/* Don't move this! */
 		_essrw = . ;
@@ -121,7 +121,7 @@ R_RODAT		*(.rodata.*)
 		LONG(0)
 		__DTOR_END__ = .;
 
-		. = ALIGN(0x10) ; 
+		. = ALIGN(0x10) ;
 		_edata = . ;
 	} > flatmem
 	.bss : {

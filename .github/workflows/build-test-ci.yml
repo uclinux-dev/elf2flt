@@ -5,11 +5,11 @@ name: Build+Test CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     tags: [v*]
   pull_request:
     types: [opened]
-    branches: [master]
+    branches: [main]
 
 jobs:
   build-test:

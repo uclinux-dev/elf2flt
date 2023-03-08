@@ -33,10 +33,10 @@
  *
  * This is Free Software, under the GNU Public Licence v2 or greater.
  *
- * Relocation added March 1997, Kresten Krab Thorup 
+ * Relocation added March 1997, Kresten Krab Thorup
  * krab@california.daimi.aau.dk
  */
- 
+
 #include <inttypes.h> /* All the standard PRI define times for printf        */
 #include <stdio.h>    /* Userland pieces of the ANSI C standard I/O package  */
 #include <stdlib.h>   /* Userland prototypes of the ANSI C std lib functions */
@@ -188,20 +188,20 @@ get_symbols (bfd *abfd, long *num)
   int32_t storage_needed;
   asymbol **symbol_table;
   long number_of_symbols;
-  
+
   storage_needed = bfd_get_symtab_upper_bound (abfd);
-	  
+
   if (storage_needed < 0)
     abort ();
-      
+
   if (storage_needed == 0)
     return NULL;
 
   symbol_table = xmalloc (storage_needed);
 
   number_of_symbols = bfd_canonicalize_symtab (abfd, symbol_table);
-  
-  if (number_of_symbols < 0) 
+
+  if (number_of_symbols < 0)
     abort ();
 
   *num = number_of_symbols;
@@ -221,7 +221,7 @@ dump_symbols(asymbol **symbol_table, long number_of_symbols)
   }
   printf("\n");
   return(0);
-}  
+}
 
 
 
@@ -273,7 +273,7 @@ add_com_to_bss(asymbol **symbol_table, int32_t number_of_symbols, int32_t bss_le
     }
   }
   return comsize;
-}  
+}
 
 #ifdef TARGET_bfin
 /* FUNCTION : weak_und_symbol
@@ -370,9 +370,9 @@ output_relocs (
 #ifdef TARGET_bfin
   unsigned long		persistent_data = 0;
 #endif
-  
+
 #if 0
-  printf("%s(%d): output_relocs(abs_bfd=%d,synbols=0x%x,number_of_symbols=%d"
+  printf("%s(%d): output_relocs(abs_bfd=%d,symbols=0x%x,number_of_symbols=%d,"
 	"n_relocs=0x%x,text=0x%x,text_len=%d,data=0x%x,data_len=%d)\n",
 	__FILE__, __LINE__, abs_bfd, symbols, number_of_symbols, n_relocs,
 	text, text_len, data, data_len);
@@ -433,7 +433,8 @@ output_relocs (
 	 */
 	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
 	    ((a->flags & SEC_CODE) ||
-	    ((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY))))
+	    ((a->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+		         (SEC_DATA | SEC_READONLY | SEC_RELOC))))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
@@ -504,7 +505,7 @@ output_relocs (
 				/* These are relative relocations, which
 				   have already been fixed up by the
 				   linker at this point, so just ignore
-				   them.  */ 
+				   them.  */
 				continue;
 			}
 #endif /* USE_V850_RELOCS */
@@ -542,7 +543,7 @@ output_relocs (
 			}
 #else
 			sym_addr = (*(q->sym_ptr_ptr))->value;
-#endif			
+#endif
 			if (use_resolved) {
 				/* Use the address of the symbol already in
 				   the program text.  How this is handled may
@@ -836,7 +837,7 @@ output_relocs (
 						sym_addr =
 							(r_mem[0] << 24)
 							+ (r_mem[1] << 16)
-							+ (r_mem[2] << 8) 
+							+ (r_mem[2] << 8)
 							+ r_mem[3];
 					else
 						sym_addr =
@@ -1029,8 +1030,8 @@ output_relocs (
 					r_mem[6] = (sym_addr >>  8) & 0xff;
 					r_mem[7] =  sym_addr        & 0xff;
 					relocation_needed = 1;
-					/* The symbol is split over two consecutive instructions.  
-					   Flag this to the flat loader by setting the high bit of 
+					/* The symbol is split over two consecutive instructions.
+					   Flag this to the flat loader by setting the high bit of
 					   the relocation symbol. */
 					pflags = 0x80000000;
 					break;
@@ -1060,7 +1061,7 @@ output_relocs (
 					continue;
 
 #endif /* TARGET_microblaze */
-					
+
 #ifdef TARGET_nios2
 #define  htoniosl(x)	(x)
 #define  niostohl(x)	(x)
@@ -1079,7 +1080,7 @@ output_relocs (
 					pflags = (FLAT_NIOS2_R_CALL26 << 28);
 					sym_vma = elf2flt_bfd_section_vma(sym_section);
 					sym_addr += sym_vma + q->addend;
-					
+
 					/* modify target, in target order */
 					// exist_val = niostohl(*(unsigned long *)r_mem);
 					exist_val = ((sym_addr >> 2) << 6);
@@ -1098,16 +1099,16 @@ output_relocs (
 						r2_type = p[1]->howto->type;
 					if ((r2_type == R_NIOS2_LO16)
 					    && (p[0]->sym_ptr_ptr == p[1]->sym_ptr_ptr)
-					    && (p[0]->addend == p[1]->addend)) 
+					    && (p[0]->addend == p[1]->addend))
 					    {
 							unsigned char * r2_mem = sectionp + p[1]->address;
 							if (p[1]->address - q->address!=4)
 								printf("Err: HI/LO not adjacent %ld\n", p[1]->address - q->address);
 							relocation_needed = 1;
-							pflags = (q->howto->type == R_NIOS2_HIADJ16) 
+							pflags = (q->howto->type == R_NIOS2_HIADJ16)
 								? FLAT_NIOS2_R_HIADJ_LO : FLAT_NIOS2_R_HI_LO;
 							pflags <<= 28;
-						
+
 							sym_vma = elf2flt_bfd_section_vma(sym_section);
 							sym_addr += sym_vma + q->addend;
 
@@ -1125,8 +1126,8 @@ output_relocs (
 							exist_val =  ((exist_val >> 22) << 22) | (exist_val & 0x3f);
 							exist_val |= ((sym_addr & 0xFFFF) << 6);
 							*(unsigned long *)r2_mem = htoniosl(exist_val);
-						
-						} else 
+
+						} else
 							goto NIOS2_RELOC_ERR;
 					}
 					break;
@@ -1185,13 +1186,13 @@ output_relocs (
 				case R_NIOS2_LO16:
 					/* check if this is actually the 2nd half of a pair */
 					if ((p > relpp)
-						&& ((p[-1]->howto->type == R_NIOS2_HIADJ16) 
+						&& ((p[-1]->howto->type == R_NIOS2_HIADJ16)
 							|| (p[-1]->howto->type == R_NIOS2_HI16))
 					    && (p[-1]->sym_ptr_ptr == p[0]->sym_ptr_ptr)
 					    && (p[-1]->addend == p[0]->addend)) {
 						if (verbose)
 							printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
-								"section=%s size=%d LO16\n", 
+								"section=%s size=%d LO16\n",
 								q->address, sym_name, addstr,
 								section_name, sym_reloc_size);
 						continue;
@@ -1277,8 +1278,8 @@ NIOS2_RELOC_ERR:
 
 #ifdef TARGET_e1
 #define  htoe1l(x)              htonl(x)
-					
-#if 0 
+
+#if 0
 #define  DEBUG_E1
 #endif
 
@@ -1301,7 +1302,7 @@ NIOS2_RELOC_ERR:
 						DBG_E1("sec_vma : [0x%x], sym_addr : [0x%x], q->address : [0x%x]\n",
 										sec_vma, sym_addr, q->address);
 						sym_addr = sec_vma + sym_addr;
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);        
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
 						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
@@ -1328,7 +1329,7 @@ NIOS2_RELOC_ERR:
 						DBG_E1( "sym_addr := sym_addr - q->address  - "
 								"sizeof(CONST31_PCREL): [0x%x]\n",
 								sym_addr );
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);              
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
 						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
@@ -1356,7 +1357,7 @@ NIOS2_RELOC_ERR:
 								"sizeof(CONST31_PCREL): [0x%x]\n",
 								sym_addr );
 						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);       
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
 						DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
@@ -1377,7 +1378,7 @@ DIS29_RELOCATION:
 										sec_vma, sym_addr);
 						sym_addr =  sec_vma + sym_addr;
 						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%08x]\n", sym_addr);
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
 						DBG_E1("Orig:exist_val : [0x%08x]\n", exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n", exist_val);
@@ -1406,7 +1407,7 @@ DIS29_RELOCATION:
 								"sizeof(CONST31_PCREL): [0x%x]\n",
 								sym_addr );
 						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                 
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
  						DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
@@ -1421,7 +1422,7 @@ DIS29_RELOCATION:
 						sym_addr =  sec_vma + sym_addr;
 						DBG_E1("sym_addr =  sec_vma + sym_addr : [0x%x]\n", sym_addr );
 						DBG_E1("sectionp:[0x%x], q->address:[0x%x]\n", sectionp, q->address );
-						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);                     
+						exist_val = *(unsigned long*)((unsigned long)sectionp + q->address + 2);
 	 					DBG_E1("Original:exist_val : [0x%08x]\n",exist_val);
 						exist_val = htoe1l(exist_val);
 						DBG_E1("HtoBE:exist_val : [0x%08x]\n",exist_val);
@@ -1832,7 +1833,7 @@ int main(int argc, char *argv[])
       break;
     }
   }
-  
+
   /*
    * if neither the -r or -p options was given,  default to
    * a RAM load as that is the only option that makes sense.
@@ -1884,7 +1885,9 @@ int main(int argc, char *argv[])
     bfd_size_type sec_size;
     bfd_vma sec_vma;
 
-    if (s->flags & SEC_CODE) {
+    if ((s->flags & SEC_CODE) ||
+       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+                    (SEC_DATA | SEC_READONLY | SEC_RELOC))) {
       vma = &text_vma;
       len = &text_len;
     } else if (s->flags & SEC_DATA) {
@@ -1917,9 +1920,13 @@ int main(int argc, char *argv[])
   if (verbose)
     printf("TEXT -> vma=0x%x len=0x%x\n", text_vma, text_len);
 
-  /* Read in all text sections.  */
+  /* Read input sections destined for the text output segment.
+   * Includes code sections, but also includes read-only relocation
+   * data sections.*/
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if (s->flags & SEC_CODE) 
+    if ((s->flags & SEC_CODE) ||
+       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
+                    (SEC_DATA | SEC_READONLY | SEC_RELOC)))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
 				   elf2flt_bfd_section_size(s)))
@@ -1943,9 +1950,13 @@ int main(int argc, char *argv[])
     text_len = data_vma - text_vma;
   }
 
-  /* Read in all data sections.  */
+  /* Read input sections destined for the data output segment.
+   * Includes data sections, but not those read-only relocation
+   * data sections already included in the text output section.*/
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if (s->flags & SEC_DATA) 
+    if ((s->flags & SEC_DATA) &&
+       ((s->flags & (SEC_READONLY | SEC_RELOC)) !=
+                    (SEC_READONLY | SEC_RELOC)))
       if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
 				   elf2flt_bfd_section_size(s)))
@@ -2009,7 +2020,7 @@ int main(int argc, char *argv[])
       printf(", relocs=0x%04x", reloc_len);
     printf("\n");
   }
-  
+
   if (!ofile) {
     ofile = xmalloc(strlen(fname) + 5 + 1); /* 5 to add suffix */
     strcpy(ofile, fname);
