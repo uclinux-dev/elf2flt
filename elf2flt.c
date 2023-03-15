@@ -433,8 +433,7 @@ output_relocs (
 	 */
 	if ((!pic_with_got || ALWAYS_RELOC_TEXT) &&
 	    ((a->flags & SEC_CODE) ||
-	    ((a->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-		         (SEC_DATA | SEC_READONLY | SEC_RELOC))))
+	    ((a->flags & (SEC_DATA | SEC_READONLY)) == (SEC_DATA | SEC_READONLY))))
 		sectionp = text + (a->vma - text_vma);
 	else if (a->flags & SEC_DATA)
 		sectionp = data + (a->vma - data_vma);
@@ -1885,9 +1884,7 @@ int main(int argc, char *argv[])
     bfd_size_type sec_size;
     bfd_vma sec_vma;
 
-    if ((s->flags & SEC_CODE) ||
-       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-                    (SEC_DATA | SEC_READONLY | SEC_RELOC))) {
+    if (s->flags & SEC_CODE) {
       vma = &text_vma;
       len = &text_len;
     } else if (s->flags & SEC_DATA) {
@@ -1920,13 +1917,9 @@ int main(int argc, char *argv[])
   if (verbose)
     printf("TEXT -> vma=0x%x len=0x%x\n", text_vma, text_len);
 
-  /* Read input sections destined for the text output segment.
-   * Includes code sections, but also includes read-only relocation
-   * data sections.*/
+  /* Read in all text sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if ((s->flags & SEC_CODE) ||
-       ((s->flags & (SEC_DATA | SEC_READONLY | SEC_RELOC)) ==
-                    (SEC_DATA | SEC_READONLY | SEC_RELOC)))
+    if (s->flags & SEC_CODE)
       if (!bfd_get_section_contents(abs_bfd, s,
 				   text + (s->vma - text_vma), 0,
 				   elf2flt_bfd_section_size(s)))
@@ -1950,13 +1943,9 @@ int main(int argc, char *argv[])
     text_len = data_vma - text_vma;
   }
 
-  /* Read input sections destined for the data output segment.
-   * Includes data sections, but not those read-only relocation
-   * data sections already included in the text output section.*/
+  /* Read in all data sections.  */
   for (s = abs_bfd->sections; s != NULL; s = s->next)
-    if ((s->flags & SEC_DATA) &&
-       ((s->flags & (SEC_READONLY | SEC_RELOC)) !=
-                    (SEC_READONLY | SEC_RELOC)))
+    if (s->flags & SEC_DATA)
       if (!bfd_get_section_contents(abs_bfd, s,
 				   data + (s->vma - data_vma), 0,
 				   elf2flt_bfd_section_size(s)))
