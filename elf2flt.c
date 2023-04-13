@@ -216,8 +216,8 @@ dump_symbols(asymbol **symbol_table, long number_of_symbols)
   long i;
   printf("SYMBOL TABLE:\n");
   for (i=0; i<number_of_symbols; i++) {
-	printf("  NAME=%s  VALUE=0x%"BFD_VMA_FMT"x\n",
-		symbol_table[i]->name, symbol_table[i]->value);
+	printf("  NAME=%s  VALUE=0x%"PRIx64"\n",
+		symbol_table[i]->name, (uint64_t) symbol_table[i]->value);
   }
   printf("\n");
   return(0);
@@ -448,8 +448,8 @@ output_relocs (
 	if (r == NULL)
 	  continue;
 	if (verbose)
-	  printf(" RELOCS: %s [%p]: flags=0x%x vma=0x%"BFD_VMA_FMT"x\n",
-			r->name, r, r->flags, elf2flt_bfd_section_vma(r));
+	  printf(" RELOCS: %s [%p]: flags=0x%x vma=0x%"PRIx64"\n",
+			r->name, r, r->flags, (uint64_t) elf2flt_bfd_section_vma(r));
   	if ((r->flags & SEC_RELOC) == 0)
   	  continue;
 	relsize = bfd_get_reloc_upper_bound(rel_bfd, r);
@@ -909,12 +909,13 @@ output_relocs (
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
-							"value=0x%"BFD_VMA_FMT"x, "
-							"address=0x%"BFD_VMA_FMT"x "
+							"value=0x%"PRIx64", "
+							"address=0x%"PRIx64" "
 							"sym_addr=0x%x rs=0x%x, opcode=0x%x\n",
 							"ABS32",
-							sym_vma, (*(q->sym_ptr_ptr))->value,
-							q->address, sym_addr,
+							sym_vma, 
+							(uint64_t) (*(q->sym_ptr_ptr))->value,
+							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
 					sym_vma = elf2flt_bfd_section_vma(sym_section);
@@ -928,12 +929,13 @@ output_relocs (
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
-							"value=0x%"BFD_VMA_FMT"x, "
-							"address=0x%"BFD_VMA_FMT"x "
+							"value=0x%"PRIx64", "
+							"address=0x%"PRIx64" "
 							"sym_addr=0x%x rs=0x%x, opcode=0x%x\n",
 							"PLT32",
-							sym_vma, (*(q->sym_ptr_ptr))->value,
-							q->address, sym_addr,
+							sym_vma,
+							(uint64_t) (*(q->sym_ptr_ptr))->value,
+							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
 				case R_ARM_PC24:
@@ -951,8 +953,8 @@ output_relocs (
 				case R_V850_ZDA_16_16_OFFSET:
 				case R_V850_ZDA_16_16_SPLIT_OFFSET:
 					/* Can't support zero-relocations.  */
-					printf ("ERROR: %s+0x%"BFD_VMA_FMT"x: zero relocations not supported\n",
-							sym_name, q->addend);
+					printf ("ERROR: %s+0x%"PRIx64": zero relocations not supported\n",
+							sym_name, (uint64_t) q->addend);
 					continue;
 #endif /* TARGET_v850 */
 
@@ -1151,12 +1153,12 @@ output_relocs (
 					temp |= (exist_val & 0x3f);
 					*(unsigned long *)r_mem = htoniosl(temp);
 					if (verbose)
-						printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
+						printf("omit: offset=0x%"PRIx64" symbol=%s%s "
 								"section=%s size=%d "
-								"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x) GPREL\n",
-								q->address, sym_name, addstr,
+								"fixup=0x%x (reloc=0x%"PRIx64") GPREL\n",
+								(uint64_t) q->address, sym_name, addstr,
 								section_name, sym_reloc_size,
-								sym_addr, section_vma + q->address);
+								sym_addr, (uint64_t) section_vma + q->address);
 					continue;
 				}
 				case R_NIOS2_PCREL16:
@@ -1171,12 +1173,12 @@ output_relocs (
 					exist_val |= ((sym_addr & 0xFFFF) << 6);
 					*(unsigned long *)r_mem = htoniosl(exist_val);
 					if (verbose)
-						printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
+						printf("omit: offset=0x%"PRIx64" symbol=%s%s "
 								"section=%s size=%d "
-								"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x) PCREL\n",
-								q->address, sym_name, addstr,
+								"fixup=0x%x (reloc=0x%"PRIx64") PCREL\n",
+								(uint64_t) q->address, sym_name, addstr,
 								section_name, sym_reloc_size,
-								sym_addr, section_vma + q->address);
+								sym_addr, (uint64_t) section_vma + q->address);
 					continue;
 				}
 
@@ -1188,9 +1190,9 @@ output_relocs (
 					    && (p[-1]->sym_ptr_ptr == p[0]->sym_ptr_ptr)
 					    && (p[-1]->addend == p[0]->addend)) {
 						if (verbose)
-							printf("omit: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
+							printf("omit: offset=0x%"PRIx64" symbol=%s%s "
 								"section=%s size=%d LO16\n",
-								q->address, sym_name, addstr,
+								(uint64_t) q->address, sym_name, addstr,
 								section_name, sym_reloc_size);
 						continue;
 					}
@@ -1603,13 +1605,13 @@ DIS29_RELOCATION:
 			 */
 			if (relocation_needed) {
 				if (verbose)
-					printf("  RELOC[%d]: offset=0x%"BFD_VMA_FMT"x symbol=%s%s "
+					printf("  RELOC[%d]: offset=0x%"PRIx64" symbol=%s%s "
 						"section=%s size=%d "
-						"fixup=0x%x (reloc=0x%"BFD_VMA_FMT"x)\n",
+						"fixup=0x%x (reloc=0x%"PRIx64")\n",
 						flat_reloc_count,
-						q->address, sym_name, addstr,
+						(uint64_t) q->address, sym_name, addstr,
 						section_name, sym_reloc_size,
-						sym_addr, section_vma + q->address);
+						sym_addr, (uint64_t) section_vma + q->address);
 
 #ifndef TARGET_bfin
 				flat_relocs = realloc(flat_relocs,
