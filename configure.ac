@@ -124,6 +124,7 @@ if test "$ac_zlib_prefix" = "NONE"; then
 else
   LIBS="-L$ac_zlib_prefix/lib -lz $LIBS"
 fi
+AC_CHECK_LIB(zstd, ZSTD_decompress)
 if test "$ac_libiberty" = "NONE"; then
   AC_CHECK_LIB(iberty, objalloc_create)
   ac_libiberty=auto
