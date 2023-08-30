@@ -819,7 +819,7 @@ output_relocs (
 					continue;
 				case R_XTENSA_32:
 				case R_XTENSA_PLT:
-					goto good_32bit_resolved_reloc;
+					goto good_32bit_resolved_reloc_update_text;
 				default:
 					goto bad_resolved_reloc;
 #elif defined(TARGET_riscv64)
@@ -856,6 +856,8 @@ output_relocs (
 					goto good_32bit_resolved_reloc;
 #endif
 				good_32bit_resolved_reloc:
+					update_text = 0;
+				good_32bit_resolved_reloc_update_text:
 					if (bfd_big_endian (abs_bfd))
 						sym_addr =
 							(r_mem[0] << 24)
@@ -869,7 +871,6 @@ output_relocs (
 							+ (r_mem[2] << 16)
 							+ (r_mem[3] << 24);
 					relocation_needed = 1;
-					update_text = 0;
 					break;
 
 				bad_resolved_reloc:
