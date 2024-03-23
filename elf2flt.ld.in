@@ -139,7 +139,7 @@ R_RODAT:	*(.gnu.linkonce.r*)
 		@SYMBOL_PREFIX@_ssro_size = @SYMBOL_PREFIX@_essro - @SYMBOL_PREFIX@_ssro;
 		PROVIDE(@SYMBOL_PREFIX@_SDA2_BASE_ = @SYMBOL_PREFIX@_ssro + (@SYMBOL_PREFIX@_ssro_size / 2));
 
-		. = ALIGN(4) ;
+		. = ALIGN(8) ;
 TOR:		@SYMBOL_PREFIX@__CTOR_LIST__ = .;
 TOR:		LONG((@SYMBOL_PREFIX@__CTOR_END__ - @SYMBOL_PREFIX@__CTOR_LIST__) / 4 - 2)
 SINGLE_LINK:	/* gcc uses crtbegin.o to find the start of
