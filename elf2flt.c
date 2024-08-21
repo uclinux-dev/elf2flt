@@ -840,6 +840,8 @@ output_relocs (
 				case R_RISCV_SET8:
 				case R_RISCV_SET16:
 				case R_RISCV_SET32:
+				case R_RISCV_SET_ULEB128:
+				case R_RISCV_SUB_ULEB128:
 					continue;
 				case R_RISCV_32:
 				case R_RISCV_64:
