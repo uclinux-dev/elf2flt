@@ -91,11 +91,12 @@ AC_ARG_ENABLE(emit-ctor-dtor,
 var_yn_to_10 emit_ctor_dtor
 
 AC_ARG_ENABLE(always-reloc-text,
-	AS_HELP_STRING([--enable-always-reloc-text], [always process text relocs ignoring pic/got (needed on Blackfin)]),
+	AS_HELP_STRING([--enable-always-reloc-text], [always process text relocs ignoring pic/got (needed on Blackfin/SuperH)]),
 	[ always_reloc_text=$enableval ],
 	[
 	case $target in
 		bfin*) always_reloc_text=yes;;
+		sh*)   always_reloc_text=yes;;
 		*)     always_reloc_text=no;;
 	esac
 	]
