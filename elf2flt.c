@@ -73,7 +73,7 @@ const char *elf2flt_progname;
 #define FLAT_NIOS2_R_HIADJ_LO	2
 #define FLAT_NIOS2_R_CALL26		4
 #include <elf/nios2.h>
-#elif defined(TARGET_sh)
+#elif defined(TARGET_sh2) || defined(TARGET_sh2eb)
 #include <elf/sh.h>
 #elif defined(TARGET_sparc)
 #include <elf/sparc.h>
@@ -109,8 +109,10 @@ const char *elf2flt_progname;
 #define	ARCH	"sparc"
 #elif defined(TARGET_v850)
 #define	ARCH	"v850"
-#elif defined(TARGET_sh)
-#define	ARCH	"sh"
+#elif defined(TARGET_sh2)
+#define	ARCH	"sh2"
+#elif defined(TARGET_sh2eb)
+#define	ARCH	"sh2"
 #elif defined(TARGET_h8300)
 #define	ARCH	"h8300"
 #elif defined(TARGET_microblaze)
@@ -758,6 +760,11 @@ output_relocs (
 
 				    flat_reloc_count++;
 				    break;
+#elif defined(TARGET_sh2) || defined(TARGET_sh2eb)
+				case R_SH_DIR32:
+					goto good_32bit_resolved_reloc;
+				case R_SH_REL32:
+					continue;
 #elif defined (TARGET_h8300)
 				case R_H8_DIR32:
 				case R_H8_DIR32A16:
@@ -1293,7 +1300,7 @@ NIOS2_RELOC_ERR:
 #endif /* TARGET_sparc */
 
 
-#ifdef TARGET_sh
+#if defined(TARGET_sh2) || defined(TARGET_sh2eb)
 				case R_SH_DIR32:
 					relocation_needed = 1;
 					sym_vma = elf2flt_bfd_section_vma(sym_section);
@@ -1304,7 +1311,7 @@ NIOS2_RELOC_ERR:
 					sym_addr += sym_vma + q->addend;
 					sym_addr -= q->address;
 					break;
-#endif /* TARGET_sh */
+#endif /* TARGET_sh2 / TARGET_sh2eb */
 
 #ifdef TARGET_e1
 #define  htoe1l(x)              htonl(x)
