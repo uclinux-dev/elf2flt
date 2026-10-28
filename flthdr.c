@@ -33,6 +33,8 @@ const char *elf2flt_progname;
 
 #if defined TARGET_bfin
 # define flat_get_relocate_addr(addr) (addr & 0x03ffffff)
+#elif defined(TARGET_lm32)
+# define flat_get_relocate_addr(addr) ((addr) & 0x1FFFFFFFU)
 #else
 # define flat_get_relocate_addr(addr) (addr)
 #endif
