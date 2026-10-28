@@ -298,10 +298,10 @@ weak_und_symbol(const char *reloc_section_name,
 #ifdef DEBUG_BFIN
 	    fprintf(stderr, "found weak undefined symbol %s\n", symbol->name);
 #endif
-	    return TRUE;
+	    return 1;
 	}
     }
-    return FALSE;
+    return 0;
 }
 
 static int
