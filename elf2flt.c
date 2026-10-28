@@ -986,6 +986,8 @@ output_relocs (
 #if defined(TARGET_arm)
 				case R_ARM_ABS32:
 					relocation_needed = 1;
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
@@ -998,14 +1000,14 @@ output_relocs (
 							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
-					sym_vma = elf2flt_bfd_section_vma(sym_section);
-					sym_addr += sym_vma + q->addend;
 					break;
 				case R_ARM_GOT32:
 				case R_ARM_GOTPC:
 					/* Should be fine as is */
 					break;
 				case R_ARM_PLT32:
+					sym_vma = 0;
+					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
@@ -1018,6 +1020,7 @@ output_relocs (
 							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
+					break;
 				case R_ARM_PC24:
 					sym_vma = 0;
 					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
