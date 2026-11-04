@@ -62,6 +62,8 @@ const char *elf2flt_progname;
 #include <elf/bfin.h>
 #elif defined(TARGET_h8300)
 #include <elf/h8.h>
+#elif defined(TARGET_lm32)
+#include <elf/lm32.h>
 #elif defined(TARGET_m68k)
 #include <elf/m68k.h>
 #elif defined(TARGET_microblaze)
@@ -115,6 +117,12 @@ const char *elf2flt_progname;
 #define	ARCH	"sh2"
 #elif defined(TARGET_h8300)
 #define	ARCH	"h8300"
+#elif defined(TARGET_lm32)
+#define ARCH	"lm32"
+#define FLAT_LM32_RELOC_TYPE_32_BIT   0
+#define FLAT_LM32_RELOC_TYPE_HI16_BIT 1
+#define FLAT_LM32_RELOC_TYPE_LO16_BIT 2
+#define FLAT_LM32_RELOC_TYPE_PERSIST  3
 #elif defined(TARGET_microblaze)
 #define ARCH	"microblaze"
 #elif defined(TARGET_e1)
@@ -375,7 +383,7 @@ output_relocs (
   int			bad_relocs = 0;
   asymbol		**symb;
   long			nsymb;
-#ifdef TARGET_bfin
+#if defined(TARGET_bfin) || defined(TARGET_lm32)
   unsigned long		persistent_data = 0;
 #endif
 
@@ -688,6 +696,40 @@ output_relocs (
 				case R_ARM_PREL31:
 				case R_ARM_V4BX:
 				case R_ARM_NONE:
+					relocation_needed = 0;
+					break;
+				default:
+					goto bad_resolved_reloc;
+#elif defined(TARGET_lm32)
+				case R_LM32_HI16:
+				case R_LM32_LO16:
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
+					/* remember the upper 16 bits */
+					if ((0xFFFF0000UL & sym_addr) != persistent_data) {
+						flat_relocs = (uint32_t *)realloc(flat_relocs,
+						    (flat_reloc_count + 1) * sizeof (uint32_t));
+						if (verbose)
+							printf("New persistent data for %08"PRIx32"\n", sym_addr);
+						persistent_data = 0xFFFF0000UL & sym_addr;
+						pflags = FLAT_LM32_RELOC_TYPE_PERSIST;
+						pflags <<= 29;
+						flat_relocs[flat_reloc_count++] = pflags | (sym_addr >> 16);
+					}
+					pflags = q->howto->type == R_LM32_HI16 ?
+					    FLAT_LM32_RELOC_TYPE_HI16_BIT :
+					    FLAT_LM32_RELOC_TYPE_LO16_BIT;
+					pflags <<= 29;
+					relocation_needed = 1;
+					break;
+				case R_LM32_32:
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
+					pflags = FLAT_LM32_RELOC_TYPE_32_BIT;
+					pflags <<= 29;
+					relocation_needed = 1;
+					break;
+				case R_LM32_CALL:
 					relocation_needed = 0;
 					break;
 				default:
@@ -1054,6 +1096,63 @@ output_relocs (
 					sym_addr -= (q->address + 1);
 					*(unsigned char *)r_mem = sym_addr;
 					continue;
+#endif
+
+#ifdef TARGET_lm32
+				case R_LM32_HI16:
+				case R_LM32_LO16:
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
+					/* remember the upper 16 bits */
+					if ((0xFFFF0000UL & sym_addr) != persistent_data) {
+						flat_relocs = (uint32_t *)realloc(flat_relocs,
+						    (flat_reloc_count + 1) * sizeof (uint32_t));
+						if (verbose)
+							printf("New persistent data for %08"PRIx32"\n", sym_addr);
+						persistent_data = 0xFFFF0000UL & sym_addr;
+						pflags = FLAT_LM32_RELOC_TYPE_PERSIST;
+						pflags <<= 29;
+						flat_relocs[flat_reloc_count++] = pflags | (sym_addr >> 16);
+					}
+					pflags = q->howto->type == R_LM32_HI16 ?
+					    FLAT_LM32_RELOC_TYPE_HI16_BIT :
+					    FLAT_LM32_RELOC_TYPE_LO16_BIT;
+					pflags <<= 29;
+					relocation_needed = 1;
+					break;
+				case R_LM32_32:
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
+					pflags = FLAT_LM32_RELOC_TYPE_32_BIT;
+					pflags <<= 29;
+					relocation_needed = 1;
+					break;
+				case R_LM32_CALL:
+					sym_vma = 0;
+					sym_addr += sym_vma + q->addend;
+					sym_addr -= q->address;
+					sym_addr = (int32_t)sym_addr >> q->howto->rightshift;
+					{
+						union {
+							uint32_t u;
+							int32_t s;
+						} rangecheck;
+
+						rangecheck.u = (unsigned)sym_addr << 6;
+						rangecheck.s >>= 6;
+						if (rangecheck.u != sym_addr) {
+							printf("ERROR: Relocation overflow for R_LM32_CALL relocation against %s\n", sym_name);
+							++bad_relocs;
+							continue;
+						}
+					}
+					relocation_needed = 0;
+					r_mem[0] = (r_mem[0] & 0xFCU) |
+					          ((sym_addr >> 24) & 0x03U);
+					r_mem[1] = (sym_addr >> 16) & 0xFFU;
+					r_mem[2] = (sym_addr >>  8) & 0xFFU;
+					r_mem[3] =  sym_addr        & 0xFFU;
+					break;
 #endif
 
 #ifdef TARGET_microblaze
@@ -1622,6 +1721,21 @@ DIS29_RELOCATION:
 						r_mem[0] = (sym_addr >>  8) & 0xff;
 						r_mem[1] =  sym_addr        & 0xff;
 					}
+					break;
+#endif
+
+#ifdef TARGET_lm32
+				case R_LM32_HI16:
+				case R_LM32_LO16:
+					r_mem[2] = (sym_addr >>  8) & 0xFFU;
+					r_mem[3] =  sym_addr        & 0xFFU;
+					break;
+				case R_LM32_CALL:
+					/*
+					 * use_resolved=…
+					 * 0: already written above
+					 * 1: no write necessary
+					 */
 					break;
 #endif
 
