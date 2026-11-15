@@ -906,11 +906,16 @@ output_relocs (
 					   give an error by default, and
 					   require `safe' relocations to be
 					   enumberated explicitly?).  */
-					goto good_32bit_resolved_reloc;
 #endif
+#if defined(TARGET_v850) || defined(TARGET_microblaze) || defined(TARGET_m68k) || \
+    defined(TARGET_sh2) || defined(TARGET_sh2eb) || defined(TARGET_h8300) || \
+    defined(TARGET_riscv64) || defined(TARGET_riscv32)
 				good_32bit_resolved_reloc:
+#endif
 					update_text = 0;
+#if defined(TARGET_xtensa)
 				good_32bit_resolved_reloc_update_text:
+#endif
 					if (bfd_big_endian (abs_bfd))
 						sym_addr =
 							(r_mem[0] << 24)
@@ -926,11 +931,15 @@ output_relocs (
 					relocation_needed = 1;
 					break;
 
+#if defined(TARGET_v850) || defined(TARGET_microblaze) || defined(TARGET_arm) || \
+    defined(TARGET_m68k) || defined(TARGET_xtensa) || \
+    defined(TARGET_riscv64) || defined(TARGET_riscv32)
 				bad_resolved_reloc:
 					printf("ERROR: reloc type %s unsupported in this context\n",
 					       q->howto->name);
 					bad_relocs++;
 					break;
+#endif
 				}
 			} else {
 				/* Calculate the sym address ourselves.  */
