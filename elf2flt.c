@@ -906,11 +906,16 @@ output_relocs (
 					   give an error by default, and
 					   require `safe' relocations to be
 					   enumberated explicitly?).  */
-					goto good_32bit_resolved_reloc;
 #endif
+#if defined(TARGET_v850) || defined(TARGET_microblaze) || defined(TARGET_m68k) || \
+    defined(TARGET_sh2) || defined(TARGET_sh2eb) || defined(TARGET_h8300) || \
+    defined(TARGET_riscv64) || defined(TARGET_riscv32)
 				good_32bit_resolved_reloc:
+#endif
 					update_text = 0;
+#if defined(TARGET_xtensa)
 				good_32bit_resolved_reloc_update_text:
+#endif
 					if (bfd_big_endian (abs_bfd))
 						sym_addr =
 							(r_mem[0] << 24)
@@ -926,11 +931,15 @@ output_relocs (
 					relocation_needed = 1;
 					break;
 
+#if defined(TARGET_v850) || defined(TARGET_microblaze) || defined(TARGET_arm) || \
+    defined(TARGET_m68k) || defined(TARGET_xtensa) || \
+    defined(TARGET_riscv64) || defined(TARGET_riscv32)
 				bad_resolved_reloc:
 					printf("ERROR: reloc type %s unsupported in this context\n",
 					       q->howto->name);
 					bad_relocs++;
 					break;
+#endif
 				}
 			} else {
 				/* Calculate the sym address ourselves.  */
@@ -986,6 +995,8 @@ output_relocs (
 #if defined(TARGET_arm)
 				case R_ARM_ABS32:
 					relocation_needed = 1;
+					sym_vma = elf2flt_bfd_section_vma(sym_section);
+					sym_addr += sym_vma + q->addend;
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
@@ -998,14 +1009,14 @@ output_relocs (
 							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
-					sym_vma = elf2flt_bfd_section_vma(sym_section);
-					sym_addr += sym_vma + q->addend;
 					break;
 				case R_ARM_GOT32:
 				case R_ARM_GOTPC:
 					/* Should be fine as is */
 					break;
 				case R_ARM_PLT32:
+					sym_vma = 0;
+					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
 					if (verbose)
 						fprintf(stderr,
 							"%s vma=0x%x, "
@@ -1018,6 +1029,7 @@ output_relocs (
 							(uint64_t) q->address, sym_addr,
 							(*p)->howto->rightshift,
 							*(uint32_t *)r_mem);
+					break;
 				case R_ARM_PC24:
 					sym_vma = 0;
 					sym_addr = (sym_addr-q->address)>>(*p)->howto->rightshift;
