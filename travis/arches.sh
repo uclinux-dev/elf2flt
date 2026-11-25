@@ -13,7 +13,7 @@ ARCHES=(
 	microblaze
 #	nios
 	nios2
-	sh
+	sh2
 	sparc
 	v850
 	xtensa
